@@ -144,6 +144,508 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-进程间的IPC通信机制" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/进程间的IPC通信机制/">进程间通信机制</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/进程间的IPC通信机制/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:30:37.825Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。</p>
+<h2 id="进程间通信方式"><a href="#进程间通信方式" class="headerlink" title="进程间通信方式"></a>进程间通信方式</h2><p>Linux进程间的基本通信方式主要有：管道（PIPE）（包括匿名管道和命名管道），信号（signal），消息队列（message queue），信号量，共享内存，内存映射，套接字。</p>
+<h4 id="1-管道"><a href="#1-管道" class="headerlink" title="1.管道"></a>1.管道</h4><p>管道实际上是由<strong>内核管理的缓冲区</strong>，位于管道两端的进程利用管道来传递消息。</p>
+<p>管道的一端连接一个输出进程，由输出进程向管道中存放数据，而另外一端连接一个输入进程（<strong>单向传输</strong>），用来取管道中的数据，当管道中数据小于512字节（<strong>基于字节流</strong>）时，保证写入的原子性；当管道中数据大于512字节时，不保证写入的原子性；当两个进程都终结的时候，管道也随之消失（<strong>生命周期随进程终结</strong>）。</p>
+<p>如下给出了两种描绘<strong>半双工管道</strong>的方法，左图中管道的两端在一个进程中相互连接，右图中则强调数据需要通过内核在管道中流动：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道1.png" alt="管道"></p>
+<p>管道通常在单个进程中没有太大用处，下图显示了父子进程之间的管道：<strong>进程先调用</strong>pipe，接着调用fork，从而创建从父进程到子进程的IPC管道：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道2.png" alt="管道"></p>
+<p>fork之后具体要做什么取决于我们想要的数据流的方向。对于从父进程到子进程的管道，父进程关闭管道的读端（fd[0]），子进程关闭管道的写端（fd[1]）：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道3.png" alt="管道"><br>管道根据是否有名字，分为匿名管道和有名管道，这两种管道有一些区别：</p>
+<pre><code>1. 管道是半双工的，数据只能在一个方向流动，如上图，输出进程只能给输入进程传递，不能反向传递。
+2. 匿名管道只能用于具有亲缘关系的进程之间通信，有名管道可允许没有亲缘关系的进程通信。
+3. 匿名管道的管道对文件系统不可见，有名管道对文件系统可见。
+4. 命名管道创建完成后就可以使用，使用方法与匿名管道一样，区别在于：命名管道使用之前需要open（）打开。这是因为：命名管道是设备文件，是存储在硬盘上，而匿名管道是存在内存中的特殊文件。命名管道调用open时有可能会阻塞，但是如果以读写方式（O_RDWR）打开则一定不会阻塞；以只读方式（O_RONLY）打开时，调用open（）的函数会被阻塞直到有数据可读；如果以只写的方式（O_WONLY）打开同样也会被阻塞，直到有以只读方式打开该管道。
+</code></pre><h5 id="管道的特殊情况（自带同步互斥效果）"><a href="#管道的特殊情况（自带同步互斥效果）" class="headerlink" title="管道的特殊情况（自带同步互斥效果）"></a>管道的特殊情况（自带同步互斥效果）</h5><pre><code>1. 管道的写端进程关闭（指向管道写端的文件描述符），但是读端仍然进程在管道的读端读数据，此时，当文件内的数据被读完后，再次read就会返回0，就像读到文件的结尾。
+2. 管道的写端进程并未关闭（管道写端的引用计数大于1），只是停止向管道中写数据，此时，若有读端的进程在读数据，等管道内剩余数据读完以后，就会阻塞等待，直到有数据可读返回。
+3. 管道的所有读端进程都关闭（指向管道读端的文件描述符），此时，若是有管道写端的的进程向管道内写数据时，该进程就会收到SIGPIPE信号，并异常终止。
+4. 管道的读端进程未关闭，而管道读端的进程并未读区数据，假如此时写端有进程向管道中写数据，等管道写满后就会被阻塞，直到管道有空位置后再写入数据并返回。
+</code></pre><h4 id="2-信号"><a href="#2-信号" class="headerlink" title="2. 信号"></a>2. 信号</h4><p>用于一个或几个进程之间传递异步信号。</p>
+<h4 id="3-消息队列"><a href="#3-消息队列" class="headerlink" title="3.消息队列"></a>3.消息队列</h4><p>消息队列实际上是内核地址空间的内部链表。</p>
+<pre><code>1. 每个消息队列由IPC 标识符唯一地址进行识别。
+2. 不同的消息队列之间相互独立。
+3. 每个消息队列中的消息，又构成一个独立的链表。
+4. 克服了信号承载量少和管道只能承载无格式字符流的缺点。
+</code></pre><p>优点：</p>
+<ol>
+<li>可独立于发送和接收进程存在。</li>
+<li>不需要进程自己提供同步方法，可避免命名管道的同步与阻塞问题。</li>
+<li>可以有选择性的接收数据。</li>
+</ol>
+<p>消息主要由消息类型和消息数据组成，通过msgsnd发送消息，通过msgrcv接收消息。接收消息时，不一定按照先进先出原则，因为可以选择类型接收消息。</p>
+<h4 id="4-信号量"><a href="#4-信号量" class="headerlink" title="4.信号量"></a>4.信号量</h4><p>信号量实际上是一个计数器，控制多个进程对同一资源的访问。</p>
+<h5 id="信号量的工作原理"><a href="#信号量的工作原理" class="headerlink" title="信号量的工作原理"></a>信号量的工作原理</h5><p>由于信号量只能进行两种操作，等待和发送信号，即PV操作。P-&gt; 申请资源，V-&gt; 释放资源。(pv操作都是原子操作，因为需要保护临界资源)</p>
+<p>P(sv):   当 sv&gt;0 时， sv = sv - 1；</p>
+<p>​        当 sv=0 时， 挂起改进程的执行。</p>
+<p>V(sv):  如果有进程挂起，则恢复其运行。如果没有进程挂起（等待），sv = sv +1。</p>
+<p>注：原子操作：单指令的操作称为原子的，单条指令的执行是不会被打断的。</p>
+<h4 id="5-共享内存"><a href="#5-共享内存" class="headerlink" title="5.共享内存"></a>5.共享内存</h4><p>共享内存是在多个进程之间共享内存区域的一种进程间的通信方式 (最快捷的方式) ，有IPC为进程创建的一个特殊地址范围，它将出现在该进程的地址空间中，其他进程可以将同一共享内存连接到自己的地址空间中，所有进程都可以访问共享的内存地址，就好像是malloc分配到的一样。当一个进程改变了这块地址中的内容的时候，其他进程都会察觉到这个更改。未提供同步机制，通常需要用其他的机制来同步对共享内存的访问，例如信号量。 </p>
+<p>在Linux中，每个进程都有属于自己的进程控制块（PCB）和地址空间（Addr Space），并且都有一个与之对应的页表，负责将进程的虚拟地址与物理地址进行映射，通过内存管理单元（MMU）进行管理。两个不同的虚拟地址通过页表映射到物理空间的同一区域，它们所指向的这块区域即共享内存。</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/共享内存.png" alt="共享内存"></p>
+<p>因为共享内存方式的通信没有中间过程，而管道、消息队列等方式则是需要将数据通过中间机制进行转换。共享内存方式直接将某段内存段进行映射，多个进程间的共享内存是同一块的物理空间，仅仅映射到各进程的地址不同而已，因此不需要进行复制，可以直接使用此段空间。</p>
+<h4 id="6-内存映射"><a href="#6-内存映射" class="headerlink" title="6.内存映射"></a>6.内存映射</h4><p>内存映射文件，是由一个文件到一块内存的映射。内存映射文件与虚拟内存有些类似，通过内存映射文件可以保留一个地址的区域，内存文件映射的物理存储器来自一个已经存在于磁盘上的文件，而且在对该文件进行操作之前必须首先对文件进行映射。使用内存映射文件处理存储于磁盘上的文件时，将不必再对文件执行I/O操作。每一个使用该机制的进程通过把同一个共享的文件映射到自己的进程地址空间来实现多个进程间的通信（这里类似于共享内存，只要有一个进程对这块映射文件的内存进行操作，其他进程也能够马上看到）。</p>
+<h5 id="共享内存和内存映射文件的区别："><a href="#共享内存和内存映射文件的区别：" class="headerlink" title="共享内存和内存映射文件的区别："></a>共享内存和内存映射文件的区别：</h5><p>​    内存映射文件是利用虚拟内存把文件映射到进程的地址空间中去，在此之后进程操作文件，就像操作进程空间里的地址一样了，比如使用c语言的memcpy等内存操作的函数。这种方法能够很好的应用在需要频繁处理一个文件或者是一个大文件的场合，这种方式处理IO效率比普通IO效率要高<br>　　共享内存是内存映射文件的一种特殊情况，内存映射的是一块内存，而非磁盘上的文件。共享内存的主语是进程（Process），操作系统默认会给每一个进程分配一个内存空间，每一个进程只允许访问操作系统分配给它的哪一段内存，而不能访问其他进程的。而有时候需要在不同进程之间访问同一段内存，怎么办呢？操作系统给出了 创建访问共享内存的API，需要共享内存的进程可以通过这一组定义好的API来访问多个进程之间共有的内存，各个进程访问这一段内存就像访问一个硬盘上的文件一样。</p>
+<h5 id="内存映射文件与虚拟内存的区别和联系："><a href="#内存映射文件与虚拟内存的区别和联系：" class="headerlink" title="内存映射文件与虚拟内存的区别和联系："></a>内存映射文件与虚拟内存的区别和联系：</h5><p>内存映射文件和虚拟内存都是操作系统内存管理的重要部分，两者有相似点也有不同点。<br>​    联系：虚拟内存和内存映射都是将一部分内容加载到内存，另一部放在磁盘上的一种机制。对于用户而言都是透明的。<br>​    区别：虚拟内存是硬盘的一部分，是内存和硬盘的数据交换区，许多程序运行过程中把暂时不用的程序数据放入这块虚拟内存，节约内存资源。内存映射是一个文件到一块内存的映射，这样程序通过内存指针就可以对文件进行访问。</p>
+<p>虚拟内存的硬件基础是分页机制。另外一个基础就是局部性原理（时间局部性和空间局部性），这样就可以将程序的一部分装入内存，其余部分留在外存，当访问信息不存在，再将所需数据调入内存。而内存映射文件并不是局部性，而是使虚拟地址空间的某个区域银蛇磁盘的全部或部分内容，通过该区域对被映射的磁盘文件进行访问，不必进行文件I/O也不需要对文件内容进行缓冲处理。</p>
+<h4 id="7-套接字"><a href="#7-套接字" class="headerlink" title="7.套接字"></a>7.套接字</h4><p>套接字机制不但可以单机的不同进程通信，而且使得跨网机器间进程可以通信。<br>套接字的创建和使用与管道是有区别的，套接字明确地将客户端与服务器区分开来，可以实现多个客户端连到同一服务器。 </p>
+<p><img src="https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=f9825ddda364034f1bc0ca54ceaa1254/3b87e950352ac65ca241f573f3f2b21193138a6e.jpg" alt="img"></p>
+<p><img src="https://gss0.bdstatic.com/-4o3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=2225b8644fed2e73e8e48e7ee668caee/a2cc7cd98d1001e92d5e43efbd0e7bec55e797eb.jpg" alt="img"></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/进程间的IPC通信机制/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-pylint_runtime_error" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/pylint_runtime_error/">pylint RuntimeError Inconsistent hierarchy</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/pylint_runtime_error/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:30:17.090Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>下面的pip分别是激活对应虚拟环境下的默认pip版本</p>
+<h2 id="在python2-安装-pylint"><a href="#在python2-安装-pylint" class="headerlink" title="在python2 安装 pylint"></a>在python2 安装 pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
+<p>安装完成后。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h <span class="comment">#运行正常</span></span><br></pre></td></tr></table></figure>
+<p>运行OK，版本如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint --version</span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line">No config file found, using default configuration</span><br><span class="line">pylint 1.9.3, </span><br><span class="line">astroid 1.6.5</span><br><span class="line">Python 2.7.10 (default, Aug 17 2018, 17:41:52) </span><br><span class="line">[GCC 4.2.1 Compatible Apple LLVM 10.0.0 (clang-1000.0.42)]</span><br></pre></td></tr></table></figure>
+<h2 id="在python3-安装pylint"><a href="#在python3-安装pylint" class="headerlink" title="在python3 安装pylint"></a>在python3 安装pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
+<p>显示安装成功后,运行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment">#运行pylint</span></span><br><span class="line">pylint -h</span><br><span class="line"></span><br><span class="line"><span class="comment">#出现报错信息</span></span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 718, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = dispatch_cache[cls]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/weakref.py"</span>, line 352, <span class="keyword">in</span> __getitem__</span><br><span class="line">    <span class="built_in">return</span> self.data[ref(key)]</span><br><span class="line">KeyError: &lt;weakref at 0x103363368; to <span class="string">'EnumMeta'</span> at 0x101d59f08 (Context)&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 721, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = registry[cls]</span><br><span class="line">KeyError: &lt;enum <span class="string">'Context'</span>&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/bin/pylint"</span>, line 11, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    sys.exit(run_pylint())</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/__init__.py"</span>, line 19, <span class="keyword">in</span> run_pylint</span><br><span class="line">    Run(sys.argv[1:])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 1313, <span class="keyword">in</span> __init__</span><br><span class="line">    linter.load_default_plugins()</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 504, <span class="keyword">in</span> load_default_plugins</span><br><span class="line">    checkers.initialize(self)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/__init__.py"</span>, line 122, <span class="keyword">in</span> initialize</span><br><span class="line">    register_plugins(linter, __path__[0])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/utils.py"</span>, line 1181, <span class="keyword">in</span> register_plugins</span><br><span class="line">    module = modutils.load_module_from_file(join(directory, filename))</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 278, <span class="keyword">in</span> load_module_from_file</span><br><span class="line">    <span class="built_in">return</span> load_module_from_modpath(modpath, path, use_sys)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 239, <span class="keyword">in</span> load_module_from_modpath</span><br><span class="line">    module = imp.load_module(curname, mp_file, mp_filename, mp_desc)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 234, <span class="keyword">in</span> load_module</span><br><span class="line">    <span class="built_in">return</span> load_source(name, filename, file)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 172, <span class="keyword">in</span> load_source</span><br><span class="line">    module = _load(spec)</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 693, <span class="keyword">in</span> _load</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 673, <span class="keyword">in</span> _load_unlocked</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap_external&gt;"</span>, line 662, <span class="keyword">in</span> exec_module</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 222, <span class="keyword">in</span> _call_with_frames_removed</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 154, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    class Python3Checker(checkers.BaseChecker):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 585, <span class="keyword">in</span> Python3Checker</span><br><span class="line">    <span class="string">'sys.version_info &lt; (3, 0)'</span>,</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 580, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    [astroid.extract_node(x).repr_tree() <span class="keyword">for</span> x <span class="keyword">in</span> [</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 877, <span class="keyword">in</span> repr_tree</span><br><span class="line">    _repr_tree(self, result, <span class="built_in">set</span>())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 723, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = _find_impl(cls, registry)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 674, <span class="keyword">in</span> _find_impl</span><br><span class="line">    mro = _compose_mro(cls, registry.keys())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 662, <span class="keyword">in</span> _compose_mro</span><br><span class="line">    <span class="built_in">return</span> _c3_mro(cls, abcs=mro)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 620, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    [explicit_bases] + [abstract_bases] + [other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 571, <span class="keyword">in</span> _c3_merge</span><br><span class="line">    raise RuntimeError(<span class="string">"Inconsistent hierarchy"</span>)</span><br><span class="line">RuntimeError: Inconsistent hierarchy</span><br></pre></td></tr></table></figure>
+<p>版本信息</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip list | grep pylint</span><br><span class="line"></span><br><span class="line"><span class="comment">#结果</span></span><br><span class="line">pylint 2.1.1</span><br></pre></td></tr></table></figure>
+<p>降版本试试，去<a href="https://pypi.org/project/pylint/#history" target="_blank" rel="noopener">pylint</a> 查看历史版本，并选择一个历史版本进行安装</p>
+ <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint==1.6.4</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h</span><br></pre></td></tr></table></figure>
+<p>运行正常。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">python3</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">pylint</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/pylint_runtime_error/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-CSRF攻击原理及防御" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/CSRF攻击原理及防御/">CSRF攻击原理及防御</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/CSRF攻击原理及防御/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:29:49.273Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="一、CSRF介绍"><a href="#一、CSRF介绍" class="headerlink" title="一、CSRF介绍"></a>一、CSRF介绍</h2><p>CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。</p>
+<h2 id="二、-浏览器同源策略"><a href="#二、-浏览器同源策略" class="headerlink" title="二、 浏览器同源策略"></a>二、 浏览器同源策略</h2><p>同源策略（Same origin policy）是一种约定，它是<a href="https://baike.baidu.com/item/%E6%B5%8F%E8%A7%88%E5%99%A8/213911" target="_blank" rel="noopener">浏览器</a>最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略基础之上的，浏览器只是针对同源策略的一种实现。</p>
+<p>同源是指：协议、域名、端口 同时相同才认为是同源。在同源检测时，将使用document.domain作为检测的依据。</p>
+<table>
+<thead>
+<tr>
+<th>Compared URL</th>
+<th>Outcome</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir/page2.html</td>
+<td>Success</td>
+<td>Same protocol, host and port</td>
+</tr>
+<tr>
+<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir2/other.html</td>
+<td>Success</td>
+<td>Same protocol, host and port</td>
+</tr>
+<tr>
+<td><strong>http://</strong>username:password@<strong><a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir2/other.html</td>
+<td>Success</td>
+<td>Same protocol, host and port</td>
+</tr>
+</tbody>
+</table>
+<p>下表为反例。</p>
+<table>
+<thead>
+<tr>
+<th>Compared URL</th>
+<th>Outcome</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.example.com:**81**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**81**/dir/other.html</a></td>
+<td>Failure</td>
+<td>Same protocol and host but different port</td>
+</tr>
+<tr>
+<td><strong>https</strong>://<a href="http://www.example.com/dir/other.html" target="_blank" rel="noopener">www.example.com/dir/other.html</a></td>
+<td>Failure</td>
+<td>Different protocol</td>
+</tr>
+<tr>
+<td>http://<strong>en.example.com</strong>/dir/other.html</td>
+<td>Failure</td>
+<td>Different host</td>
+</tr>
+<tr>
+<td>http://<strong>example.com</strong>/dir/other.html</td>
+<td>Failure</td>
+<td>Different host (exact match required)</td>
+</tr>
+<tr>
+<td>http://<strong>v2.<a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir/other.html</td>
+<td>Failure</td>
+<td>Different host (exact match required)</td>
+</tr>
+</tbody>
+</table>
+<p>下表依赖于浏览器的实现</p>
+<table>
+<thead>
+<tr>
+<th>Compared URL</th>
+<th>Outcome</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.example.com:**80**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**80**/dir/other.html</a></td>
+<td>Depends</td>
+<td>Port explicit. Depends on implementation in browser.</td>
+</tr>
+</tbody>
+</table>
+<p>一般浏览器默认80端口，当端口显示制定为80时，根据浏览器策略而定。</p>
+<h3 id="受限制内容"><a href="#受限制内容" class="headerlink" title="受限制内容"></a>受限制内容</h3><p>对JavaScript代码能够操作哪些Web内容的一条完整的安全<em>限制</em>，主要针对js读取某些内容或读写某些属性，例如：</p>
+<ol>
+<li>DOM无法获得：禁止对不同源页面DOM进行操作。这里主要场景是iframe跨域的情况，不同域名的iframe是限制互相访问的。</li>
+<li>ajax请求不能发送： 禁止使用XHR对象向不同源的服务器地址发起HTTP请求。</li>
+<li>Cookie、LocalStorage 和 IndexDB 无法读取。</li>
+</ol>
+<h3 id="不受限制内容"><a href="#不受限制内容" class="headerlink" title="不受限制内容"></a>不受限制内容</h3><p>允许嵌入资源，例如<code>img</code>链接、<code>&lt;script src=&quot;...&quot;&gt;</code>  <code>&lt;/script&gt;</code> <code>&lt;img&gt;</code> <code>&lt;link&gt;</code>  等。</p>
+<h2 id="三、-Cookie作用域"><a href="#三、-Cookie作用域" class="headerlink" title="三、 Cookie作用域"></a>三、 Cookie作用域</h2><p>Cookie 是服务器写入浏览器的一小段信息，只有同源的网页才能共享。</p>
+<p>Cookie有两个很重要的属性:Domain和Path，用来指示此Cookie的作用域：Domain告诉浏览器当前要添加的Cookie的域名归属；Path告诉浏览器当前要添加的Cookie的路径归属，如果没有明确指明则默认为当前路径。浏览器提交的Cookie需要满足以下两点：</p>
+<ol>
+<li><p>当前域名或者父域名下的Cookie。</p>
+</li>
+<li><p>当前路径或父路径下的Cookie，要满足这两个条件的Cookie才会被提交。</p>
+</li>
+</ol>
+<h2 id="四、-CSRF攻击原理"><a href="#四、-CSRF攻击原理" class="headerlink" title="四、 CSRF攻击原理"></a>四、 CSRF攻击原理</h2><p>攻击者（attacker）利用存储在本地的有效cookie及cookie的作用域来伪造用户的某种行为（只是利用cookie骗取服务器信任，并不能拿到cookie，也看不到cookie内容）。</p>
+<ol>
+<li>用户（victim）访问信任网站A，输入用户名和密码并登录成功，产生网站A的生成的cookie。</li>
+<li>在此cookie的有效期内，用户恰好访问恶意网站B，网站B上有某个隐藏的链接或者图片标签会自动请求网站A的URL地址,例如表单提交，传指定的参数， 此时浏览器会自动携带网站A的cookie。</li>
+<li>网站A收到这个请求后，误认为是用户（victim）的正常操作，伪造成功。</li>
+</ol>
+<h2 id="五、CSRF攻击防御"><a href="#五、CSRF攻击防御" class="headerlink" title="五、CSRF攻击防御"></a>五、CSRF攻击防御</h2><p>大多数防御方法是在请求中嵌入额外的验证数据来检测是否是真实用户的操作。</p>
+<h3 id="Synchronizer-token-pattern"><a href="#Synchronizer-token-pattern" class="headerlink" title="Synchronizer token pattern"></a>Synchronizer token pattern</h3><p>在form表单中嵌入验证信息，并在server端校验。攻击者无法使用最新的csrf值进行操作，代码如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"><span class="keyword">from</span> tornado.web <span class="keyword">import</span> HTTPError</span><br><span class="line"></span><br><span class="line">csrfs = <span class="string">b""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">make_crsf</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">global</span> csrf</span><br><span class="line">        csrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>)).decode()</span><br><span class="line">        <span class="keyword">return</span> csrf</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.write(<span class="string">"""&lt;html&gt;</span></span><br><span class="line"><span class="string">    &lt;head&gt;</span></span><br><span class="line"><span class="string">        &lt;meta charset="UTF-8"&gt;</span></span><br><span class="line"><span class="string">        &lt;title&gt;&lt;/title&gt;</span></span><br><span class="line"><span class="string">    &lt;/head&gt;</span></span><br><span class="line"><span class="string">    &lt;body&gt;</span></span><br><span class="line"><span class="string">        &lt;form action="/" method="POST" enctype="multipart/form-data"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="file" name="filename"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="hidden" name="csrf" value="%s"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="submit" name="submit"&gt;</span></span><br><span class="line"><span class="string">        &lt;/form&gt;</span></span><br><span class="line"><span class="string">    &lt;/body&gt;</span></span><br><span class="line"><span class="string">&lt;/html&gt;"""</span>%(self.make_crsf()))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> csrf != self.get_argument(<span class="string">'csrf'</span>,<span class="string">""</span>):</span><br><span class="line">            <span class="keyword">raise</span> HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
+<p>弊端:</p>
+<ol>
+<li>服务端需要存储每个用户的最新的csrf值。</li>
+<li>同一个用户打开多个tab页面时，其它某些csrf值可能失效，返回403错误。</li>
+</ol>
+<h3 id="Cookie-to-header-token"><a href="#Cookie-to-header-token" class="headerlink" title="Cookie-to-header token"></a>Cookie-to-header token</h3><p>此方法是基于浏览器的同源策略，同源才能读取cookie 值。恶意网站受同源限制不能读取cookie值。</p>
+<p>用户访问表单页面时，server端设置xsrf_cookie，页面嵌入js代码，自定义header头。</p>
+<p>index.html</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"https://cdn.staticfile.org/jquery/2.0.0/jquery.min.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"http://malsup.github.com/jquery.form.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"myform"</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"file"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"submit"</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">value</span>=<span class="string">"提交"</span> <span class="attr">onclick</span>=<span class="string">"showoption()"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function getCookie(name) &#123;</span></span><br><span class="line"><span class="undefined">        var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");</span></span><br><span class="line"><span class="undefined">        return r ? r[1] : undefined;</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function showoption()&#123;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var formData = new FormData();</span></span><br><span class="line"><span class="undefined">        formData.append("filename",document.getElementById("file").files[0]);</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var option = &#123;</span></span><br><span class="line"><span class="undefined">            url : "/",</span></span><br><span class="line"><span class="undefined">            type : 'POST',</span></span><br><span class="line"><span class="undefined">            data: formData,</span></span><br><span class="line"><span class="undefined">            headers : &#123;"X-XSRFToken":getCookie("_xsrf")&#125;, //添加请求头部</span></span><br><span class="line"><span class="undefined">            contentType : false,</span></span><br><span class="line"><span class="undefined">            processData : false,</span></span><br><span class="line"><span class="undefined">            success : function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('success');</span></span><br><span class="line"><span class="undefined">                 document.write(data);</span></span><br><span class="line"><span class="undefined">            &#125;,</span></span><br><span class="line"><span class="undefined">            error: function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('error');</span></span><br><span class="line"><span class="undefined">                 document.write('upload failed');</span></span><br><span class="line"><span class="undefined">            &#125;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">        $.ajax(option)</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>handler</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        xsrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>))</span><br><span class="line">        self.set_cookie(<span class="string">'_xsrf'</span>,xsrf)</span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">check_xsrf_cookie</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.request.headers.get(<span class="string">'X-XSRFToken'</span>) != self.get_cookie(<span class="string">"_xsrf"</span>):</span><br><span class="line">            <span class="keyword">raise</span> tornado.web.HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler)</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
+<h3 id="Double-Submit-Cookie"><a href="#Double-Submit-Cookie" class="headerlink" title="Double Submit Cookie"></a>Double Submit Cookie</h3><p>当form表单提交时，服务端设置_xsrf值到cookie中，同时也设置到form表单中一份，server端收到请求时，从cookie中_xsrf字段取出csrf_token与form提交的_xsrf中取出的csrf_token值是否一致。</p>
+<p>下面用tornado中的xsrf_form_html来实现。</p>
+<p>index.html    </p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">            &#123;% module xsrf_form_html() %&#125;</span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>handlers.py</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
+<p>受同源策略限制，恶意网站不能根据form提交的_xsrf值设置别的源下的cookie值。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Cookie: _xsrf=2|f6cb1468|2debdc878192abd5577e27000d0daf91|1547196447</span><br></pre></td></tr></table></figure>
+<p>表单中的值为</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"_xsrf"</span> <span class="attr">value</span>=<span class="string">"2|221a566b|f93a9e845543e9d683af6503d9dced92|1547196447"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>cookie失效之前，cookie值不会改变。cookie中解出token，form表单每次刷新时value值会改变，因为form表单中使用随机值生成masked_token。</p>
+<p>有疑问？</p>
+<h3 id="Client-side-safeguards"><a href="#Client-side-safeguards" class="headerlink" title="Client-side safeguards"></a>Client-side safeguards</h3><p>待补充</p>
+<h3 id="Other-techniques"><a href="#Other-techniques" class="headerlink" title="Other techniques"></a>Other techniques</h3><h4 id="检验-HTTP-Referer-字段"><a href="#检验-HTTP-Referer-字段" class="headerlink" title="检验 HTTP Referer 字段"></a>检验 HTTP Referer 字段</h4><p>攻击者不能篡改Referer值，但是某些浏览器会隐藏Referer值，并且依赖浏览器。</p>
+<p>​    </p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/CSRF攻击原理及防御/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-Content-Disposition header" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/Content-Disposition header/">Content-Disposition</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/Content-Disposition header/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:29:12.330Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Network Working Group                                          R. Troost</span><br><span class="line">Request for Comments: 1806                           New Century Systems</span><br><span class="line">Category: Experimental                                         S. Dorner</span><br><span class="line">                                                   QUALCOMM Incorporated</span><br><span class="line">                                                               June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">               Communicating Presentation Information in</span><br><span class="line">                           Internet Messages:</span><br><span class="line">                     The Content-Disposition Header</span><br><span class="line"></span><br><span class="line">Status of this Memo</span><br><span class="line"></span><br><span class="line">   This memo defines an Experimental Protocol for the Internet</span><br><span class="line">   community.  This memo does not specify an Internet standard of any</span><br><span class="line">   kind.  Discussion and suggestions for improvement are requested.</span><br><span class="line">   Distribution of this memo is unlimited.</span><br><span class="line"></span><br><span class="line">Abstract</span><br><span class="line"></span><br><span class="line">   This memo provides a mechanism whereby messages conforming to the</span><br><span class="line">   [RFC 1521] (&quot;MIME&quot;) specification can convey presentational</span><br><span class="line">   information.  It specifies a new &quot;Content-Disposition&quot; header,</span><br><span class="line">   optional and valid for any [RFC 1521] entity (&quot;message&quot; or &quot;body</span><br><span class="line">   part&quot;). Two values for this header are described in this memo; one</span><br><span class="line">   for the ordinary linear presentation of the body part, and another to</span><br><span class="line">   facilitate the use of mail to transfer files. It is expected that</span><br><span class="line">   more values will be defined in the future, and procedures are defined</span><br><span class="line">   for extending this set of values.</span><br><span class="line"></span><br><span class="line">   This document is intended as an extension to [RFC 1521]. As such, the</span><br><span class="line">   reader is assumed to be familiar with [RFC 1521], and [RFC 822]. The</span><br><span class="line">   information presented herein supplements but does not replace that</span><br><span class="line">   found in those documents.</span><br><span class="line"></span><br><span class="line">1.  Introduction</span><br><span class="line"></span><br><span class="line">   [RFC 1521] specifies a standard format for encapsulating multiple</span><br><span class="line">   pieces of data into a single Internet message. That document does not</span><br><span class="line">   address the issue of presentation styles; it provides a framework for</span><br><span class="line">   the interchange of message content, but leaves presentation issues</span><br><span class="line">   solely in the hands of mail user agent (MUA) implementors.</span><br><span class="line"></span><br><span class="line">   Two common ways of presenting multipart electronic messages are as a</span><br><span class="line">   main document with a list of separate attachments, and as a single</span><br><span class="line">   document with the various parts expanded (displayed) inline. The</span><br><span class="line">   display of an attachment is generally construed to require positive</span><br><span class="line">   action on the part of the recipient, while inline message components</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 1]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   are displayed automatically when the message is viewed. A mechanism</span><br><span class="line">   is needed to allow the sender to transmit this sort of presentational</span><br><span class="line">   information to the recipient; the Content-Disposition header provides</span><br><span class="line">   this mechanism, allowing each component of a message to be tagged</span><br><span class="line">   with an indication of its desired presentation semantics.</span><br><span class="line"></span><br><span class="line">   Tagging messages in this manner will often be sufficient for basic</span><br><span class="line">   message formatting. However, in many cases a more powerful and</span><br><span class="line">   flexible approach will be necessary. The definition of such</span><br><span class="line">   approaches is beyond the scope of this memo; however, such approaches</span><br><span class="line">   can benefit from additional Content-Disposition values and</span><br><span class="line">   parameters, to be defined at a later date.</span><br><span class="line"></span><br><span class="line">   In addition to allowing the sender to specify the presentational</span><br><span class="line">   disposition of a message component, it is desirable to allow her to</span><br><span class="line">   indicate a default archival disposition; a filename. The optional</span><br><span class="line">   &quot;filename&quot; parameter provides for this.</span><br><span class="line"></span><br><span class="line">2.  The Content-Disposition Header Field</span><br><span class="line"></span><br><span class="line">   Content-Disposition is an optional header; in its absence, the MUA</span><br><span class="line">   may use whatever presentation method it deems suitable.</span><br><span class="line"></span><br><span class="line">   It is desirable to keep the set of possible disposition types small</span><br><span class="line">   and well defined, to avoid needless complexity. Even so, evolving</span><br><span class="line">   usage will likely require the definition of additional disposition</span><br><span class="line">   types or parameters, so the set of disposition values is extensible;</span><br><span class="line">   see below.</span><br><span class="line"></span><br><span class="line">   In the extended BNF notation of [RFC 822], the Content-Disposition</span><br><span class="line">   header field is defined as follows:</span><br><span class="line"></span><br><span class="line">        disposition := &quot;Content-Disposition&quot; &quot;:&quot;</span><br><span class="line">                       disposition-type</span><br><span class="line">                       *(&quot;;&quot; disposition-parm)</span><br><span class="line"></span><br><span class="line">        disposition-type := &quot;inline&quot;</span><br><span class="line">                          / &quot;attachment&quot;</span><br><span class="line">                          / extension-token</span><br><span class="line">                          ; values are not case-sensitive</span><br><span class="line"></span><br><span class="line">        disposition-parm := filename-parm / parameter</span><br><span class="line"></span><br><span class="line">        filename-parm := &quot;filename&quot; &quot;=&quot; value;</span><br><span class="line"></span><br><span class="line">   `Extension-token&apos;, `parameter&apos; and `value&apos; are defined according to</span><br><span class="line">   [RFC 822] and [RFC 1521].</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 2]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">2.1  The Inline Disposition Type</span><br><span class="line"></span><br><span class="line">   A bodypart should be marked `inline&apos; if it is intended to be</span><br><span class="line">   displayed automatically upon display of the message. Inline bodyparts</span><br><span class="line">   should be presented in the order in which they occur, subject to the</span><br><span class="line">   normal semantics of multipart messages.</span><br><span class="line"></span><br><span class="line">2.2  The Attachment Disposition Type</span><br><span class="line"></span><br><span class="line">   Bodyparts can be designated `attachment&apos; to indicate that they are</span><br><span class="line">   separate from the main body of the mail message, and that their</span><br><span class="line">   display should not be automatic, but contingent upon some further</span><br><span class="line">   action of the user. The MUA might instead present the user of a</span><br><span class="line">   bitmap terminal with an iconic representation of the attachments, or,</span><br><span class="line">   on character terminals, with a list of attachments from which the</span><br><span class="line">   user could select for viewing or storage.</span><br><span class="line"></span><br><span class="line">2.3  The Filename Parameter</span><br><span class="line"></span><br><span class="line">   The sender may want to suggest a filename to be used if the entity is</span><br><span class="line">   detached and stored in a separate file. If the receiving MUA writes</span><br><span class="line">   the entity to a file, the suggested filename should be used as a</span><br><span class="line">   basis for the actual filename, where possible.</span><br><span class="line"></span><br><span class="line">   It is important that the receiving MUA not blindly use the suggested</span><br><span class="line">   filename.  The suggested filename should be checked (and possibly</span><br><span class="line">   changed) to see that it conforms to local filesystem conventions,</span><br><span class="line">   does not overwrite an existing file, and does not present a security</span><br><span class="line">   problem (see Security Considerations below).</span><br><span class="line"></span><br><span class="line">   The receiving MUA should not respect any directory path information</span><br><span class="line">   that may seem to be present in the filename parameter.  The filename</span><br><span class="line">   should be treated as a terminal component only.  Portable</span><br><span class="line">   specification of directory paths might possibly be done in the future</span><br><span class="line">   via a separate Content-Disposition parameter, but no provision is</span><br><span class="line">   made for it in this draft.</span><br><span class="line"></span><br><span class="line">   Current [RFC 1521] grammar restricts parameter values (and hence</span><br><span class="line">   Content-Disposition filenames) to US-ASCII.  We recognize the great</span><br><span class="line">   desirability of allowing arbitrary character sets in filenames, but</span><br><span class="line">   it is beyond the scope of this document to define the necessary</span><br><span class="line">   mechanisms.  We expect that the basic [RFC 1521] `value&apos;</span><br><span class="line">   specification will someday be amended to allow use of non-US-ASCII</span><br><span class="line">   characters, at which time the same mechanism should be used in the</span><br><span class="line">   Content-Disposition filename parameter.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 3]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Beyond the limitation to US-ASCII, the sending MUA may wish to bear</span><br><span class="line">   in mind the limitations of common filesystems.  Many have severe</span><br><span class="line">   length and character set restrictions.  Short alphanumeric filenames</span><br><span class="line">   are least likely to require modification by the receiving system.</span><br><span class="line"></span><br><span class="line">   The presence of the filename parameter does not force an</span><br><span class="line">   implementation to write the entity to a separate file. It is</span><br><span class="line">   perfectly acceptable for implementations to leave the entity as part</span><br><span class="line">   of the normal mail stream unless the user requests otherwise. As a</span><br><span class="line">   consequence, the parameter may be used on any MIME entity, even</span><br><span class="line">   `inline&apos; ones. These will not normally be written to files, but the</span><br><span class="line">   parameter could be used to provide a filename if the receiving user</span><br><span class="line">   should choose to write the part to a file.</span><br><span class="line"></span><br><span class="line">2.4  Future Extensions and Unrecognized Disposition Types</span><br><span class="line"></span><br><span class="line">   In the likely event that new parameters or disposition types are</span><br><span class="line">   needed, they should be registered with the IANA, in the manner</span><br><span class="line">   specified in [RFC 1521], appendix E.</span><br><span class="line"></span><br><span class="line">   Once new disposition types and parameters are defined, there is of</span><br><span class="line">   course the likelihood that implementations will see disposition types</span><br><span class="line">   and parameters they do not understand.  Furthermore, since x-tokens</span><br><span class="line">   are allowed, implementations may also see entirely unregistered</span><br><span class="line">   disposition types and parameters.</span><br><span class="line"></span><br><span class="line">   Unrecognized parameters should be ignored. Unrecognized disposition</span><br><span class="line">   types should be treated as `attachment&apos;. The choice of `attachment&apos;</span><br><span class="line">   for unrecognized types is made because a sender who goes to the</span><br><span class="line">   trouble of producing a Content-Disposition header with a new</span><br><span class="line">   disposition type is more likely aiming for something more elaborate</span><br><span class="line">   than inline presentation.</span><br><span class="line"></span><br><span class="line">   Unless noted otherwise in the definition of a parameter, Content-</span><br><span class="line">   Disposition parameters are valid for all dispositions.  (In contrast</span><br><span class="line">   to [RFC 1521] content-type parameters, which are defined on a per-</span><br><span class="line">   content-type basis.) Thus, for example, the `filename&apos; parameter</span><br><span class="line">   still means the name of the file to which the part should be written,</span><br><span class="line">   even if the disposition itself is unrecognized.</span><br><span class="line"></span><br><span class="line">2.5  Content-Disposition and Multipart</span><br><span class="line"></span><br><span class="line">   If a Content-Disposition header is used on a multipart body part, it</span><br><span class="line">   applies to the multipart as a whole, not the individual subparts.</span><br><span class="line">   The disposition types of the subparts do not need to be consulted</span><br><span class="line">   until the multipart itself is presented.  When the multipart is</span><br><span class="line">   displayed, then the dispositions of the subparts should be respected.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 4]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   If the `inline&apos; disposition is used, the multipart should be</span><br><span class="line">   displayed as normal; however, an `attachment&apos; subpart should require</span><br><span class="line">   action from the user to display.</span><br><span class="line"></span><br><span class="line">   If the `attachment&apos; disposition is used, presentation of the</span><br><span class="line">   multipart should not proceed without explicit user action.  Once the</span><br><span class="line">   user has chosen to display the multipart, the individual subpart</span><br><span class="line">   dispositions should be consulted to determine how to present the</span><br><span class="line">   subparts.</span><br><span class="line"></span><br><span class="line">2.6  Content-Disposition and the Main Message</span><br><span class="line"></span><br><span class="line">   It is permissible to use Content-Disposition on the main body of an</span><br><span class="line">   [RFC 822] message.</span><br><span class="line"></span><br><span class="line">3.  Examples</span><br><span class="line"></span><br><span class="line">   Here is a an example of a body part containing a JPEG image that is</span><br><span class="line">   intended to be viewed by the user immediately:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: inline</span><br><span class="line">         Content-Description: just a small picture of me</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following body part contains a JPEG image that should be</span><br><span class="line">   displayed to the user only if the user requests it. If the JPEG is</span><br><span class="line">   written to a file, the file should be named &quot;genome.jpg&quot;:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: attachment; filename=genome.jpeg</span><br><span class="line">         Content-Description: a complete map of the human genome</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following is an example of the use of the `attachment&apos;</span><br><span class="line">   disposition with a multipart body part.  The user should see text-</span><br><span class="line">   part-1 immediately, then take some action to view multipart-2.  After</span><br><span class="line">   taking action to view multipart-2, the user will see text-part-2</span><br><span class="line">   right away, and be required to take action to view jpeg-1.  Subparts</span><br><span class="line">   are indented for clarity; they would not be so indented in a real</span><br><span class="line">   message.</span><br><span class="line"></span><br><span class="line">         Content-Type: multipart/mixed; boundary=outer</span><br><span class="line">         Content-Description: multipart-1</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 5]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">           Content-Type: text/plain</span><br><span class="line">           Content-Disposition: inline</span><br><span class="line">           Content-Description: text-part-1</span><br><span class="line"></span><br><span class="line">           Some text goes here</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line">           Content-Type: multipart/mixed; boundary=inner</span><br><span class="line">           Content-Disposition: attachment</span><br><span class="line">           Content-Description: multipart-2</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: text/plain</span><br><span class="line">             Content-Disposition: inline</span><br><span class="line">             Content-Description: text-part-2</span><br><span class="line"></span><br><span class="line">             Some more text here.</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: image/jpeg</span><br><span class="line">             Content-Disposition: attachment</span><br><span class="line">             Content-Description: jpeg-1</span><br><span class="line"></span><br><span class="line">             &lt;jpeg data&gt;</span><br><span class="line">           --inner--</span><br><span class="line">         --outer--</span><br><span class="line"></span><br><span class="line">4.  Summary</span><br><span class="line"></span><br><span class="line">   Content-Disposition takes one of two values, `inline&apos; and</span><br><span class="line">   `attachment&apos;.  &apos;Inline&apos; indicates that the entity should be</span><br><span class="line">   immediately displayed to the user, whereas `attachment&apos; means that</span><br><span class="line">   the user should take additional action to view the entity.</span><br><span class="line"></span><br><span class="line">   The `filename&apos; parameter can be used to suggest a filename for</span><br><span class="line">   storing the bodypart, if the user wishes to store it in an external</span><br><span class="line">   file.</span><br><span class="line"></span><br><span class="line">5.  Security Considerations</span><br><span class="line"></span><br><span class="line">   There are security issues involved any time users exchange data.</span><br><span class="line">   While these are not to be minimized, neither does this memo change</span><br><span class="line">   the status quo in that regard, except in one instance.</span><br><span class="line"></span><br><span class="line">   Since this memo provides a way for the sender to suggest a filename,</span><br><span class="line">   a receiving MUA must take care that the sender&apos;s suggested filename</span><br><span class="line">   does not represent a hazard. Using UNIX as an example, some hazards</span><br><span class="line">   would be:</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 6]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          + Creating startup files (e.g., &quot;.login&quot;).</span><br><span class="line"></span><br><span class="line">          + Creating or overwriting system files (e.g.,</span><br><span class="line">            &quot;/etc/passwd&quot;).</span><br><span class="line"></span><br><span class="line">          + Overwriting any existing file.</span><br><span class="line"></span><br><span class="line">          + Placing executable files into any command search path</span><br><span class="line">            (e.g., &quot;~/bin/more&quot;).</span><br><span class="line"></span><br><span class="line">          + Sending the file to a pipe (e.g., &quot;| sh&quot;).</span><br><span class="line"></span><br><span class="line">   In general, the receiving MUA should never name or place the file</span><br><span class="line">   such that it will get interpreted or executed without the user</span><br><span class="line">   explicitly initiating the action.</span><br><span class="line"></span><br><span class="line">   It is very important to note that this is not an exhaustive list; it</span><br><span class="line">   is intended as a small set of examples only.  Implementors must be</span><br><span class="line">   alert to the potential hazards on their target systems.</span><br><span class="line"></span><br><span class="line">6.  References</span><br><span class="line"></span><br><span class="line">    [RFC 1521]</span><br><span class="line">        Borenstein N., and N. Freed, &quot;MIME (Multipurpose Internet</span><br><span class="line">        Mail Extensions) Part One:  Mechanisms for Specifying and</span><br><span class="line">        Describing the Format of Internet Message Bodies&quot;,</span><br><span class="line">        RFC 1521, Bellcore, Innosoft, September 1993.</span><br><span class="line"></span><br><span class="line">    [RFC 822]</span><br><span class="line">        Crocker, D., &quot;Standard for the Format of ARPA Internet</span><br><span class="line">        Text Messages&quot;, STD 11, RFC 822, UDEL, August 1982.</span><br><span class="line"></span><br><span class="line">7.  Acknowledgements</span><br><span class="line"></span><br><span class="line">We gratefully acknowledge the help these people provided</span><br><span class="line">during the preparation of this draft:</span><br><span class="line"></span><br><span class="line">            Nathaniel Borenstein</span><br><span class="line">            Ned Freed</span><br><span class="line">            Keith Moore</span><br><span class="line">            Dave Crocker</span><br><span class="line">            Dan Pritchett</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 7]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">8.  Authors&apos; Addresses</span><br><span class="line"></span><br><span class="line">   Rens Troost</span><br><span class="line">   New Century Systems</span><br><span class="line">   324 East 41st Street #804</span><br><span class="line">   New York, NY, 10017 USA</span><br><span class="line"></span><br><span class="line">   Phone: +1 (212) 557-2050</span><br><span class="line">   Fax: +1 (212) 557-2049</span><br><span class="line">   EMail: rens@century.com</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Steve Dorner</span><br><span class="line">   QUALCOMM Incorporated</span><br><span class="line">   6455 Lusk Boulevard</span><br><span class="line">   San Diego, CA 92121</span><br><span class="line">   USA</span><br><span class="line"></span><br><span class="line">   EMail: sdorner@qualcomm.com</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">upload file</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/Content-Disposition header/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-greenlet详解" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -384,508 +886,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2019/03/06/tornado的事件循环机制/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-CSRF攻击原理及防御" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/12/CSRF攻击原理及防御/">CSRF攻击原理及防御</a>
-    </h1>
-  
-
-        
-        <a href="/2019/01/12/CSRF攻击原理及防御/" class="archive-article-date">
-  	<time datetime="2019-01-12T12:10:44.794Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-01-12</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="一、CSRF介绍"><a href="#一、CSRF介绍" class="headerlink" title="一、CSRF介绍"></a>一、CSRF介绍</h2><p>CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。</p>
-<h2 id="二、-浏览器同源策略"><a href="#二、-浏览器同源策略" class="headerlink" title="二、 浏览器同源策略"></a>二、 浏览器同源策略</h2><p>同源策略（Same origin policy）是一种约定，它是<a href="https://baike.baidu.com/item/%E6%B5%8F%E8%A7%88%E5%99%A8/213911" target="_blank" rel="noopener">浏览器</a>最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略基础之上的，浏览器只是针对同源策略的一种实现。</p>
-<p>同源是指：协议、域名、端口 同时相同才认为是同源。在同源检测时，将使用document.domain作为检测的依据。</p>
-<table>
-<thead>
-<tr>
-<th>Compared URL</th>
-<th>Outcome</th>
-<th>Reason</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir/page2.html</td>
-<td>Success</td>
-<td>Same protocol, host and port</td>
-</tr>
-<tr>
-<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir2/other.html</td>
-<td>Success</td>
-<td>Same protocol, host and port</td>
-</tr>
-<tr>
-<td><strong>http://</strong>username:password@<strong><a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir2/other.html</td>
-<td>Success</td>
-<td>Same protocol, host and port</td>
-</tr>
-</tbody>
-</table>
-<p>下表为反例。</p>
-<table>
-<thead>
-<tr>
-<th>Compared URL</th>
-<th>Outcome</th>
-<th>Reason</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="http://www.example.com:**81**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**81**/dir/other.html</a></td>
-<td>Failure</td>
-<td>Same protocol and host but different port</td>
-</tr>
-<tr>
-<td><strong>https</strong>://<a href="http://www.example.com/dir/other.html" target="_blank" rel="noopener">www.example.com/dir/other.html</a></td>
-<td>Failure</td>
-<td>Different protocol</td>
-</tr>
-<tr>
-<td>http://<strong>en.example.com</strong>/dir/other.html</td>
-<td>Failure</td>
-<td>Different host</td>
-</tr>
-<tr>
-<td>http://<strong>example.com</strong>/dir/other.html</td>
-<td>Failure</td>
-<td>Different host (exact match required)</td>
-</tr>
-<tr>
-<td>http://<strong>v2.<a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir/other.html</td>
-<td>Failure</td>
-<td>Different host (exact match required)</td>
-</tr>
-</tbody>
-</table>
-<p>下表依赖于浏览器的实现</p>
-<table>
-<thead>
-<tr>
-<th>Compared URL</th>
-<th>Outcome</th>
-<th>Reason</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="http://www.example.com:**80**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**80**/dir/other.html</a></td>
-<td>Depends</td>
-<td>Port explicit. Depends on implementation in browser.</td>
-</tr>
-</tbody>
-</table>
-<p>一般浏览器默认80端口，当端口显示制定为80时，根据浏览器策略而定。</p>
-<h3 id="受限制内容"><a href="#受限制内容" class="headerlink" title="受限制内容"></a>受限制内容</h3><p>对JavaScript代码能够操作哪些Web内容的一条完整的安全<em>限制</em>，主要针对js读取某些内容或读写某些属性，例如：</p>
-<ol>
-<li>DOM无法获得：禁止对不同源页面DOM进行操作。这里主要场景是iframe跨域的情况，不同域名的iframe是限制互相访问的。</li>
-<li>ajax请求不能发送： 禁止使用XHR对象向不同源的服务器地址发起HTTP请求。</li>
-<li>Cookie、LocalStorage 和 IndexDB 无法读取。</li>
-</ol>
-<h3 id="不受限制内容"><a href="#不受限制内容" class="headerlink" title="不受限制内容"></a>不受限制内容</h3><p>允许嵌入资源，例如<code>img</code>链接、<code>&lt;script src=&quot;...&quot;&gt;</code>  <code>&lt;/script&gt;</code> <code>&lt;img&gt;</code> <code>&lt;link&gt;</code>  等。</p>
-<h2 id="三、-Cookie作用域"><a href="#三、-Cookie作用域" class="headerlink" title="三、 Cookie作用域"></a>三、 Cookie作用域</h2><p>Cookie 是服务器写入浏览器的一小段信息，只有同源的网页才能共享。</p>
-<p>Cookie有两个很重要的属性:Domain和Path，用来指示此Cookie的作用域：Domain告诉浏览器当前要添加的Cookie的域名归属；Path告诉浏览器当前要添加的Cookie的路径归属，如果没有明确指明则默认为当前路径。浏览器提交的Cookie需要满足以下两点：</p>
-<ol>
-<li><p>当前域名或者父域名下的Cookie。</p>
-</li>
-<li><p>当前路径或父路径下的Cookie，要满足这两个条件的Cookie才会被提交。</p>
-</li>
-</ol>
-<h2 id="四、-CSRF攻击原理"><a href="#四、-CSRF攻击原理" class="headerlink" title="四、 CSRF攻击原理"></a>四、 CSRF攻击原理</h2><p>攻击者（attacker）利用存储在本地的有效cookie及cookie的作用域来伪造用户的某种行为（只是利用cookie骗取服务器信任，并不能拿到cookie，也看不到cookie内容）。</p>
-<ol>
-<li>用户（victim）访问信任网站A，输入用户名和密码并登录成功，产生网站A的生成的cookie。</li>
-<li>在此cookie的有效期内，用户恰好访问恶意网站B，网站B上有某个隐藏的链接或者图片标签会自动请求网站A的URL地址,例如表单提交，传指定的参数， 此时浏览器会自动携带网站A的cookie。</li>
-<li>网站A收到这个请求后，误认为是用户（victim）的正常操作，伪造成功。</li>
-</ol>
-<h2 id="五、CSRF攻击防御"><a href="#五、CSRF攻击防御" class="headerlink" title="五、CSRF攻击防御"></a>五、CSRF攻击防御</h2><p>大多数防御方法是在请求中嵌入额外的验证数据来检测是否是真实用户的操作。</p>
-<h3 id="Synchronizer-token-pattern"><a href="#Synchronizer-token-pattern" class="headerlink" title="Synchronizer token pattern"></a>Synchronizer token pattern</h3><p>在form表单中嵌入验证信息，并在server端校验。攻击者无法使用最新的csrf值进行操作，代码如下：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"><span class="keyword">from</span> tornado.web <span class="keyword">import</span> HTTPError</span><br><span class="line"></span><br><span class="line">csrfs = <span class="string">b""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">make_crsf</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">global</span> csrf</span><br><span class="line">        csrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>)).decode()</span><br><span class="line">        <span class="keyword">return</span> csrf</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.write(<span class="string">"""&lt;html&gt;</span></span><br><span class="line"><span class="string">    &lt;head&gt;</span></span><br><span class="line"><span class="string">        &lt;meta charset="UTF-8"&gt;</span></span><br><span class="line"><span class="string">        &lt;title&gt;&lt;/title&gt;</span></span><br><span class="line"><span class="string">    &lt;/head&gt;</span></span><br><span class="line"><span class="string">    &lt;body&gt;</span></span><br><span class="line"><span class="string">        &lt;form action="/" method="POST" enctype="multipart/form-data"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="file" name="filename"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="hidden" name="csrf" value="%s"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="submit" name="submit"&gt;</span></span><br><span class="line"><span class="string">        &lt;/form&gt;</span></span><br><span class="line"><span class="string">    &lt;/body&gt;</span></span><br><span class="line"><span class="string">&lt;/html&gt;"""</span>%(self.make_crsf()))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> csrf != self.get_argument(<span class="string">'csrf'</span>,<span class="string">""</span>):</span><br><span class="line">            <span class="keyword">raise</span> HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
-<p>弊端:</p>
-<ol>
-<li>服务端需要存储每个用户的最新的csrf值。</li>
-<li>同一个用户打开多个tab页面时，其它某些csrf值可能失效，返回403错误。</li>
-</ol>
-<h3 id="Cookie-to-header-token"><a href="#Cookie-to-header-token" class="headerlink" title="Cookie-to-header token"></a>Cookie-to-header token</h3><p>此方法是基于浏览器的同源策略，同源才能读取cookie 值。恶意网站受同源限制不能读取cookie值。</p>
-<p>用户访问表单页面时，server端设置xsrf_cookie，页面嵌入js代码，自定义header头。</p>
-<p>index.html</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"https://cdn.staticfile.org/jquery/2.0.0/jquery.min.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"http://malsup.github.com/jquery.form.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"myform"</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"file"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"submit"</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">value</span>=<span class="string">"提交"</span> <span class="attr">onclick</span>=<span class="string">"showoption()"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function getCookie(name) &#123;</span></span><br><span class="line"><span class="undefined">        var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");</span></span><br><span class="line"><span class="undefined">        return r ? r[1] : undefined;</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function showoption()&#123;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var formData = new FormData();</span></span><br><span class="line"><span class="undefined">        formData.append("filename",document.getElementById("file").files[0]);</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var option = &#123;</span></span><br><span class="line"><span class="undefined">            url : "/",</span></span><br><span class="line"><span class="undefined">            type : 'POST',</span></span><br><span class="line"><span class="undefined">            data: formData,</span></span><br><span class="line"><span class="undefined">            headers : &#123;"X-XSRFToken":getCookie("_xsrf")&#125;, //添加请求头部</span></span><br><span class="line"><span class="undefined">            contentType : false,</span></span><br><span class="line"><span class="undefined">            processData : false,</span></span><br><span class="line"><span class="undefined">            success : function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('success');</span></span><br><span class="line"><span class="undefined">                 document.write(data);</span></span><br><span class="line"><span class="undefined">            &#125;,</span></span><br><span class="line"><span class="undefined">            error: function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('error');</span></span><br><span class="line"><span class="undefined">                 document.write('upload failed');</span></span><br><span class="line"><span class="undefined">            &#125;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">        $.ajax(option)</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>handler</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        xsrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>))</span><br><span class="line">        self.set_cookie(<span class="string">'_xsrf'</span>,xsrf)</span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">check_xsrf_cookie</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.request.headers.get(<span class="string">'X-XSRFToken'</span>) != self.get_cookie(<span class="string">"_xsrf"</span>):</span><br><span class="line">            <span class="keyword">raise</span> tornado.web.HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler)</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
-<h3 id="Double-Submit-Cookie"><a href="#Double-Submit-Cookie" class="headerlink" title="Double Submit Cookie"></a>Double Submit Cookie</h3><p>当form表单提交时，服务端设置_xsrf值到cookie中，同时也设置到form表单中一份，server端收到请求时，从cookie中_xsrf字段取出csrf_token与form提交的_xsrf中取出的csrf_token值是否一致。</p>
-<p>下面用tornado中的xsrf_form_html来实现。</p>
-<p>index.html    </p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">            &#123;% module xsrf_form_html() %&#125;</span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>handlers.py</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
-<p>受同源策略限制，恶意网站不能根据form提交的_xsrf值设置别的源下的cookie值。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Cookie: _xsrf=2|f6cb1468|2debdc878192abd5577e27000d0daf91|1547196447</span><br></pre></td></tr></table></figure>
-<p>表单中的值为</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"_xsrf"</span> <span class="attr">value</span>=<span class="string">"2|221a566b|f93a9e845543e9d683af6503d9dced92|1547196447"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>cookie失效之前，cookie值不会改变。cookie中解出token，form表单每次刷新时value值会改变，因为form表单中使用随机值生成masked_token。</p>
-<p>有疑问？</p>
-<h3 id="Client-side-safeguards"><a href="#Client-side-safeguards" class="headerlink" title="Client-side safeguards"></a>Client-side safeguards</h3><p>待补充</p>
-<h3 id="Other-techniques"><a href="#Other-techniques" class="headerlink" title="Other techniques"></a>Other techniques</h3><h4 id="检验-HTTP-Referer-字段"><a href="#检验-HTTP-Referer-字段" class="headerlink" title="检验 HTTP Referer 字段"></a>检验 HTTP Referer 字段</h4><p>攻击者不能篡改Referer值，但是某些浏览器会隐藏Referer值，并且依赖浏览器。</p>
-<p>​    </p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/01/12/CSRF攻击原理及防御/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-pylint_runtime_error" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/12/pylint_runtime_error/">pylint RuntimeError Inconsistent hierarchy</a>
-    </h1>
-  
-
-        
-        <a href="/2019/01/12/pylint_runtime_error/" class="archive-article-date">
-  	<time datetime="2019-01-12T09:06:38.406Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-01-12</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>下面的pip分别是激活对应虚拟环境下的默认pip版本</p>
-<h2 id="在python2-安装-pylint"><a href="#在python2-安装-pylint" class="headerlink" title="在python2 安装 pylint"></a>在python2 安装 pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
-<p>安装完成后。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h <span class="comment">#运行正常</span></span><br></pre></td></tr></table></figure>
-<p>运行OK，版本如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint --version</span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line">No config file found, using default configuration</span><br><span class="line">pylint 1.9.3, </span><br><span class="line">astroid 1.6.5</span><br><span class="line">Python 2.7.10 (default, Aug 17 2018, 17:41:52) </span><br><span class="line">[GCC 4.2.1 Compatible Apple LLVM 10.0.0 (clang-1000.0.42)]</span><br></pre></td></tr></table></figure>
-<h2 id="在python3-安装pylint"><a href="#在python3-安装pylint" class="headerlink" title="在python3 安装pylint"></a>在python3 安装pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
-<p>显示安装成功后,运行</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment">#运行pylint</span></span><br><span class="line">pylint -h</span><br><span class="line"></span><br><span class="line"><span class="comment">#出现报错信息</span></span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 718, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = dispatch_cache[cls]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/weakref.py"</span>, line 352, <span class="keyword">in</span> __getitem__</span><br><span class="line">    <span class="built_in">return</span> self.data[ref(key)]</span><br><span class="line">KeyError: &lt;weakref at 0x103363368; to <span class="string">'EnumMeta'</span> at 0x101d59f08 (Context)&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 721, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = registry[cls]</span><br><span class="line">KeyError: &lt;enum <span class="string">'Context'</span>&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/bin/pylint"</span>, line 11, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    sys.exit(run_pylint())</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/__init__.py"</span>, line 19, <span class="keyword">in</span> run_pylint</span><br><span class="line">    Run(sys.argv[1:])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 1313, <span class="keyword">in</span> __init__</span><br><span class="line">    linter.load_default_plugins()</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 504, <span class="keyword">in</span> load_default_plugins</span><br><span class="line">    checkers.initialize(self)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/__init__.py"</span>, line 122, <span class="keyword">in</span> initialize</span><br><span class="line">    register_plugins(linter, __path__[0])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/utils.py"</span>, line 1181, <span class="keyword">in</span> register_plugins</span><br><span class="line">    module = modutils.load_module_from_file(join(directory, filename))</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 278, <span class="keyword">in</span> load_module_from_file</span><br><span class="line">    <span class="built_in">return</span> load_module_from_modpath(modpath, path, use_sys)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 239, <span class="keyword">in</span> load_module_from_modpath</span><br><span class="line">    module = imp.load_module(curname, mp_file, mp_filename, mp_desc)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 234, <span class="keyword">in</span> load_module</span><br><span class="line">    <span class="built_in">return</span> load_source(name, filename, file)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 172, <span class="keyword">in</span> load_source</span><br><span class="line">    module = _load(spec)</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 693, <span class="keyword">in</span> _load</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 673, <span class="keyword">in</span> _load_unlocked</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap_external&gt;"</span>, line 662, <span class="keyword">in</span> exec_module</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 222, <span class="keyword">in</span> _call_with_frames_removed</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 154, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    class Python3Checker(checkers.BaseChecker):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 585, <span class="keyword">in</span> Python3Checker</span><br><span class="line">    <span class="string">'sys.version_info &lt; (3, 0)'</span>,</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 580, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    [astroid.extract_node(x).repr_tree() <span class="keyword">for</span> x <span class="keyword">in</span> [</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 877, <span class="keyword">in</span> repr_tree</span><br><span class="line">    _repr_tree(self, result, <span class="built_in">set</span>())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 723, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = _find_impl(cls, registry)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 674, <span class="keyword">in</span> _find_impl</span><br><span class="line">    mro = _compose_mro(cls, registry.keys())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 662, <span class="keyword">in</span> _compose_mro</span><br><span class="line">    <span class="built_in">return</span> _c3_mro(cls, abcs=mro)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 620, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    [explicit_bases] + [abstract_bases] + [other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 571, <span class="keyword">in</span> _c3_merge</span><br><span class="line">    raise RuntimeError(<span class="string">"Inconsistent hierarchy"</span>)</span><br><span class="line">RuntimeError: Inconsistent hierarchy</span><br></pre></td></tr></table></figure>
-<p>版本信息</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip list | grep pylint</span><br><span class="line"></span><br><span class="line"><span class="comment">#结果</span></span><br><span class="line">pylint 2.1.1</span><br></pre></td></tr></table></figure>
-<p>降版本试试，去<a href="https://pypi.org/project/pylint/#history" target="_blank" rel="noopener">pylint</a> 查看历史版本，并选择一个历史版本进行安装</p>
- <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint==1.6.4</span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h</span><br></pre></td></tr></table></figure>
-<p>运行正常。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">python3</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">pylint</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/01/12/pylint_runtime_error/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-Content-Disposition header" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/07/Content-Disposition header/">Content-Disposition</a>
-    </h1>
-  
-
-        
-        <a href="/2019/01/07/Content-Disposition header/" class="archive-article-date">
-  	<time datetime="2019-01-07T10:05:35.783Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-01-07</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Network Working Group                                          R. Troost</span><br><span class="line">Request for Comments: 1806                           New Century Systems</span><br><span class="line">Category: Experimental                                         S. Dorner</span><br><span class="line">                                                   QUALCOMM Incorporated</span><br><span class="line">                                                               June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">               Communicating Presentation Information in</span><br><span class="line">                           Internet Messages:</span><br><span class="line">                     The Content-Disposition Header</span><br><span class="line"></span><br><span class="line">Status of this Memo</span><br><span class="line"></span><br><span class="line">   This memo defines an Experimental Protocol for the Internet</span><br><span class="line">   community.  This memo does not specify an Internet standard of any</span><br><span class="line">   kind.  Discussion and suggestions for improvement are requested.</span><br><span class="line">   Distribution of this memo is unlimited.</span><br><span class="line"></span><br><span class="line">Abstract</span><br><span class="line"></span><br><span class="line">   This memo provides a mechanism whereby messages conforming to the</span><br><span class="line">   [RFC 1521] (&quot;MIME&quot;) specification can convey presentational</span><br><span class="line">   information.  It specifies a new &quot;Content-Disposition&quot; header,</span><br><span class="line">   optional and valid for any [RFC 1521] entity (&quot;message&quot; or &quot;body</span><br><span class="line">   part&quot;). Two values for this header are described in this memo; one</span><br><span class="line">   for the ordinary linear presentation of the body part, and another to</span><br><span class="line">   facilitate the use of mail to transfer files. It is expected that</span><br><span class="line">   more values will be defined in the future, and procedures are defined</span><br><span class="line">   for extending this set of values.</span><br><span class="line"></span><br><span class="line">   This document is intended as an extension to [RFC 1521]. As such, the</span><br><span class="line">   reader is assumed to be familiar with [RFC 1521], and [RFC 822]. The</span><br><span class="line">   information presented herein supplements but does not replace that</span><br><span class="line">   found in those documents.</span><br><span class="line"></span><br><span class="line">1.  Introduction</span><br><span class="line"></span><br><span class="line">   [RFC 1521] specifies a standard format for encapsulating multiple</span><br><span class="line">   pieces of data into a single Internet message. That document does not</span><br><span class="line">   address the issue of presentation styles; it provides a framework for</span><br><span class="line">   the interchange of message content, but leaves presentation issues</span><br><span class="line">   solely in the hands of mail user agent (MUA) implementors.</span><br><span class="line"></span><br><span class="line">   Two common ways of presenting multipart electronic messages are as a</span><br><span class="line">   main document with a list of separate attachments, and as a single</span><br><span class="line">   document with the various parts expanded (displayed) inline. The</span><br><span class="line">   display of an attachment is generally construed to require positive</span><br><span class="line">   action on the part of the recipient, while inline message components</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 1]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   are displayed automatically when the message is viewed. A mechanism</span><br><span class="line">   is needed to allow the sender to transmit this sort of presentational</span><br><span class="line">   information to the recipient; the Content-Disposition header provides</span><br><span class="line">   this mechanism, allowing each component of a message to be tagged</span><br><span class="line">   with an indication of its desired presentation semantics.</span><br><span class="line"></span><br><span class="line">   Tagging messages in this manner will often be sufficient for basic</span><br><span class="line">   message formatting. However, in many cases a more powerful and</span><br><span class="line">   flexible approach will be necessary. The definition of such</span><br><span class="line">   approaches is beyond the scope of this memo; however, such approaches</span><br><span class="line">   can benefit from additional Content-Disposition values and</span><br><span class="line">   parameters, to be defined at a later date.</span><br><span class="line"></span><br><span class="line">   In addition to allowing the sender to specify the presentational</span><br><span class="line">   disposition of a message component, it is desirable to allow her to</span><br><span class="line">   indicate a default archival disposition; a filename. The optional</span><br><span class="line">   &quot;filename&quot; parameter provides for this.</span><br><span class="line"></span><br><span class="line">2.  The Content-Disposition Header Field</span><br><span class="line"></span><br><span class="line">   Content-Disposition is an optional header; in its absence, the MUA</span><br><span class="line">   may use whatever presentation method it deems suitable.</span><br><span class="line"></span><br><span class="line">   It is desirable to keep the set of possible disposition types small</span><br><span class="line">   and well defined, to avoid needless complexity. Even so, evolving</span><br><span class="line">   usage will likely require the definition of additional disposition</span><br><span class="line">   types or parameters, so the set of disposition values is extensible;</span><br><span class="line">   see below.</span><br><span class="line"></span><br><span class="line">   In the extended BNF notation of [RFC 822], the Content-Disposition</span><br><span class="line">   header field is defined as follows:</span><br><span class="line"></span><br><span class="line">        disposition := &quot;Content-Disposition&quot; &quot;:&quot;</span><br><span class="line">                       disposition-type</span><br><span class="line">                       *(&quot;;&quot; disposition-parm)</span><br><span class="line"></span><br><span class="line">        disposition-type := &quot;inline&quot;</span><br><span class="line">                          / &quot;attachment&quot;</span><br><span class="line">                          / extension-token</span><br><span class="line">                          ; values are not case-sensitive</span><br><span class="line"></span><br><span class="line">        disposition-parm := filename-parm / parameter</span><br><span class="line"></span><br><span class="line">        filename-parm := &quot;filename&quot; &quot;=&quot; value;</span><br><span class="line"></span><br><span class="line">   `Extension-token&apos;, `parameter&apos; and `value&apos; are defined according to</span><br><span class="line">   [RFC 822] and [RFC 1521].</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 2]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">2.1  The Inline Disposition Type</span><br><span class="line"></span><br><span class="line">   A bodypart should be marked `inline&apos; if it is intended to be</span><br><span class="line">   displayed automatically upon display of the message. Inline bodyparts</span><br><span class="line">   should be presented in the order in which they occur, subject to the</span><br><span class="line">   normal semantics of multipart messages.</span><br><span class="line"></span><br><span class="line">2.2  The Attachment Disposition Type</span><br><span class="line"></span><br><span class="line">   Bodyparts can be designated `attachment&apos; to indicate that they are</span><br><span class="line">   separate from the main body of the mail message, and that their</span><br><span class="line">   display should not be automatic, but contingent upon some further</span><br><span class="line">   action of the user. The MUA might instead present the user of a</span><br><span class="line">   bitmap terminal with an iconic representation of the attachments, or,</span><br><span class="line">   on character terminals, with a list of attachments from which the</span><br><span class="line">   user could select for viewing or storage.</span><br><span class="line"></span><br><span class="line">2.3  The Filename Parameter</span><br><span class="line"></span><br><span class="line">   The sender may want to suggest a filename to be used if the entity is</span><br><span class="line">   detached and stored in a separate file. If the receiving MUA writes</span><br><span class="line">   the entity to a file, the suggested filename should be used as a</span><br><span class="line">   basis for the actual filename, where possible.</span><br><span class="line"></span><br><span class="line">   It is important that the receiving MUA not blindly use the suggested</span><br><span class="line">   filename.  The suggested filename should be checked (and possibly</span><br><span class="line">   changed) to see that it conforms to local filesystem conventions,</span><br><span class="line">   does not overwrite an existing file, and does not present a security</span><br><span class="line">   problem (see Security Considerations below).</span><br><span class="line"></span><br><span class="line">   The receiving MUA should not respect any directory path information</span><br><span class="line">   that may seem to be present in the filename parameter.  The filename</span><br><span class="line">   should be treated as a terminal component only.  Portable</span><br><span class="line">   specification of directory paths might possibly be done in the future</span><br><span class="line">   via a separate Content-Disposition parameter, but no provision is</span><br><span class="line">   made for it in this draft.</span><br><span class="line"></span><br><span class="line">   Current [RFC 1521] grammar restricts parameter values (and hence</span><br><span class="line">   Content-Disposition filenames) to US-ASCII.  We recognize the great</span><br><span class="line">   desirability of allowing arbitrary character sets in filenames, but</span><br><span class="line">   it is beyond the scope of this document to define the necessary</span><br><span class="line">   mechanisms.  We expect that the basic [RFC 1521] `value&apos;</span><br><span class="line">   specification will someday be amended to allow use of non-US-ASCII</span><br><span class="line">   characters, at which time the same mechanism should be used in the</span><br><span class="line">   Content-Disposition filename parameter.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 3]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Beyond the limitation to US-ASCII, the sending MUA may wish to bear</span><br><span class="line">   in mind the limitations of common filesystems.  Many have severe</span><br><span class="line">   length and character set restrictions.  Short alphanumeric filenames</span><br><span class="line">   are least likely to require modification by the receiving system.</span><br><span class="line"></span><br><span class="line">   The presence of the filename parameter does not force an</span><br><span class="line">   implementation to write the entity to a separate file. It is</span><br><span class="line">   perfectly acceptable for implementations to leave the entity as part</span><br><span class="line">   of the normal mail stream unless the user requests otherwise. As a</span><br><span class="line">   consequence, the parameter may be used on any MIME entity, even</span><br><span class="line">   `inline&apos; ones. These will not normally be written to files, but the</span><br><span class="line">   parameter could be used to provide a filename if the receiving user</span><br><span class="line">   should choose to write the part to a file.</span><br><span class="line"></span><br><span class="line">2.4  Future Extensions and Unrecognized Disposition Types</span><br><span class="line"></span><br><span class="line">   In the likely event that new parameters or disposition types are</span><br><span class="line">   needed, they should be registered with the IANA, in the manner</span><br><span class="line">   specified in [RFC 1521], appendix E.</span><br><span class="line"></span><br><span class="line">   Once new disposition types and parameters are defined, there is of</span><br><span class="line">   course the likelihood that implementations will see disposition types</span><br><span class="line">   and parameters they do not understand.  Furthermore, since x-tokens</span><br><span class="line">   are allowed, implementations may also see entirely unregistered</span><br><span class="line">   disposition types and parameters.</span><br><span class="line"></span><br><span class="line">   Unrecognized parameters should be ignored. Unrecognized disposition</span><br><span class="line">   types should be treated as `attachment&apos;. The choice of `attachment&apos;</span><br><span class="line">   for unrecognized types is made because a sender who goes to the</span><br><span class="line">   trouble of producing a Content-Disposition header with a new</span><br><span class="line">   disposition type is more likely aiming for something more elaborate</span><br><span class="line">   than inline presentation.</span><br><span class="line"></span><br><span class="line">   Unless noted otherwise in the definition of a parameter, Content-</span><br><span class="line">   Disposition parameters are valid for all dispositions.  (In contrast</span><br><span class="line">   to [RFC 1521] content-type parameters, which are defined on a per-</span><br><span class="line">   content-type basis.) Thus, for example, the `filename&apos; parameter</span><br><span class="line">   still means the name of the file to which the part should be written,</span><br><span class="line">   even if the disposition itself is unrecognized.</span><br><span class="line"></span><br><span class="line">2.5  Content-Disposition and Multipart</span><br><span class="line"></span><br><span class="line">   If a Content-Disposition header is used on a multipart body part, it</span><br><span class="line">   applies to the multipart as a whole, not the individual subparts.</span><br><span class="line">   The disposition types of the subparts do not need to be consulted</span><br><span class="line">   until the multipart itself is presented.  When the multipart is</span><br><span class="line">   displayed, then the dispositions of the subparts should be respected.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 4]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   If the `inline&apos; disposition is used, the multipart should be</span><br><span class="line">   displayed as normal; however, an `attachment&apos; subpart should require</span><br><span class="line">   action from the user to display.</span><br><span class="line"></span><br><span class="line">   If the `attachment&apos; disposition is used, presentation of the</span><br><span class="line">   multipart should not proceed without explicit user action.  Once the</span><br><span class="line">   user has chosen to display the multipart, the individual subpart</span><br><span class="line">   dispositions should be consulted to determine how to present the</span><br><span class="line">   subparts.</span><br><span class="line"></span><br><span class="line">2.6  Content-Disposition and the Main Message</span><br><span class="line"></span><br><span class="line">   It is permissible to use Content-Disposition on the main body of an</span><br><span class="line">   [RFC 822] message.</span><br><span class="line"></span><br><span class="line">3.  Examples</span><br><span class="line"></span><br><span class="line">   Here is a an example of a body part containing a JPEG image that is</span><br><span class="line">   intended to be viewed by the user immediately:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: inline</span><br><span class="line">         Content-Description: just a small picture of me</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following body part contains a JPEG image that should be</span><br><span class="line">   displayed to the user only if the user requests it. If the JPEG is</span><br><span class="line">   written to a file, the file should be named &quot;genome.jpg&quot;:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: attachment; filename=genome.jpeg</span><br><span class="line">         Content-Description: a complete map of the human genome</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following is an example of the use of the `attachment&apos;</span><br><span class="line">   disposition with a multipart body part.  The user should see text-</span><br><span class="line">   part-1 immediately, then take some action to view multipart-2.  After</span><br><span class="line">   taking action to view multipart-2, the user will see text-part-2</span><br><span class="line">   right away, and be required to take action to view jpeg-1.  Subparts</span><br><span class="line">   are indented for clarity; they would not be so indented in a real</span><br><span class="line">   message.</span><br><span class="line"></span><br><span class="line">         Content-Type: multipart/mixed; boundary=outer</span><br><span class="line">         Content-Description: multipart-1</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 5]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">           Content-Type: text/plain</span><br><span class="line">           Content-Disposition: inline</span><br><span class="line">           Content-Description: text-part-1</span><br><span class="line"></span><br><span class="line">           Some text goes here</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line">           Content-Type: multipart/mixed; boundary=inner</span><br><span class="line">           Content-Disposition: attachment</span><br><span class="line">           Content-Description: multipart-2</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: text/plain</span><br><span class="line">             Content-Disposition: inline</span><br><span class="line">             Content-Description: text-part-2</span><br><span class="line"></span><br><span class="line">             Some more text here.</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: image/jpeg</span><br><span class="line">             Content-Disposition: attachment</span><br><span class="line">             Content-Description: jpeg-1</span><br><span class="line"></span><br><span class="line">             &lt;jpeg data&gt;</span><br><span class="line">           --inner--</span><br><span class="line">         --outer--</span><br><span class="line"></span><br><span class="line">4.  Summary</span><br><span class="line"></span><br><span class="line">   Content-Disposition takes one of two values, `inline&apos; and</span><br><span class="line">   `attachment&apos;.  &apos;Inline&apos; indicates that the entity should be</span><br><span class="line">   immediately displayed to the user, whereas `attachment&apos; means that</span><br><span class="line">   the user should take additional action to view the entity.</span><br><span class="line"></span><br><span class="line">   The `filename&apos; parameter can be used to suggest a filename for</span><br><span class="line">   storing the bodypart, if the user wishes to store it in an external</span><br><span class="line">   file.</span><br><span class="line"></span><br><span class="line">5.  Security Considerations</span><br><span class="line"></span><br><span class="line">   There are security issues involved any time users exchange data.</span><br><span class="line">   While these are not to be minimized, neither does this memo change</span><br><span class="line">   the status quo in that regard, except in one instance.</span><br><span class="line"></span><br><span class="line">   Since this memo provides a way for the sender to suggest a filename,</span><br><span class="line">   a receiving MUA must take care that the sender&apos;s suggested filename</span><br><span class="line">   does not represent a hazard. Using UNIX as an example, some hazards</span><br><span class="line">   would be:</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 6]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          + Creating startup files (e.g., &quot;.login&quot;).</span><br><span class="line"></span><br><span class="line">          + Creating or overwriting system files (e.g.,</span><br><span class="line">            &quot;/etc/passwd&quot;).</span><br><span class="line"></span><br><span class="line">          + Overwriting any existing file.</span><br><span class="line"></span><br><span class="line">          + Placing executable files into any command search path</span><br><span class="line">            (e.g., &quot;~/bin/more&quot;).</span><br><span class="line"></span><br><span class="line">          + Sending the file to a pipe (e.g., &quot;| sh&quot;).</span><br><span class="line"></span><br><span class="line">   In general, the receiving MUA should never name or place the file</span><br><span class="line">   such that it will get interpreted or executed without the user</span><br><span class="line">   explicitly initiating the action.</span><br><span class="line"></span><br><span class="line">   It is very important to note that this is not an exhaustive list; it</span><br><span class="line">   is intended as a small set of examples only.  Implementors must be</span><br><span class="line">   alert to the potential hazards on their target systems.</span><br><span class="line"></span><br><span class="line">6.  References</span><br><span class="line"></span><br><span class="line">    [RFC 1521]</span><br><span class="line">        Borenstein N., and N. Freed, &quot;MIME (Multipurpose Internet</span><br><span class="line">        Mail Extensions) Part One:  Mechanisms for Specifying and</span><br><span class="line">        Describing the Format of Internet Message Bodies&quot;,</span><br><span class="line">        RFC 1521, Bellcore, Innosoft, September 1993.</span><br><span class="line"></span><br><span class="line">    [RFC 822]</span><br><span class="line">        Crocker, D., &quot;Standard for the Format of ARPA Internet</span><br><span class="line">        Text Messages&quot;, STD 11, RFC 822, UDEL, August 1982.</span><br><span class="line"></span><br><span class="line">7.  Acknowledgements</span><br><span class="line"></span><br><span class="line">We gratefully acknowledge the help these people provided</span><br><span class="line">during the preparation of this draft:</span><br><span class="line"></span><br><span class="line">            Nathaniel Borenstein</span><br><span class="line">            Ned Freed</span><br><span class="line">            Keith Moore</span><br><span class="line">            Dave Crocker</span><br><span class="line">            Dan Pritchett</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 7]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">8.  Authors&apos; Addresses</span><br><span class="line"></span><br><span class="line">   Rens Troost</span><br><span class="line">   New Century Systems</span><br><span class="line">   324 East 41st Street #804</span><br><span class="line">   New York, NY, 10017 USA</span><br><span class="line"></span><br><span class="line">   Phone: +1 (212) 557-2050</span><br><span class="line">   Fax: +1 (212) 557-2049</span><br><span class="line">   EMail: rens@century.com</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Steve Dorner</span><br><span class="line">   QUALCOMM Incorporated</span><br><span class="line">   6455 Lusk Boulevard</span><br><span class="line">   San Diego, CA 92121</span><br><span class="line">   USA</span><br><span class="line"></span><br><span class="line">   EMail: sdorner@qualcomm.com</span><br></pre></td></tr></table></figure>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">upload file</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/01/07/Content-Disposition header/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-进程间的IPC通信机制" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/26/进程间的IPC通信机制/">进程间通信机制</a>
-    </h1>
-  
-
-        
-        <a href="/2018/12/26/进程间的IPC通信机制/" class="archive-article-date">
-  	<time datetime="2018-12-26T02:52:05.644Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-12-26</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。</p>
-<h2 id="进程间通信方式"><a href="#进程间通信方式" class="headerlink" title="进程间通信方式"></a>进程间通信方式</h2><p>Linux进程间的基本通信方式主要有：管道（PIPE）（包括匿名管道和命名管道），信号（signal），消息队列（message queue），信号量，共享内存，内存映射，套接字。</p>
-<h4 id="1-管道"><a href="#1-管道" class="headerlink" title="1.管道"></a>1.管道</h4><p>管道实际上是由<strong>内核管理的缓冲区</strong>，位于管道两端的进程利用管道来传递消息。</p>
-<p>管道的一端连接一个输出进程，由输出进程向管道中存放数据，而另外一端连接一个输入进程（<strong>单向传输</strong>），用来取管道中的数据，当管道中数据小于512字节（<strong>基于字节流</strong>）时，保证写入的原子性；当管道中数据大于512字节时，不保证写入的原子性；当两个进程都终结的时候，管道也随之消失（<strong>生命周期随进程终结</strong>）。</p>
-<p>如下给出了两种描绘<strong>半双工管道</strong>的方法，左图中管道的两端在一个进程中相互连接，右图中则强调数据需要通过内核在管道中流动：</p>
-<p><img src="/2018/12/26/进程间的IPC通信机制/管道1.png" alt="管道"></p>
-<p>管道通常在单个进程中没有太大用处，下图显示了父子进程之间的管道：<strong>进程先调用</strong>pipe，接着调用fork，从而创建从父进程到子进程的IPC管道：</p>
-<p><img src="/2018/12/26/进程间的IPC通信机制/管道2.png" alt="管道"></p>
-<p>fork之后具体要做什么取决于我们想要的数据流的方向。对于从父进程到子进程的管道，父进程关闭管道的读端（fd[0]），子进程关闭管道的写端（fd[1]）：</p>
-<p><img src="/2018/12/26/进程间的IPC通信机制/管道3.png" alt="管道"><br>管道根据是否有名字，分为匿名管道和有名管道，这两种管道有一些区别：</p>
-<pre><code>1. 管道是半双工的，数据只能在一个方向流动，如上图，输出进程只能给输入进程传递，不能反向传递。
-2. 匿名管道只能用于具有亲缘关系的进程之间通信，有名管道可允许没有亲缘关系的进程通信。
-3. 匿名管道的管道对文件系统不可见，有名管道对文件系统可见。
-4. 命名管道创建完成后就可以使用，使用方法与匿名管道一样，区别在于：命名管道使用之前需要open（）打开。这是因为：命名管道是设备文件，是存储在硬盘上，而匿名管道是存在内存中的特殊文件。命名管道调用open时有可能会阻塞，但是如果以读写方式（O_RDWR）打开则一定不会阻塞；以只读方式（O_RONLY）打开时，调用open（）的函数会被阻塞直到有数据可读；如果以只写的方式（O_WONLY）打开同样也会被阻塞，直到有以只读方式打开该管道。
-</code></pre><h5 id="管道的特殊情况（自带同步互斥效果）"><a href="#管道的特殊情况（自带同步互斥效果）" class="headerlink" title="管道的特殊情况（自带同步互斥效果）"></a>管道的特殊情况（自带同步互斥效果）</h5><pre><code>1. 管道的写端进程关闭（指向管道写端的文件描述符），但是读端仍然进程在管道的读端读数据，此时，当文件内的数据被读完后，再次read就会返回0，就像读到文件的结尾。
-2. 管道的写端进程并未关闭（管道写端的引用计数大于1），只是停止向管道中写数据，此时，若有读端的进程在读数据，等管道内剩余数据读完以后，就会阻塞等待，直到有数据可读返回。
-3. 管道的所有读端进程都关闭（指向管道读端的文件描述符），此时，若是有管道写端的的进程向管道内写数据时，该进程就会收到SIGPIPE信号，并异常终止。
-4. 管道的读端进程未关闭，而管道读端的进程并未读区数据，假如此时写端有进程向管道中写数据，等管道写满后就会被阻塞，直到管道有空位置后再写入数据并返回。
-</code></pre><h4 id="2-信号"><a href="#2-信号" class="headerlink" title="2. 信号"></a>2. 信号</h4><p>用于一个或几个进程之间传递异步信号。</p>
-<h4 id="3-消息队列"><a href="#3-消息队列" class="headerlink" title="3.消息队列"></a>3.消息队列</h4><p>消息队列实际上是内核地址空间的内部链表。</p>
-<pre><code>1. 每个消息队列由IPC 标识符唯一地址进行识别。
-2. 不同的消息队列之间相互独立。
-3. 每个消息队列中的消息，又构成一个独立的链表。
-4. 克服了信号承载量少和管道只能承载无格式字符流的缺点。
-</code></pre><p>优点：</p>
-<ol>
-<li>可独立于发送和接收进程存在。</li>
-<li>不需要进程自己提供同步方法，可避免命名管道的同步与阻塞问题。</li>
-<li>可以有选择性的接收数据。</li>
-</ol>
-<p>消息主要由消息类型和消息数据组成，通过msgsnd发送消息，通过msgrcv接收消息。接收消息时，不一定按照先进先出原则，因为可以选择类型接收消息。</p>
-<h4 id="4-信号量"><a href="#4-信号量" class="headerlink" title="4.信号量"></a>4.信号量</h4><p>信号量实际上是一个计数器，控制多个进程对同一资源的访问。</p>
-<h5 id="信号量的工作原理"><a href="#信号量的工作原理" class="headerlink" title="信号量的工作原理"></a>信号量的工作原理</h5><p>由于信号量只能进行两种操作，等待和发送信号，即PV操作。P-&gt; 申请资源，V-&gt; 释放资源。(pv操作都是原子操作，因为需要保护临界资源)</p>
-<p>P(sv):   当 sv&gt;0 时， sv = sv - 1；</p>
-<p>​        当 sv=0 时， 挂起改进程的执行。</p>
-<p>V(sv):  如果有进程挂起，则恢复其运行。如果没有进程挂起（等待），sv = sv +1。</p>
-<p>注：原子操作：单指令的操作称为原子的，单条指令的执行是不会被打断的。</p>
-<h4 id="5-共享内存"><a href="#5-共享内存" class="headerlink" title="5.共享内存"></a>5.共享内存</h4><p>共享内存是在多个进程之间共享内存区域的一种进程间的通信方式 (最快捷的方式) ，有IPC为进程创建的一个特殊地址范围，它将出现在该进程的地址空间中，其他进程可以将同一共享内存连接到自己的地址空间中，所有进程都可以访问共享的内存地址，就好像是malloc分配到的一样。当一个进程改变了这块地址中的内容的时候，其他进程都会察觉到这个更改。未提供同步机制，通常需要用其他的机制来同步对共享内存的访问，例如信号量。 </p>
-<p>在Linux中，每个进程都有属于自己的进程控制块（PCB）和地址空间（Addr Space），并且都有一个与之对应的页表，负责将进程的虚拟地址与物理地址进行映射，通过内存管理单元（MMU）进行管理。两个不同的虚拟地址通过页表映射到物理空间的同一区域，它们所指向的这块区域即共享内存。</p>
-<p><img src="/2018/12/26/进程间的IPC通信机制/共享内存.png" alt="共享内存"></p>
-<p>因为共享内存方式的通信没有中间过程，而管道、消息队列等方式则是需要将数据通过中间机制进行转换。共享内存方式直接将某段内存段进行映射，多个进程间的共享内存是同一块的物理空间，仅仅映射到各进程的地址不同而已，因此不需要进行复制，可以直接使用此段空间。</p>
-<h4 id="6-内存映射"><a href="#6-内存映射" class="headerlink" title="6.内存映射"></a>6.内存映射</h4><p>内存映射文件，是由一个文件到一块内存的映射。内存映射文件与虚拟内存有些类似，通过内存映射文件可以保留一个地址的区域，内存文件映射的物理存储器来自一个已经存在于磁盘上的文件，而且在对该文件进行操作之前必须首先对文件进行映射。使用内存映射文件处理存储于磁盘上的文件时，将不必再对文件执行I/O操作。每一个使用该机制的进程通过把同一个共享的文件映射到自己的进程地址空间来实现多个进程间的通信（这里类似于共享内存，只要有一个进程对这块映射文件的内存进行操作，其他进程也能够马上看到）。</p>
-<h5 id="共享内存和内存映射文件的区别："><a href="#共享内存和内存映射文件的区别：" class="headerlink" title="共享内存和内存映射文件的区别："></a>共享内存和内存映射文件的区别：</h5><p>​    内存映射文件是利用虚拟内存把文件映射到进程的地址空间中去，在此之后进程操作文件，就像操作进程空间里的地址一样了，比如使用c语言的memcpy等内存操作的函数。这种方法能够很好的应用在需要频繁处理一个文件或者是一个大文件的场合，这种方式处理IO效率比普通IO效率要高<br>　　共享内存是内存映射文件的一种特殊情况，内存映射的是一块内存，而非磁盘上的文件。共享内存的主语是进程（Process），操作系统默认会给每一个进程分配一个内存空间，每一个进程只允许访问操作系统分配给它的哪一段内存，而不能访问其他进程的。而有时候需要在不同进程之间访问同一段内存，怎么办呢？操作系统给出了 创建访问共享内存的API，需要共享内存的进程可以通过这一组定义好的API来访问多个进程之间共有的内存，各个进程访问这一段内存就像访问一个硬盘上的文件一样。</p>
-<h5 id="内存映射文件与虚拟内存的区别和联系："><a href="#内存映射文件与虚拟内存的区别和联系：" class="headerlink" title="内存映射文件与虚拟内存的区别和联系："></a>内存映射文件与虚拟内存的区别和联系：</h5><p>内存映射文件和虚拟内存都是操作系统内存管理的重要部分，两者有相似点也有不同点。<br>​    联系：虚拟内存和内存映射都是将一部分内容加载到内存，另一部放在磁盘上的一种机制。对于用户而言都是透明的。<br>​    区别：虚拟内存是硬盘的一部分，是内存和硬盘的数据交换区，许多程序运行过程中把暂时不用的程序数据放入这块虚拟内存，节约内存资源。内存映射是一个文件到一块内存的映射，这样程序通过内存指针就可以对文件进行访问。</p>
-<p>虚拟内存的硬件基础是分页机制。另外一个基础就是局部性原理（时间局部性和空间局部性），这样就可以将程序的一部分装入内存，其余部分留在外存，当访问信息不存在，再将所需数据调入内存。而内存映射文件并不是局部性，而是使虚拟地址空间的某个区域银蛇磁盘的全部或部分内容，通过该区域对被映射的磁盘文件进行访问，不必进行文件I/O也不需要对文件内容进行缓冲处理。</p>
-<h4 id="7-套接字"><a href="#7-套接字" class="headerlink" title="7.套接字"></a>7.套接字</h4><p>套接字机制不但可以单机的不同进程通信，而且使得跨网机器间进程可以通信。<br>套接字的创建和使用与管道是有区别的，套接字明确地将客户端与服务器区分开来，可以实现多个客户端连到同一服务器。 </p>
-<p><img src="https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=f9825ddda364034f1bc0ca54ceaa1254/3b87e950352ac65ca241f573f3f2b21193138a6e.jpg" alt="img"></p>
-<p><img src="https://gss0.bdstatic.com/-4o3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=2225b8644fed2e73e8e48e7ee668caee/a2cc7cd98d1001e92d5e43efbd0e7bec55e797eb.jpg" alt="img"></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/12/26/进程间的IPC通信机制/">展开全文 >></a>
         </p>
       
 

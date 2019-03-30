@@ -6,15 +6,27 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Archives: 2019/1 | Archer</title>
+  <title>进程间通信机制 | Archer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Archer">
-<meta property="og:url" content="https://yangyaq.github.io/archives/2019/01/index.html">
+  <meta name="description" content="进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。 进程间通信方式Linux进程间的基本通信方式主要有：管">
+<meta name="keywords" content="IPC,linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程间通信机制">
+<meta property="og:url" content="https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/index.html">
 <meta property="og:site_name" content="Archer">
+<meta property="og:description" content="进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。 进程间通信方式Linux进程间的基本通信方式主要有：管">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/管道1.png">
+<meta property="og:image" content="https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/管道2.png">
+<meta property="og:image" content="https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/管道3.png">
+<meta property="og:image" content="https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/共享内存.png">
+<meta property="og:image" content="https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=f9825ddda364034f1bc0ca54ceaa1254/3b87e950352ac65ca241f573f3f2b21193138a6e.jpg">
+<meta property="og:image" content="https://gss0.bdstatic.com/-4o3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=2225b8644fed2e73e8e48e7ee668caee/a2cc7cd98d1001e92d5e43efbd0e7bec55e797eb.jpg">
+<meta property="og:updated_time" content="2019-03-30T13:30:37.822Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Archer">
+<meta name="twitter:title" content="进程间通信机制">
+<meta name="twitter:description" content="进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。 进程间通信方式Linux进程间的基本通信方式主要有：管">
+<meta name="twitter:image" content="https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/管道1.png">
   
     <link rel="alternative" href="/atom.xml" title="Archer" type="application/atom+xml">
   
@@ -142,143 +154,253 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-进程间的IPC通信机制" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/01/12/CSRF攻击原理及防御/" class="archive-article-date">
-  	<time datetime="2019-01-12T12:10:44.794Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-01-12</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/12/CSRF攻击原理及防御/">CSRF攻击原理及防御</a>
+    <h1 class="article-title" itemprop="name">
+      进程间通信机制
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/03/30/进程间的IPC通信机制/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:30:37.825Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。</p>
+<h2 id="进程间通信方式"><a href="#进程间通信方式" class="headerlink" title="进程间通信方式"></a>进程间通信方式</h2><p>Linux进程间的基本通信方式主要有：管道（PIPE）（包括匿名管道和命名管道），信号（signal），消息队列（message queue），信号量，共享内存，内存映射，套接字。</p>
+<h4 id="1-管道"><a href="#1-管道" class="headerlink" title="1.管道"></a>1.管道</h4><p>管道实际上是由<strong>内核管理的缓冲区</strong>，位于管道两端的进程利用管道来传递消息。</p>
+<p>管道的一端连接一个输出进程，由输出进程向管道中存放数据，而另外一端连接一个输入进程（<strong>单向传输</strong>），用来取管道中的数据，当管道中数据小于512字节（<strong>基于字节流</strong>）时，保证写入的原子性；当管道中数据大于512字节时，不保证写入的原子性；当两个进程都终结的时候，管道也随之消失（<strong>生命周期随进程终结</strong>）。</p>
+<p>如下给出了两种描绘<strong>半双工管道</strong>的方法，左图中管道的两端在一个进程中相互连接，右图中则强调数据需要通过内核在管道中流动：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道1.png" alt="管道"></p>
+<p>管道通常在单个进程中没有太大用处，下图显示了父子进程之间的管道：<strong>进程先调用</strong>pipe，接着调用fork，从而创建从父进程到子进程的IPC管道：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道2.png" alt="管道"></p>
+<p>fork之后具体要做什么取决于我们想要的数据流的方向。对于从父进程到子进程的管道，父进程关闭管道的读端（fd[0]），子进程关闭管道的写端（fd[1]）：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道3.png" alt="管道"><br>管道根据是否有名字，分为匿名管道和有名管道，这两种管道有一些区别：</p>
+<pre><code>1. 管道是半双工的，数据只能在一个方向流动，如上图，输出进程只能给输入进程传递，不能反向传递。
+2. 匿名管道只能用于具有亲缘关系的进程之间通信，有名管道可允许没有亲缘关系的进程通信。
+3. 匿名管道的管道对文件系统不可见，有名管道对文件系统可见。
+4. 命名管道创建完成后就可以使用，使用方法与匿名管道一样，区别在于：命名管道使用之前需要open（）打开。这是因为：命名管道是设备文件，是存储在硬盘上，而匿名管道是存在内存中的特殊文件。命名管道调用open时有可能会阻塞，但是如果以读写方式（O_RDWR）打开则一定不会阻塞；以只读方式（O_RONLY）打开时，调用open（）的函数会被阻塞直到有数据可读；如果以只写的方式（O_WONLY）打开同样也会被阻塞，直到有以只读方式打开该管道。
+</code></pre><h5 id="管道的特殊情况（自带同步互斥效果）"><a href="#管道的特殊情况（自带同步互斥效果）" class="headerlink" title="管道的特殊情况（自带同步互斥效果）"></a>管道的特殊情况（自带同步互斥效果）</h5><pre><code>1. 管道的写端进程关闭（指向管道写端的文件描述符），但是读端仍然进程在管道的读端读数据，此时，当文件内的数据被读完后，再次read就会返回0，就像读到文件的结尾。
+2. 管道的写端进程并未关闭（管道写端的引用计数大于1），只是停止向管道中写数据，此时，若有读端的进程在读数据，等管道内剩余数据读完以后，就会阻塞等待，直到有数据可读返回。
+3. 管道的所有读端进程都关闭（指向管道读端的文件描述符），此时，若是有管道写端的的进程向管道内写数据时，该进程就会收到SIGPIPE信号，并异常终止。
+4. 管道的读端进程未关闭，而管道读端的进程并未读区数据，假如此时写端有进程向管道中写数据，等管道写满后就会被阻塞，直到管道有空位置后再写入数据并返回。
+</code></pre><h4 id="2-信号"><a href="#2-信号" class="headerlink" title="2. 信号"></a>2. 信号</h4><p>用于一个或几个进程之间传递异步信号。</p>
+<h4 id="3-消息队列"><a href="#3-消息队列" class="headerlink" title="3.消息队列"></a>3.消息队列</h4><p>消息队列实际上是内核地址空间的内部链表。</p>
+<pre><code>1. 每个消息队列由IPC 标识符唯一地址进行识别。
+2. 不同的消息队列之间相互独立。
+3. 每个消息队列中的消息，又构成一个独立的链表。
+4. 克服了信号承载量少和管道只能承载无格式字符流的缺点。
+</code></pre><p>优点：</p>
+<ol>
+<li>可独立于发送和接收进程存在。</li>
+<li>不需要进程自己提供同步方法，可避免命名管道的同步与阻塞问题。</li>
+<li>可以有选择性的接收数据。</li>
+</ol>
+<p>消息主要由消息类型和消息数据组成，通过msgsnd发送消息，通过msgrcv接收消息。接收消息时，不一定按照先进先出原则，因为可以选择类型接收消息。</p>
+<h4 id="4-信号量"><a href="#4-信号量" class="headerlink" title="4.信号量"></a>4.信号量</h4><p>信号量实际上是一个计数器，控制多个进程对同一资源的访问。</p>
+<h5 id="信号量的工作原理"><a href="#信号量的工作原理" class="headerlink" title="信号量的工作原理"></a>信号量的工作原理</h5><p>由于信号量只能进行两种操作，等待和发送信号，即PV操作。P-&gt; 申请资源，V-&gt; 释放资源。(pv操作都是原子操作，因为需要保护临界资源)</p>
+<p>P(sv):   当 sv&gt;0 时， sv = sv - 1；</p>
+<p>​        当 sv=0 时， 挂起改进程的执行。</p>
+<p>V(sv):  如果有进程挂起，则恢复其运行。如果没有进程挂起（等待），sv = sv +1。</p>
+<p>注：原子操作：单指令的操作称为原子的，单条指令的执行是不会被打断的。</p>
+<h4 id="5-共享内存"><a href="#5-共享内存" class="headerlink" title="5.共享内存"></a>5.共享内存</h4><p>共享内存是在多个进程之间共享内存区域的一种进程间的通信方式 (最快捷的方式) ，有IPC为进程创建的一个特殊地址范围，它将出现在该进程的地址空间中，其他进程可以将同一共享内存连接到自己的地址空间中，所有进程都可以访问共享的内存地址，就好像是malloc分配到的一样。当一个进程改变了这块地址中的内容的时候，其他进程都会察觉到这个更改。未提供同步机制，通常需要用其他的机制来同步对共享内存的访问，例如信号量。 </p>
+<p>在Linux中，每个进程都有属于自己的进程控制块（PCB）和地址空间（Addr Space），并且都有一个与之对应的页表，负责将进程的虚拟地址与物理地址进行映射，通过内存管理单元（MMU）进行管理。两个不同的虚拟地址通过页表映射到物理空间的同一区域，它们所指向的这块区域即共享内存。</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/共享内存.png" alt="共享内存"></p>
+<p>因为共享内存方式的通信没有中间过程，而管道、消息队列等方式则是需要将数据通过中间机制进行转换。共享内存方式直接将某段内存段进行映射，多个进程间的共享内存是同一块的物理空间，仅仅映射到各进程的地址不同而已，因此不需要进行复制，可以直接使用此段空间。</p>
+<h4 id="6-内存映射"><a href="#6-内存映射" class="headerlink" title="6.内存映射"></a>6.内存映射</h4><p>内存映射文件，是由一个文件到一块内存的映射。内存映射文件与虚拟内存有些类似，通过内存映射文件可以保留一个地址的区域，内存文件映射的物理存储器来自一个已经存在于磁盘上的文件，而且在对该文件进行操作之前必须首先对文件进行映射。使用内存映射文件处理存储于磁盘上的文件时，将不必再对文件执行I/O操作。每一个使用该机制的进程通过把同一个共享的文件映射到自己的进程地址空间来实现多个进程间的通信（这里类似于共享内存，只要有一个进程对这块映射文件的内存进行操作，其他进程也能够马上看到）。</p>
+<h5 id="共享内存和内存映射文件的区别："><a href="#共享内存和内存映射文件的区别：" class="headerlink" title="共享内存和内存映射文件的区别："></a>共享内存和内存映射文件的区别：</h5><p>​    内存映射文件是利用虚拟内存把文件映射到进程的地址空间中去，在此之后进程操作文件，就像操作进程空间里的地址一样了，比如使用c语言的memcpy等内存操作的函数。这种方法能够很好的应用在需要频繁处理一个文件或者是一个大文件的场合，这种方式处理IO效率比普通IO效率要高<br>　　共享内存是内存映射文件的一种特殊情况，内存映射的是一块内存，而非磁盘上的文件。共享内存的主语是进程（Process），操作系统默认会给每一个进程分配一个内存空间，每一个进程只允许访问操作系统分配给它的哪一段内存，而不能访问其他进程的。而有时候需要在不同进程之间访问同一段内存，怎么办呢？操作系统给出了 创建访问共享内存的API，需要共享内存的进程可以通过这一组定义好的API来访问多个进程之间共有的内存，各个进程访问这一段内存就像访问一个硬盘上的文件一样。</p>
+<h5 id="内存映射文件与虚拟内存的区别和联系："><a href="#内存映射文件与虚拟内存的区别和联系：" class="headerlink" title="内存映射文件与虚拟内存的区别和联系："></a>内存映射文件与虚拟内存的区别和联系：</h5><p>内存映射文件和虚拟内存都是操作系统内存管理的重要部分，两者有相似点也有不同点。<br>​    联系：虚拟内存和内存映射都是将一部分内容加载到内存，另一部放在磁盘上的一种机制。对于用户而言都是透明的。<br>​    区别：虚拟内存是硬盘的一部分，是内存和硬盘的数据交换区，许多程序运行过程中把暂时不用的程序数据放入这块虚拟内存，节约内存资源。内存映射是一个文件到一块内存的映射，这样程序通过内存指针就可以对文件进行访问。</p>
+<p>虚拟内存的硬件基础是分页机制。另外一个基础就是局部性原理（时间局部性和空间局部性），这样就可以将程序的一部分装入内存，其余部分留在外存，当访问信息不存在，再将所需数据调入内存。而内存映射文件并不是局部性，而是使虚拟地址空间的某个区域银蛇磁盘的全部或部分内容，通过该区域对被映射的磁盘文件进行访问，不必进行文件I/O也不需要对文件内容进行缓冲处理。</p>
+<h4 id="7-套接字"><a href="#7-套接字" class="headerlink" title="7.套接字"></a>7.套接字</h4><p>套接字机制不但可以单机的不同进程通信，而且使得跨网机器间进程可以通信。<br>套接字的创建和使用与管道是有区别的，套接字明确地将客户端与服务器区分开来，可以实现多个客户端连到同一服务器。 </p>
+<p><img src="https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=f9825ddda364034f1bc0ca54ceaa1254/3b87e950352ac65ca241f573f3f2b21193138a6e.jpg" alt="img"></p>
+<p><img src="https://gss0.bdstatic.com/-4o3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=2225b8644fed2e73e8e48e7ee668caee/a2cc7cd98d1001e92d5e43efbd0e7bec55e797eb.jpg" alt="img"></p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/01/12/pylint_runtime_error/" class="archive-article-date">
-  	<time datetime="2019-01-12T09:06:38.406Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-01-12</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/12/pylint_runtime_error/">pylint RuntimeError Inconsistent hierarchy</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">python3</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">pylint</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/03/30/进程间的IPC通信机制/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/01/07/Content-Disposition header/" class="archive-article-date">
-  	<time datetime="2019-01-07T10:05:35.783Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-01-07</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/03/30/pylint_runtime_error/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">pylint RuntimeError Inconsistent hierarchy</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/07/Content-Disposition header/">Content-Disposition</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">upload file</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#进程间通信方式"><span class="toc-number">1.</span> <span class="toc-text">进程间通信方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-管道"><span class="toc-number">1.0.1.</span> <span class="toc-text">1.管道</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#管道的特殊情况（自带同步互斥效果）"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">管道的特殊情况（自带同步互斥效果）</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-信号"><span class="toc-number">1.0.2.</span> <span class="toc-text">2. 信号</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-消息队列"><span class="toc-number">1.0.3.</span> <span class="toc-text">3.消息队列</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-信号量"><span class="toc-number">1.0.4.</span> <span class="toc-text">4.信号量</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#信号量的工作原理"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">信号量的工作原理</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-共享内存"><span class="toc-number">1.0.5.</span> <span class="toc-text">5.共享内存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-内存映射"><span class="toc-number">1.0.6.</span> <span class="toc-text">6.内存映射</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#共享内存和内存映射文件的区别："><span class="toc-number">1.0.6.1.</span> <span class="toc-text">共享内存和内存映射文件的区别：</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#内存映射文件与虚拟内存的区别和联系："><span class="toc-number">1.0.6.2.</span> <span class="toc-text">内存映射文件与虚拟内存的区别和联系：</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-套接字"><span class="toc-number">1.0.7.</span> <span class="toc-text">7.套接字</span></a></li></ol></li></ol>
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+        
+    </div>
+</aside>
+
+
 
   
   
-    </div></section>
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: location.pathname,
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -301,8 +423,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

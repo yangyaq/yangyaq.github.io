@@ -6,20 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>pylint RuntimeError Inconsistent hierarchy | Archer</title>
+  <title>CSRF攻击原理及防御 | Archer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="下面的pip分别是激活对应虚拟环境下的默认pip版本 在python2 安装 pylintpip install pylint 安装完成后。 pylint -h #运行正常 运行OK，版本如下： pylint --version#输出No config file found, using default configurationpylint 1.9.3, astroid 1.6.5Python">
-<meta name="keywords" content="python3,pylint">
+  <meta name="description" content="一、CSRF介绍CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。 二、 浏览器同源策略同源策略（Same origin policy）是一种约定，它是浏览器最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略">
+<meta name="keywords" content="CSRF">
 <meta property="og:type" content="article">
-<meta property="og:title" content="pylint RuntimeError Inconsistent hierarchy">
-<meta property="og:url" content="https://yangyaq.github.io/2019/01/12/pylint_runtime_error/index.html">
+<meta property="og:title" content="CSRF攻击原理及防御">
+<meta property="og:url" content="https://yangyaq.github.io/2019/03/30/CSRF攻击原理及防御/index.html">
 <meta property="og:site_name" content="Archer">
-<meta property="og:description" content="下面的pip分别是激活对应虚拟环境下的默认pip版本 在python2 安装 pylintpip install pylint 安装完成后。 pylint -h #运行正常 运行OK，版本如下： pylint --version#输出No config file found, using default configurationpylint 1.9.3, astroid 1.6.5Python">
+<meta property="og:description" content="一、CSRF介绍CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。 二、 浏览器同源策略同源策略（Same origin policy）是一种约定，它是浏览器最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-01-12T09:06:38.404Z">
+<meta property="og:updated_time" content="2019-03-30T13:29:49.271Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="pylint RuntimeError Inconsistent hierarchy">
-<meta name="twitter:description" content="下面的pip分别是激活对应虚拟环境下的默认pip版本 在python2 安装 pylintpip install pylint 安装完成后。 pylint -h #运行正常 运行OK，版本如下： pylint --version#输出No config file found, using default configurationpylint 1.9.3, astroid 1.6.5Python">
+<meta name="twitter:title" content="CSRF攻击原理及防御">
+<meta name="twitter:description" content="一、CSRF介绍CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。 二、 浏览器同源策略同源策略（Same origin policy）是一种约定，它是浏览器最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略">
   
     <link rel="alternative" href="/atom.xml" title="Archer" type="application/atom+xml">
   
@@ -147,41 +147,160 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-pylint_runtime_error" class="article article-type-post " itemscope="" itemprop="blogPost">
+            <article id="post-CSRF攻击原理及防御" class="article article-type-post " itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      pylint RuntimeError Inconsistent hierarchy
+      CSRF攻击原理及防御
     </h1>
   
 
         
-        <a href="/2019/01/12/pylint_runtime_error/" class="archive-article-date">
-  	<time datetime="2019-01-12T09:06:38.406Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-01-12</time>
+        <a href="/2019/03/30/CSRF攻击原理及防御/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:29:49.273Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>下面的pip分别是激活对应虚拟环境下的默认pip版本</p>
-<h2 id="在python2-安装-pylint"><a href="#在python2-安装-pylint" class="headerlink" title="在python2 安装 pylint"></a>在python2 安装 pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
-<p>安装完成后。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h <span class="comment">#运行正常</span></span><br></pre></td></tr></table></figure>
-<p>运行OK，版本如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint --version</span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line">No config file found, using default configuration</span><br><span class="line">pylint 1.9.3, </span><br><span class="line">astroid 1.6.5</span><br><span class="line">Python 2.7.10 (default, Aug 17 2018, 17:41:52) </span><br><span class="line">[GCC 4.2.1 Compatible Apple LLVM 10.0.0 (clang-1000.0.42)]</span><br></pre></td></tr></table></figure>
-<h2 id="在python3-安装pylint"><a href="#在python3-安装pylint" class="headerlink" title="在python3 安装pylint"></a>在python3 安装pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
-<p>显示安装成功后,运行</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment">#运行pylint</span></span><br><span class="line">pylint -h</span><br><span class="line"></span><br><span class="line"><span class="comment">#出现报错信息</span></span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 718, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = dispatch_cache[cls]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/weakref.py"</span>, line 352, <span class="keyword">in</span> __getitem__</span><br><span class="line">    <span class="built_in">return</span> self.data[ref(key)]</span><br><span class="line">KeyError: &lt;weakref at 0x103363368; to <span class="string">'EnumMeta'</span> at 0x101d59f08 (Context)&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 721, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = registry[cls]</span><br><span class="line">KeyError: &lt;enum <span class="string">'Context'</span>&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/bin/pylint"</span>, line 11, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    sys.exit(run_pylint())</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/__init__.py"</span>, line 19, <span class="keyword">in</span> run_pylint</span><br><span class="line">    Run(sys.argv[1:])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 1313, <span class="keyword">in</span> __init__</span><br><span class="line">    linter.load_default_plugins()</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 504, <span class="keyword">in</span> load_default_plugins</span><br><span class="line">    checkers.initialize(self)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/__init__.py"</span>, line 122, <span class="keyword">in</span> initialize</span><br><span class="line">    register_plugins(linter, __path__[0])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/utils.py"</span>, line 1181, <span class="keyword">in</span> register_plugins</span><br><span class="line">    module = modutils.load_module_from_file(join(directory, filename))</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 278, <span class="keyword">in</span> load_module_from_file</span><br><span class="line">    <span class="built_in">return</span> load_module_from_modpath(modpath, path, use_sys)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 239, <span class="keyword">in</span> load_module_from_modpath</span><br><span class="line">    module = imp.load_module(curname, mp_file, mp_filename, mp_desc)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 234, <span class="keyword">in</span> load_module</span><br><span class="line">    <span class="built_in">return</span> load_source(name, filename, file)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 172, <span class="keyword">in</span> load_source</span><br><span class="line">    module = _load(spec)</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 693, <span class="keyword">in</span> _load</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 673, <span class="keyword">in</span> _load_unlocked</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap_external&gt;"</span>, line 662, <span class="keyword">in</span> exec_module</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 222, <span class="keyword">in</span> _call_with_frames_removed</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 154, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    class Python3Checker(checkers.BaseChecker):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 585, <span class="keyword">in</span> Python3Checker</span><br><span class="line">    <span class="string">'sys.version_info &lt; (3, 0)'</span>,</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 580, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    [astroid.extract_node(x).repr_tree() <span class="keyword">for</span> x <span class="keyword">in</span> [</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 877, <span class="keyword">in</span> repr_tree</span><br><span class="line">    _repr_tree(self, result, <span class="built_in">set</span>())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 723, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = _find_impl(cls, registry)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 674, <span class="keyword">in</span> _find_impl</span><br><span class="line">    mro = _compose_mro(cls, registry.keys())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 662, <span class="keyword">in</span> _compose_mro</span><br><span class="line">    <span class="built_in">return</span> _c3_mro(cls, abcs=mro)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 620, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    [explicit_bases] + [abstract_bases] + [other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 571, <span class="keyword">in</span> _c3_merge</span><br><span class="line">    raise RuntimeError(<span class="string">"Inconsistent hierarchy"</span>)</span><br><span class="line">RuntimeError: Inconsistent hierarchy</span><br></pre></td></tr></table></figure>
-<p>版本信息</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip list | grep pylint</span><br><span class="line"></span><br><span class="line"><span class="comment">#结果</span></span><br><span class="line">pylint 2.1.1</span><br></pre></td></tr></table></figure>
-<p>降版本试试，去<a href="https://pypi.org/project/pylint/#history" target="_blank" rel="noopener">pylint</a> 查看历史版本，并选择一个历史版本进行安装</p>
- <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint==1.6.4</span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h</span><br></pre></td></tr></table></figure>
-<p>运行正常。</p>
+        <h2 id="一、CSRF介绍"><a href="#一、CSRF介绍" class="headerlink" title="一、CSRF介绍"></a>一、CSRF介绍</h2><p>CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。</p>
+<h2 id="二、-浏览器同源策略"><a href="#二、-浏览器同源策略" class="headerlink" title="二、 浏览器同源策略"></a>二、 浏览器同源策略</h2><p>同源策略（Same origin policy）是一种约定，它是<a href="https://baike.baidu.com/item/%E6%B5%8F%E8%A7%88%E5%99%A8/213911" target="_blank" rel="noopener">浏览器</a>最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略基础之上的，浏览器只是针对同源策略的一种实现。</p>
+<p>同源是指：协议、域名、端口 同时相同才认为是同源。在同源检测时，将使用document.domain作为检测的依据。</p>
+<table>
+<thead>
+<tr>
+<th>Compared URL</th>
+<th>Outcome</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir/page2.html</td>
+<td>Success</td>
+<td>Same protocol, host and port</td>
+</tr>
+<tr>
+<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir2/other.html</td>
+<td>Success</td>
+<td>Same protocol, host and port</td>
+</tr>
+<tr>
+<td><strong>http://</strong>username:password@<strong><a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir2/other.html</td>
+<td>Success</td>
+<td>Same protocol, host and port</td>
+</tr>
+</tbody>
+</table>
+<p>下表为反例。</p>
+<table>
+<thead>
+<tr>
+<th>Compared URL</th>
+<th>Outcome</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.example.com:**81**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**81**/dir/other.html</a></td>
+<td>Failure</td>
+<td>Same protocol and host but different port</td>
+</tr>
+<tr>
+<td><strong>https</strong>://<a href="http://www.example.com/dir/other.html" target="_blank" rel="noopener">www.example.com/dir/other.html</a></td>
+<td>Failure</td>
+<td>Different protocol</td>
+</tr>
+<tr>
+<td>http://<strong>en.example.com</strong>/dir/other.html</td>
+<td>Failure</td>
+<td>Different host</td>
+</tr>
+<tr>
+<td>http://<strong>example.com</strong>/dir/other.html</td>
+<td>Failure</td>
+<td>Different host (exact match required)</td>
+</tr>
+<tr>
+<td>http://<strong>v2.<a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir/other.html</td>
+<td>Failure</td>
+<td>Different host (exact match required)</td>
+</tr>
+</tbody>
+</table>
+<p>下表依赖于浏览器的实现</p>
+<table>
+<thead>
+<tr>
+<th>Compared URL</th>
+<th>Outcome</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.example.com:**80**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**80**/dir/other.html</a></td>
+<td>Depends</td>
+<td>Port explicit. Depends on implementation in browser.</td>
+</tr>
+</tbody>
+</table>
+<p>一般浏览器默认80端口，当端口显示制定为80时，根据浏览器策略而定。</p>
+<h3 id="受限制内容"><a href="#受限制内容" class="headerlink" title="受限制内容"></a>受限制内容</h3><p>对JavaScript代码能够操作哪些Web内容的一条完整的安全<em>限制</em>，主要针对js读取某些内容或读写某些属性，例如：</p>
+<ol>
+<li>DOM无法获得：禁止对不同源页面DOM进行操作。这里主要场景是iframe跨域的情况，不同域名的iframe是限制互相访问的。</li>
+<li>ajax请求不能发送： 禁止使用XHR对象向不同源的服务器地址发起HTTP请求。</li>
+<li>Cookie、LocalStorage 和 IndexDB 无法读取。</li>
+</ol>
+<h3 id="不受限制内容"><a href="#不受限制内容" class="headerlink" title="不受限制内容"></a>不受限制内容</h3><p>允许嵌入资源，例如<code>img</code>链接、<code>&lt;script src=&quot;...&quot;&gt;</code>  <code>&lt;/script&gt;</code> <code>&lt;img&gt;</code> <code>&lt;link&gt;</code>  等。</p>
+<h2 id="三、-Cookie作用域"><a href="#三、-Cookie作用域" class="headerlink" title="三、 Cookie作用域"></a>三、 Cookie作用域</h2><p>Cookie 是服务器写入浏览器的一小段信息，只有同源的网页才能共享。</p>
+<p>Cookie有两个很重要的属性:Domain和Path，用来指示此Cookie的作用域：Domain告诉浏览器当前要添加的Cookie的域名归属；Path告诉浏览器当前要添加的Cookie的路径归属，如果没有明确指明则默认为当前路径。浏览器提交的Cookie需要满足以下两点：</p>
+<ol>
+<li><p>当前域名或者父域名下的Cookie。</p>
+</li>
+<li><p>当前路径或父路径下的Cookie，要满足这两个条件的Cookie才会被提交。</p>
+</li>
+</ol>
+<h2 id="四、-CSRF攻击原理"><a href="#四、-CSRF攻击原理" class="headerlink" title="四、 CSRF攻击原理"></a>四、 CSRF攻击原理</h2><p>攻击者（attacker）利用存储在本地的有效cookie及cookie的作用域来伪造用户的某种行为（只是利用cookie骗取服务器信任，并不能拿到cookie，也看不到cookie内容）。</p>
+<ol>
+<li>用户（victim）访问信任网站A，输入用户名和密码并登录成功，产生网站A的生成的cookie。</li>
+<li>在此cookie的有效期内，用户恰好访问恶意网站B，网站B上有某个隐藏的链接或者图片标签会自动请求网站A的URL地址,例如表单提交，传指定的参数， 此时浏览器会自动携带网站A的cookie。</li>
+<li>网站A收到这个请求后，误认为是用户（victim）的正常操作，伪造成功。</li>
+</ol>
+<h2 id="五、CSRF攻击防御"><a href="#五、CSRF攻击防御" class="headerlink" title="五、CSRF攻击防御"></a>五、CSRF攻击防御</h2><p>大多数防御方法是在请求中嵌入额外的验证数据来检测是否是真实用户的操作。</p>
+<h3 id="Synchronizer-token-pattern"><a href="#Synchronizer-token-pattern" class="headerlink" title="Synchronizer token pattern"></a>Synchronizer token pattern</h3><p>在form表单中嵌入验证信息，并在server端校验。攻击者无法使用最新的csrf值进行操作，代码如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"><span class="keyword">from</span> tornado.web <span class="keyword">import</span> HTTPError</span><br><span class="line"></span><br><span class="line">csrfs = <span class="string">b""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">make_crsf</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">global</span> csrf</span><br><span class="line">        csrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>)).decode()</span><br><span class="line">        <span class="keyword">return</span> csrf</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.write(<span class="string">"""&lt;html&gt;</span></span><br><span class="line"><span class="string">    &lt;head&gt;</span></span><br><span class="line"><span class="string">        &lt;meta charset="UTF-8"&gt;</span></span><br><span class="line"><span class="string">        &lt;title&gt;&lt;/title&gt;</span></span><br><span class="line"><span class="string">    &lt;/head&gt;</span></span><br><span class="line"><span class="string">    &lt;body&gt;</span></span><br><span class="line"><span class="string">        &lt;form action="/" method="POST" enctype="multipart/form-data"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="file" name="filename"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="hidden" name="csrf" value="%s"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="submit" name="submit"&gt;</span></span><br><span class="line"><span class="string">        &lt;/form&gt;</span></span><br><span class="line"><span class="string">    &lt;/body&gt;</span></span><br><span class="line"><span class="string">&lt;/html&gt;"""</span>%(self.make_crsf()))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> csrf != self.get_argument(<span class="string">'csrf'</span>,<span class="string">""</span>):</span><br><span class="line">            <span class="keyword">raise</span> HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
+<p>弊端:</p>
+<ol>
+<li>服务端需要存储每个用户的最新的csrf值。</li>
+<li>同一个用户打开多个tab页面时，其它某些csrf值可能失效，返回403错误。</li>
+</ol>
+<h3 id="Cookie-to-header-token"><a href="#Cookie-to-header-token" class="headerlink" title="Cookie-to-header token"></a>Cookie-to-header token</h3><p>此方法是基于浏览器的同源策略，同源才能读取cookie 值。恶意网站受同源限制不能读取cookie值。</p>
+<p>用户访问表单页面时，server端设置xsrf_cookie，页面嵌入js代码，自定义header头。</p>
+<p>index.html</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"https://cdn.staticfile.org/jquery/2.0.0/jquery.min.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"http://malsup.github.com/jquery.form.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"myform"</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"file"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"submit"</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">value</span>=<span class="string">"提交"</span> <span class="attr">onclick</span>=<span class="string">"showoption()"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function getCookie(name) &#123;</span></span><br><span class="line"><span class="undefined">        var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");</span></span><br><span class="line"><span class="undefined">        return r ? r[1] : undefined;</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function showoption()&#123;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var formData = new FormData();</span></span><br><span class="line"><span class="undefined">        formData.append("filename",document.getElementById("file").files[0]);</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var option = &#123;</span></span><br><span class="line"><span class="undefined">            url : "/",</span></span><br><span class="line"><span class="undefined">            type : 'POST',</span></span><br><span class="line"><span class="undefined">            data: formData,</span></span><br><span class="line"><span class="undefined">            headers : &#123;"X-XSRFToken":getCookie("_xsrf")&#125;, //添加请求头部</span></span><br><span class="line"><span class="undefined">            contentType : false,</span></span><br><span class="line"><span class="undefined">            processData : false,</span></span><br><span class="line"><span class="undefined">            success : function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('success');</span></span><br><span class="line"><span class="undefined">                 document.write(data);</span></span><br><span class="line"><span class="undefined">            &#125;,</span></span><br><span class="line"><span class="undefined">            error: function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('error');</span></span><br><span class="line"><span class="undefined">                 document.write('upload failed');</span></span><br><span class="line"><span class="undefined">            &#125;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">        $.ajax(option)</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>handler</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        xsrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>))</span><br><span class="line">        self.set_cookie(<span class="string">'_xsrf'</span>,xsrf)</span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">check_xsrf_cookie</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.request.headers.get(<span class="string">'X-XSRFToken'</span>) != self.get_cookie(<span class="string">"_xsrf"</span>):</span><br><span class="line">            <span class="keyword">raise</span> tornado.web.HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler)</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
+<h3 id="Double-Submit-Cookie"><a href="#Double-Submit-Cookie" class="headerlink" title="Double Submit Cookie"></a>Double Submit Cookie</h3><p>当form表单提交时，服务端设置_xsrf值到cookie中，同时也设置到form表单中一份，server端收到请求时，从cookie中_xsrf字段取出csrf_token与form提交的_xsrf中取出的csrf_token值是否一致。</p>
+<p>下面用tornado中的xsrf_form_html来实现。</p>
+<p>index.html    </p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">            &#123;% module xsrf_form_html() %&#125;</span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>handlers.py</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
+<p>受同源策略限制，恶意网站不能根据form提交的_xsrf值设置别的源下的cookie值。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Cookie: _xsrf=2|f6cb1468|2debdc878192abd5577e27000d0daf91|1547196447</span><br></pre></td></tr></table></figure>
+<p>表单中的值为</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"_xsrf"</span> <span class="attr">value</span>=<span class="string">"2|221a566b|f93a9e845543e9d683af6503d9dced92|1547196447"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>cookie失效之前，cookie值不会改变。cookie中解出token，form表单每次刷新时value值会改变，因为form表单中使用随机值生成masked_token。</p>
+<p>有疑问？</p>
+<h3 id="Client-side-safeguards"><a href="#Client-side-safeguards" class="headerlink" title="Client-side safeguards"></a>Client-side safeguards</h3><p>待补充</p>
+<h3 id="Other-techniques"><a href="#Other-techniques" class="headerlink" title="Other techniques"></a>Other techniques</h3><h4 id="检验-HTTP-Referer-字段"><a href="#检验-HTTP-Referer-字段" class="headerlink" title="检验 HTTP Referer 字段"></a>检验 HTTP Referer 字段</h4><p>攻击者不能篡改Referer值，但是某些浏览器会隐藏Referer值，并且依赖浏览器。</p>
+<p>​    </p>
 
       
 
@@ -216,11 +335,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">python3</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">pylint</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF</a>
         		</li>
       		
 		</ul>
@@ -276,7 +391,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/01/12/pylint_runtime_error/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/03/30/CSRF攻击原理及防御/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -290,17 +405,17 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/01/12/CSRF攻击原理及防御/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/03/30/pylint_runtime_error/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          CSRF攻击原理及防御
+          pylint RuntimeError Inconsistent hierarchy
         
       </div>
     </a>
   
   
-    <a href="/2019/01/07/Content-Disposition header/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2019/03/30/Content-Disposition header/" id="article-nav-older" class="article-nav-link-wrap">
       <div class="article-nav-title">Content-Disposition</div>
       <i class="icon-circle-right"></i>
     </a>
@@ -328,7 +443,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#在python2-安装-pylint"><span class="toc-number">1.</span> <span class="toc-text">在python2 安装 pylint</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#在python3-安装pylint"><span class="toc-number">2.</span> <span class="toc-text">在python3 安装pylint</span></a></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一、CSRF介绍"><span class="toc-number">1.</span> <span class="toc-text">一、CSRF介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二、-浏览器同源策略"><span class="toc-number">2.</span> <span class="toc-text">二、 浏览器同源策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#受限制内容"><span class="toc-number">2.1.</span> <span class="toc-text">受限制内容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#不受限制内容"><span class="toc-number">2.2.</span> <span class="toc-text">不受限制内容</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三、-Cookie作用域"><span class="toc-number">3.</span> <span class="toc-text">三、 Cookie作用域</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四、-CSRF攻击原理"><span class="toc-number">4.</span> <span class="toc-text">四、 CSRF攻击原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五、CSRF攻击防御"><span class="toc-number">5.</span> <span class="toc-text">五、CSRF攻击防御</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Synchronizer-token-pattern"><span class="toc-number">5.1.</span> <span class="toc-text">Synchronizer token pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cookie-to-header-token"><span class="toc-number">5.2.</span> <span class="toc-text">Cookie-to-header token</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Double-Submit-Cookie"><span class="toc-number">5.3.</span> <span class="toc-text">Double Submit Cookie</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Client-side-safeguards"><span class="toc-number">5.4.</span> <span class="toc-text">Client-side safeguards</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Other-techniques"><span class="toc-number">5.5.</span> <span class="toc-text">Other techniques</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#检验-HTTP-Referer-字段"><span class="toc-number">5.5.1.</span> <span class="toc-text">检验 HTTP Referer 字段</span></a></li></ol></li></ol></li></ol>
                     </div>
                 </span>
             </div>
