@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Tag: greenlet | Archer</title>
+  <title>greenlet 详解 | Archer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Archer">
-<meta property="og:url" content="https://yangyaq.github.io/tags/greenlet/index.html">
+  <meta name="description" content="官网 简单使用介绍​    A “greenlet” is a small independent pseudo-thread. Think about it as a small stack of frames; the outermost (bottom) frame is the initial function you called, and the innermost frame is">
+<meta name="keywords" content="协程,greenlet,python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="greenlet 详解">
+<meta property="og:url" content="https://yangyaq.github.io/2019/03/30/greenlet详解/index.html">
 <meta property="og:site_name" content="Archer">
+<meta property="og:description" content="官网 简单使用介绍​    A “greenlet” is a small independent pseudo-thread. Think about it as a small stack of frames; the outermost (bottom) frame is the initial function you called, and the innermost frame is">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-03-30T13:27:18.059Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Archer">
+<meta name="twitter:title" content="greenlet 详解">
+<meta name="twitter:description" content="官网 简单使用介绍​    A “greenlet” is a small independent pseudo-thread. Think about it as a small stack of frames; the outermost (bottom) frame is the initial function you called, and the innermost frame is">
   
     <link rel="alternative" href="/atom.xml" title="Archer" type="application/atom+xml">
   
@@ -142,36 +147,116 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-greenlet详解" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/03/30/greenlet详解/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:27:18.061Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-03-30</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/30/greenlet详解/">greenlet 详解</a>
+    <h1 class="article-title" itemprop="name">
+      greenlet 详解
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/03/30/greenlet详解/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:27:18.061Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="https://greenlet.readthedocs.io/en/latest/" target="_blank" rel="noopener">官网</a></p>
+<h3 id="简单使用介绍"><a href="#简单使用介绍" class="headerlink" title="简单使用介绍"></a>简单使用介绍</h3><p>​    A “greenlet” is a small independent pseudo-thread. Think about it as a small stack of frames; the outermost (bottom) frame is the initial function you called, and the innermost frame is the one in which the greenlet is currently paused. You work with greenlets by creating a number of such stacks and jumping execution between them. Jumps are never implicit: a greenlet must choose to jump to another greenlet, which will cause the former to suspend and the latter to resume where it was suspended. Jumping between greenlets is called “switching”.</p>
+<p>​    When you create a greenlet, it gets an initially empty stack; when you first switch to it, it starts to run a specified function, which may call other functions, switch out of the greenlet, etc. When eventually the outermost function finishes its execution, the greenlet’s stack becomes empty again and the greenlet is “dead”. Greenlets can also die of an uncaught exception.</p>
+<pre><code>一个 “greenlet” 是一个小型的独立伪线程。可以把它想像成一些栈帧，栈底是初始调用的函数，而栈顶是当前greenlet的暂停位置。你使用greenlet创建一堆这样的堆栈，然后在他们之间跳转执行。跳转必须**显式声明**的：一个greenlet必须选择要跳转到的另一个greenlet，这会让前一个挂起，而后一个在此前挂起处恢复执行。不同greenlets之间的跳转称为切换(switching) 。
+</code></pre><p>　　当你创建一个greenlet时，它得到一个开始时为空的栈；当你第一次切换到它时，它会执行指定的函数，这个函数可能会调用其他函数、切换跳出greenlet等等。当最终栈底的函数执行结束出栈时，这个greenlet的栈又变成空的，这个greenlet也就死掉了。greenlet也会因为一个未捕捉的异常死掉。</p>
+<p>示例1:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> greenlet <span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="number">12</span>)</span><br><span class="line">    gr2.switch()<span class="comment">#2.jumps to test2,print 56</span></span><br><span class="line">    print(<span class="number">34</span>)</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="number">56</span>)</span><br><span class="line">    gr1.switch()<span class="comment">#3.jumps to test1,print 34,then test1 finishes and gr1 dies</span></span><br><span class="line">    print(<span class="number">78</span>)</span><br><span class="line">    </span><br><span class="line">gr1 = greenlet(test1) <span class="comment">#create a new greenlet object gr1(without running it)</span></span><br><span class="line">gr2 = greenlet(test2) <span class="comment">#create a new greenlet object gr2(without running it)</span></span><br><span class="line"></span><br><span class="line">gr1.switch()<span class="comment">#1.jumps to test1,print 12 #4. back to here</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 78 is never printed , test2 is no dead</span></span><br></pre></td></tr></table></figure>
+<p>​    程序从<code>gr1.switch()</code>开始，运行<code>test1</code>，打印12，经<code>gr2.switch()</code>，切换到<code>test2</code>，打印56，经<code>gr1.switch()</code>切换到<code>test1</code>上次离开的地方，打印34，<code>test1</code>运行结束，切回到其parent，也就是<code>gr1.switch()</code>处，运行结束，而<code>test2</code>中的 78 没有执行到。</p>
+<p>​      接着看<code>示例2</code>，使用<code>dead</code>查看<code>greenlet</code>的状态。</p>
+<p>示例2:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> greenlet <span class="keyword">import</span> greenlet</span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(a)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> a</span><br><span class="line">    z = gr2.switch(<span class="string">'a to b'</span>)</span><br><span class="line">    <span class="keyword">print</span> z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(b)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> b</span><br><span class="line">    gr1.switch(<span class="string">'b to a'</span>)</span><br><span class="line">    <span class="keyword">print</span> b</span><br><span class="line"></span><br><span class="line">gr1 = greenlet(test1)</span><br><span class="line">gr2 = greenlet(test2)</span><br><span class="line"></span><br><span class="line">gr1.switch(<span class="string">'a'</span>)<span class="comment"># target.switch(value)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> (gr1.dead)</span><br><span class="line"><span class="keyword">print</span> (gr2.dead)<span class="comment">#False</span></span><br></pre></td></tr></table></figure>
+<p>打印结果</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">a</span><br><span class="line">a to b</span><br><span class="line">b to a <span class="comment">#切换到a后，a运行结束</span></span><br><span class="line">True</span><br><span class="line">False <span class="comment">#说明test2没有正常退出</span></span><br></pre></td></tr></table></figure>
+<h3 id="父parent"><a href="#父parent" class="headerlink" title="父parent"></a>父parent</h3><p>​    Let’s see where execution goes when a greenlet dies. Every greenlet has a “parent” greenlet. The parent greenlet is initially the one in which the greenlet was created (this can be changed at any time). The parent is where execution continues when a greenlet dies. This way, greenlets are organized in a tree. Top-level code that doesn’t run in a user-created greenlet runs in the implicit “main” greenlet, which is the root of the tree.</p>
+<p>​    In the above example, both gr1 and gr2 have the main greenlet as a parent. Whenever one of them dies, the execution comes back to “main”.</p>
+<p>　　Uncaught exceptions are propagated into the parent, too. For example, if the above test2() contained a typo, it would generate a NameError that would kill gr2, and the exception would go back directly into “main”. The traceback would show test2, but not test1. Remember, switches are not calls, but transfer of execution between parallel “stack containers”, and the “parent” defines which stack logically comes “below” the current one.</p>
+<p>　　现在看看一个greenlet结束时执行点去哪里。每个greenlet拥有一个父greenlet。每个greenlet最初在其父greenlet中创建(不过可以在任何时候改变)。当子greenlet结束时，执行位置从父greenlet那里继续。这样，greenlets之间就被组织成一棵树，顶级的代码并不在用户创建的 greenlet 中运行，而是运行在一个主greenlet中，也就是所有greenlet关系图的树根。</p>
+<p>​        在上面的例子中， <code>gr1</code> 和 <code>gr2</code> 都把主greenlet作为父greenlet。任何一个死掉，执行点都会回到主greenlet。</p>
+<p>　　未捕获的异常会传递给父greenlet。如果<code>示例1</code>的  <code>test2</code>包含一个打印错误(typo)，会生成一个  <code>NameError</code>而杀死 <code>gr2</code> ，然后异常被传递回主greenlet。traceback会显示  <code>test2</code>而不是 <code>test1</code> 。记住，<code>switchs are not calls</code>，而是执行点在并行的栈容器间交换，而父greenlet定义了这些栈之间的先后关系。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">return 到其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    z = gr2.switch(x+y)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'back z'</span>,z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    <span class="keyword">return</span> u</span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">'main:%s,gr1:%s,gr2:%s'</span>%(id(greenlet.getcurrent()),id(gr1),id(gr2))</span><br><span class="line"><span class="keyword">print</span> gr1.switch(<span class="string">'hello'</span>,<span class="string">' world'</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'back to main'</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main:4413943152,gr1:4413942832,gr2:4413943312</span><br><span class="line">4413942832 4413943152 <span class="comment"># gr1的parent是main greenlet</span></span><br><span class="line">4413943312 4413943152 <span class="comment"># gr2的paren是main greenlet</span></span><br><span class="line">hello world <span class="comment">#gr1把值返回给main greenlet</span></span><br><span class="line">back to main</span><br></pre></td></tr></table></figure>
+<p>​        每个<code>greenlet</code>都有一个<code>parent</code>，parent取决于greenlet的创生环境。当<code>return</code>时，将值传递到其parent，而这个parent在任何地方都可以改变。</p>
+<p>​    如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">return 到其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    z = gr2.switch(x+y)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'back z'</span>,z</span><br><span class="line">    <span class="keyword">return</span> z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    gr2.parent = gr1 <span class="comment">#指定gr2的parent是gr1</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    <span class="keyword">return</span> u</span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2) <span class="comment">#或者在这里指定,gr2 = greenlet.greenlet(test2,parent=gr1)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">'main:%s,gr1:%s,gr2:%s'</span>%(id(greenlet.getcurrent()),id(gr1),id(gr2))</span><br><span class="line"><span class="keyword">print</span> gr1.switch(<span class="string">'hello'</span>,<span class="string">' world'</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'back to main'</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main:4328455536,gr1:4328455216,gr2:4328455696</span><br><span class="line">4328455216 4328455536 <span class="comment">#gr1的parent是main greenlet（greenlet关系图的树根）</span></span><br><span class="line">4328455696 4328455216 <span class="comment">#gr2的parent是gr1 greenlet</span></span><br><span class="line">back z hello world <span class="comment">#gr2 将值返回给gr1</span></span><br><span class="line">hello world <span class="comment">#gr1将值返回给main greenlet</span></span><br><span class="line">back to main</span><br></pre></td></tr></table></figure>
+<p>​    同样，子greenlet抛出的异常也传递给parent。         </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">异常抛至其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"><span class="keyword">import</span> traceback</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        z = gr2.switch(<span class="string">'x+y'</span>)</span><br><span class="line">    <span class="keyword">except</span> Exception:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'catch Exception in test1'</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    <span class="keyword">assert</span> <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    gr1.switch(<span class="string">"hello"</span>,<span class="string">" world"</span>)</span><br><span class="line"><span class="keyword">except</span> Exception,e:</span><br><span class="line">    traceback.print_exc(e)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'catch Exception in main'</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"4.py"</span>, line 23, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    gr1.switch(<span class="string">"hello"</span>,<span class="string">" world"</span>)</span><br><span class="line">  File <span class="string">"4.py"</span>, line 17, <span class="keyword">in</span> test2   <span class="comment">#### switch not calls</span></span><br><span class="line">    assert False</span><br><span class="line">AssertionError</span><br><span class="line">catch Exception <span class="keyword">in</span> main</span><br></pre></td></tr></table></figure>
+<p>​    greenlet 中也提供了，监控greenlet切换的接口tracing</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">trace 监控greenlet切换</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_greenlet_tracing</span><span class="params">()</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">callback</span><span class="params">(event, args)</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'callback'</span>, event, <span class="string">'from'</span>, id(args[<span class="number">0</span>]), <span class="string">'to'</span>, id(args[<span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dummy</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'dummpy'</span></span><br><span class="line">        g2.switch()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dummyexception</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'dummpyexception'</span></span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">'execp in dummyexecption'</span>)</span><br><span class="line"></span><br><span class="line">    main = greenlet.getcurrent()</span><br><span class="line">    g1 = greenlet.greenlet(dummy)</span><br><span class="line">	g2 = greenlet.greenlet(dummyexception)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'main id %s, g1 id %s, g2 id %s'</span> %(id(main),id(g1),id(g2))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    oldtrace = greenlet.settrace(callback)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        g1.switch()</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'Exception'</span></span><br><span class="line"></span><br><span class="line">    greenlet.settrace(oldtrace)</span><br><span class="line"></span><br><span class="line">test_greenlet_tracing()</span><br></pre></td></tr></table></figure>
+<p><code>event</code>：事件<code>throw</code> or <code>switch</code></p>
+<p><code>args</code>：二元组<code>(origin,target)</code></p>
+<p>运行结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main id 4444089392, g1 id 4444089872, g2 id 4444090192</span><br><span class="line">callback switch from 4444089392 to 4444089872 <span class="comment">#main-&gt;g1</span></span><br><span class="line">dummpy</span><br><span class="line">callback switch from 4444089872 to 4444090192 <span class="comment">#g1-&gt;g2</span></span><br><span class="line">dummpyexception</span><br><span class="line">callback throw from 4444090192 to 4444089392 <span class="comment">#g2-&gt;main</span></span><br><span class="line">Exception</span><br></pre></td></tr></table></figure>
+<h3 id="实例化"><a href="#实例化" class="headerlink" title="实例化"></a>实例化</h3><p><code>greenlet.greenlet</code>是greenlet 类型，支持以下操作：</p>
+<p><code>greenlet(run=None，parent=None)</code></p>
+<p>​      创建一个新的<code>greenlet</code>对象（不执行），<code>run</code> 是这个<code>greenlet</code>要执行的回调函数，<code>parent</code>是其父  greenlet，默认是当前<code>greenlet</code>。</p>
+<p><code>greenlet.getcurrent()</code></p>
+<p>​         返回调用当前方法的<code>greenlet</code></p>
+<p> <code>greenlet.GreenletExit</code></p>
+<p>​         这个特定的异常不会波及到父greenlet，它用于干掉一个greenlet。</p>
+<p>  greenlet.greenlet可以被继承，继承的子类实现<code>run</code>方法，并且不用再创建时显示指定run参数。</p>
+<h3 id="greenlets-之间的切换"><a href="#greenlets-之间的切换" class="headerlink" title="greenlets 之间的切换"></a>greenlets 之间的切换</h3><p>​    Switches between greenlets occur when the method switch() of a greenlet is called, in which case execution jumps to the greenlet whose switch() is called, or when a greenlet dies, in which case execution jumps to the parent greenlet. During a switch, an object or an exception is “sent” to the target greenlet; this can be used as a convenient way to pass information between greenlets. </p>
+<p>​    当greenlet调用<code>switch()</code>方法，或该greenlet执行结束要回其parent greenlet时，就会发生greenlets之间的切换。在切换时，一个对象或者异常被发送到目标greenlet，这便可以作为greenlet之间的传递信息的方式。            </p>
+<p>​      <code>g.switch(*args,**kwargs)</code>：切换到g，并发送给定的参数，如果g还没有运行就让它运行。</p>
+<p>​      run方法运行结束后，子greenlt return的值或者异常传递给父greenlet（ 除了异常是<code>greenlt.GreenletExit</code>）</p>
+<h3 id="greenlet的方法和属性"><a href="#greenlet的方法和属性" class="headerlink" title="greenlet的方法和属性"></a>greenlet的方法和属性</h3><p><code>g.switch(*args,**kwargs)</code></p>
+<p><code>g.run</code></p>
+<p><code>g.parent</code></p>
+<p><code>g.gr_frame</code></p>
+<p><code>g.dead</code></p>
+<p><code>bool(g)</code> ：未执行或者执行结束为<code>False</code></p>
+<p><code>g.throw(typ,[val,[tb]])</code>：默认typ<code>greenlet.GreenletExit</code></p>
+<h3 id="greenlets和Python线程"><a href="#greenlets和Python线程" class="headerlink" title="greenlets和Python线程"></a><strong>greenlets和Python线程</strong></h3><p>​    Greenlets can be combined with Python threads; in this case, each thread contains an independent “main” greenlet with a tree of sub-greenlets. It is not possible to mix or switch between greenlets belonging to different threads.</p>
+<p>　　greenlets可以与Python线程一起使用；在这种情况下，每个线程包含一个独立的 main greenlet，并拥有自己的greenlet树。不同线程之间不可以互相切换greenlet。</p>
+<h3 id="垃圾收集活跃的greenlets"><a href="#垃圾收集活跃的greenlets" class="headerlink" title="垃圾收集活跃的greenlets"></a><strong>垃圾收集活跃的greenlets</strong></h3><p>​    If all the references to a greenlet object go away (including the references from the parent attribute of other greenlets), then there is no way to ever switch back to this greenlet. In this case, a GreenletExit exception is generated into the greenlet. This is the only case where a greenlet receives the execution asynchronously. This gives try:finally: blocks a chance to clean up resources held by the greenlet. This feature also enables a programming style in which greenlets are infinite loops waiting for data and processing it. Such loops are automatically interrupted when the last reference to the greenlet goes away.</p>
+<p>　　The greenlet is expected to either die or be resurrected by having a new reference to it stored somewhere; just catching and ignoring the GreenletExit is likely to lead to an infinite loop.</p>
+<p>　　Greenlets do not participate in garbage collection; cycles involving data that is present in a greenlet’s frames will not be detected. Storing references to other greenlets cyclically may lead to leaks.</p>
+<p>　　如果不再有对greenlet对象的引用时(包括其他greenlet的parent)，还是没有办法切换回greenlet。这种情况下会生成一个 GreenletExit 异常到greenlet。这是greenlet收到异步异常的唯一情况。应该给出一个 try .. finally 用于清理greenlet内的资源。这个功能同时允许greenlet中无限循环的编程风格。这样循环可以在最后一个引用消失时自动中断。</p>
+<p>　　如果不希望greenlet死掉或者把引用放到别处，只需要捕捉和忽略 GreenletExit 异常即可。</p>
+<p>　　greenlet不参与垃圾收集；greenlet帧的循环引用数据会被检测到。将引用传递到其他的循环greenlet会引起内存泄露。</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -191,20 +276,141 @@
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/03/30/greenlet详解/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+  
+    <a href="/2019/03/06/tornado的事件循环机制/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">tornado的事件循环机制</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#简单使用介绍"><span class="toc-number">1.</span> <span class="toc-text">简单使用介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#父parent"><span class="toc-number">2.</span> <span class="toc-text">父parent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实例化"><span class="toc-number">3.</span> <span class="toc-text">实例化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#greenlets-之间的切换"><span class="toc-number">4.</span> <span class="toc-text">greenlets 之间的切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#greenlet的方法和属性"><span class="toc-number">5.</span> <span class="toc-text">greenlet的方法和属性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#greenlets和Python线程"><span class="toc-number">6.</span> <span class="toc-text">greenlets和Python线程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#垃圾收集活跃的greenlets"><span class="toc-number">7.</span> <span class="toc-text">垃圾收集活跃的greenlets</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: location.pathname,
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -227,9 +433,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
