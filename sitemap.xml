@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>https://yangyaq.github.io/2018/11/06/tornado-motor/</loc>
+    
+    <lastmod>2019-03-06T06:12:26.456Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/03/06/tornado%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%E6%9C%BA%E5%88%B6/</loc>
+    
+    <lastmod>2019-03-06T06:12:24.483Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/01/12/CSRF%E6%94%BB%E5%87%BB%E5%8E%9F%E7%90%86%E5%8F%8A%E9%98%B2%E5%BE%A1/</loc>
+    
+    <lastmod>2019-01-12T12:10:44.791Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/01/12/pylint_runtime_error/</loc>
+    
+    <lastmod>2019-01-12T09:06:38.404Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/01/12/greenlet%E8%AF%A6%E8%A7%A3/</loc>
+    
+    <lastmod>2019-01-12T09:02:39.528Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/01/07/Content-Disposition%20header/</loc>
+    
+    <lastmod>2019-01-07T10:05:35.780Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2018/12/26/%E8%BF%9B%E7%A8%8B%E9%97%B4%E7%9A%84IPC%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6/</loc>
+    
+    <lastmod>2018-12-26T02:52:05.642Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2018/12/20/%E7%90%86%E8%A7%A3OAuth/</loc>
+    
+    <lastmod>2018-12-20T06:37:19.266Z</lastmod>
+    
+  </url>
+  
+</urlset>
