@@ -6,20 +6,15 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Content-Disposition | yangyaq</title>
+  <title>Tag: 设计模式 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Network Working Group                                          R. TroostRequest for Comments: 1806                           New Century SystemsCategory: Experimental">
-<meta name="keywords" content="upload file">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Content-Disposition">
-<meta property="og:url" content="https://yangyaq.github.io/2019/03/30/Content-Disposition header/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="yangyaq">
+<meta property="og:url" content="https://yangyaq.github.io/tags/设计模式/index.html">
 <meta property="og:site_name" content="yangyaq">
-<meta property="og:description" content="Network Working Group                                          R. TroostRequest for Comments: 1806                           New Century SystemsCategory: Experimental">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-03-30T13:29:12.327Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Content-Disposition">
-<meta name="twitter:description" content="Network Working Group                                          R. TroostRequest for Comments: 1806                           New Century SystemsCategory: Experimental">
+<meta name="twitter:title" content="yangyaq">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -147,212 +142,61 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Content-Disposition header" class="article article-type-post " itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      Content-Disposition
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2019" class="archive-year">2019</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2019/05/21/常用设计模式/" class="archive-article-date">
+  	<time datetime="2019-05-21T10:09:31.361Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-05-21</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2019/05/21/常用设计模式/">常用设计模式</a>
     </h1>
   
 
-        
-        <a href="/2019/03/30/Content-Disposition header/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:29:12.330Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Network Working Group                                          R. Troost</span><br><span class="line">Request for Comments: 1806                           New Century Systems</span><br><span class="line">Category: Experimental                                         S. Dorner</span><br><span class="line">                                                   QUALCOMM Incorporated</span><br><span class="line">                                                               June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">               Communicating Presentation Information in</span><br><span class="line">                           Internet Messages:</span><br><span class="line">                     The Content-Disposition Header</span><br><span class="line"></span><br><span class="line">Status of this Memo</span><br><span class="line"></span><br><span class="line">   This memo defines an Experimental Protocol for the Internet</span><br><span class="line">   community.  This memo does not specify an Internet standard of any</span><br><span class="line">   kind.  Discussion and suggestions for improvement are requested.</span><br><span class="line">   Distribution of this memo is unlimited.</span><br><span class="line"></span><br><span class="line">Abstract</span><br><span class="line"></span><br><span class="line">   This memo provides a mechanism whereby messages conforming to the</span><br><span class="line">   [RFC 1521] (&quot;MIME&quot;) specification can convey presentational</span><br><span class="line">   information.  It specifies a new &quot;Content-Disposition&quot; header,</span><br><span class="line">   optional and valid for any [RFC 1521] entity (&quot;message&quot; or &quot;body</span><br><span class="line">   part&quot;). Two values for this header are described in this memo; one</span><br><span class="line">   for the ordinary linear presentation of the body part, and another to</span><br><span class="line">   facilitate the use of mail to transfer files. It is expected that</span><br><span class="line">   more values will be defined in the future, and procedures are defined</span><br><span class="line">   for extending this set of values.</span><br><span class="line"></span><br><span class="line">   This document is intended as an extension to [RFC 1521]. As such, the</span><br><span class="line">   reader is assumed to be familiar with [RFC 1521], and [RFC 822]. The</span><br><span class="line">   information presented herein supplements but does not replace that</span><br><span class="line">   found in those documents.</span><br><span class="line"></span><br><span class="line">1.  Introduction</span><br><span class="line"></span><br><span class="line">   [RFC 1521] specifies a standard format for encapsulating multiple</span><br><span class="line">   pieces of data into a single Internet message. That document does not</span><br><span class="line">   address the issue of presentation styles; it provides a framework for</span><br><span class="line">   the interchange of message content, but leaves presentation issues</span><br><span class="line">   solely in the hands of mail user agent (MUA) implementors.</span><br><span class="line"></span><br><span class="line">   Two common ways of presenting multipart electronic messages are as a</span><br><span class="line">   main document with a list of separate attachments, and as a single</span><br><span class="line">   document with the various parts expanded (displayed) inline. The</span><br><span class="line">   display of an attachment is generally construed to require positive</span><br><span class="line">   action on the part of the recipient, while inline message components</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 1]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   are displayed automatically when the message is viewed. A mechanism</span><br><span class="line">   is needed to allow the sender to transmit this sort of presentational</span><br><span class="line">   information to the recipient; the Content-Disposition header provides</span><br><span class="line">   this mechanism, allowing each component of a message to be tagged</span><br><span class="line">   with an indication of its desired presentation semantics.</span><br><span class="line"></span><br><span class="line">   Tagging messages in this manner will often be sufficient for basic</span><br><span class="line">   message formatting. However, in many cases a more powerful and</span><br><span class="line">   flexible approach will be necessary. The definition of such</span><br><span class="line">   approaches is beyond the scope of this memo; however, such approaches</span><br><span class="line">   can benefit from additional Content-Disposition values and</span><br><span class="line">   parameters, to be defined at a later date.</span><br><span class="line"></span><br><span class="line">   In addition to allowing the sender to specify the presentational</span><br><span class="line">   disposition of a message component, it is desirable to allow her to</span><br><span class="line">   indicate a default archival disposition; a filename. The optional</span><br><span class="line">   &quot;filename&quot; parameter provides for this.</span><br><span class="line"></span><br><span class="line">2.  The Content-Disposition Header Field</span><br><span class="line"></span><br><span class="line">   Content-Disposition is an optional header; in its absence, the MUA</span><br><span class="line">   may use whatever presentation method it deems suitable.</span><br><span class="line"></span><br><span class="line">   It is desirable to keep the set of possible disposition types small</span><br><span class="line">   and well defined, to avoid needless complexity. Even so, evolving</span><br><span class="line">   usage will likely require the definition of additional disposition</span><br><span class="line">   types or parameters, so the set of disposition values is extensible;</span><br><span class="line">   see below.</span><br><span class="line"></span><br><span class="line">   In the extended BNF notation of [RFC 822], the Content-Disposition</span><br><span class="line">   header field is defined as follows:</span><br><span class="line"></span><br><span class="line">        disposition := &quot;Content-Disposition&quot; &quot;:&quot;</span><br><span class="line">                       disposition-type</span><br><span class="line">                       *(&quot;;&quot; disposition-parm)</span><br><span class="line"></span><br><span class="line">        disposition-type := &quot;inline&quot;</span><br><span class="line">                          / &quot;attachment&quot;</span><br><span class="line">                          / extension-token</span><br><span class="line">                          ; values are not case-sensitive</span><br><span class="line"></span><br><span class="line">        disposition-parm := filename-parm / parameter</span><br><span class="line"></span><br><span class="line">        filename-parm := &quot;filename&quot; &quot;=&quot; value;</span><br><span class="line"></span><br><span class="line">   `Extension-token&apos;, `parameter&apos; and `value&apos; are defined according to</span><br><span class="line">   [RFC 822] and [RFC 1521].</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 2]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">2.1  The Inline Disposition Type</span><br><span class="line"></span><br><span class="line">   A bodypart should be marked `inline&apos; if it is intended to be</span><br><span class="line">   displayed automatically upon display of the message. Inline bodyparts</span><br><span class="line">   should be presented in the order in which they occur, subject to the</span><br><span class="line">   normal semantics of multipart messages.</span><br><span class="line"></span><br><span class="line">2.2  The Attachment Disposition Type</span><br><span class="line"></span><br><span class="line">   Bodyparts can be designated `attachment&apos; to indicate that they are</span><br><span class="line">   separate from the main body of the mail message, and that their</span><br><span class="line">   display should not be automatic, but contingent upon some further</span><br><span class="line">   action of the user. The MUA might instead present the user of a</span><br><span class="line">   bitmap terminal with an iconic representation of the attachments, or,</span><br><span class="line">   on character terminals, with a list of attachments from which the</span><br><span class="line">   user could select for viewing or storage.</span><br><span class="line"></span><br><span class="line">2.3  The Filename Parameter</span><br><span class="line"></span><br><span class="line">   The sender may want to suggest a filename to be used if the entity is</span><br><span class="line">   detached and stored in a separate file. If the receiving MUA writes</span><br><span class="line">   the entity to a file, the suggested filename should be used as a</span><br><span class="line">   basis for the actual filename, where possible.</span><br><span class="line"></span><br><span class="line">   It is important that the receiving MUA not blindly use the suggested</span><br><span class="line">   filename.  The suggested filename should be checked (and possibly</span><br><span class="line">   changed) to see that it conforms to local filesystem conventions,</span><br><span class="line">   does not overwrite an existing file, and does not present a security</span><br><span class="line">   problem (see Security Considerations below).</span><br><span class="line"></span><br><span class="line">   The receiving MUA should not respect any directory path information</span><br><span class="line">   that may seem to be present in the filename parameter.  The filename</span><br><span class="line">   should be treated as a terminal component only.  Portable</span><br><span class="line">   specification of directory paths might possibly be done in the future</span><br><span class="line">   via a separate Content-Disposition parameter, but no provision is</span><br><span class="line">   made for it in this draft.</span><br><span class="line"></span><br><span class="line">   Current [RFC 1521] grammar restricts parameter values (and hence</span><br><span class="line">   Content-Disposition filenames) to US-ASCII.  We recognize the great</span><br><span class="line">   desirability of allowing arbitrary character sets in filenames, but</span><br><span class="line">   it is beyond the scope of this document to define the necessary</span><br><span class="line">   mechanisms.  We expect that the basic [RFC 1521] `value&apos;</span><br><span class="line">   specification will someday be amended to allow use of non-US-ASCII</span><br><span class="line">   characters, at which time the same mechanism should be used in the</span><br><span class="line">   Content-Disposition filename parameter.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 3]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Beyond the limitation to US-ASCII, the sending MUA may wish to bear</span><br><span class="line">   in mind the limitations of common filesystems.  Many have severe</span><br><span class="line">   length and character set restrictions.  Short alphanumeric filenames</span><br><span class="line">   are least likely to require modification by the receiving system.</span><br><span class="line"></span><br><span class="line">   The presence of the filename parameter does not force an</span><br><span class="line">   implementation to write the entity to a separate file. It is</span><br><span class="line">   perfectly acceptable for implementations to leave the entity as part</span><br><span class="line">   of the normal mail stream unless the user requests otherwise. As a</span><br><span class="line">   consequence, the parameter may be used on any MIME entity, even</span><br><span class="line">   `inline&apos; ones. These will not normally be written to files, but the</span><br><span class="line">   parameter could be used to provide a filename if the receiving user</span><br><span class="line">   should choose to write the part to a file.</span><br><span class="line"></span><br><span class="line">2.4  Future Extensions and Unrecognized Disposition Types</span><br><span class="line"></span><br><span class="line">   In the likely event that new parameters or disposition types are</span><br><span class="line">   needed, they should be registered with the IANA, in the manner</span><br><span class="line">   specified in [RFC 1521], appendix E.</span><br><span class="line"></span><br><span class="line">   Once new disposition types and parameters are defined, there is of</span><br><span class="line">   course the likelihood that implementations will see disposition types</span><br><span class="line">   and parameters they do not understand.  Furthermore, since x-tokens</span><br><span class="line">   are allowed, implementations may also see entirely unregistered</span><br><span class="line">   disposition types and parameters.</span><br><span class="line"></span><br><span class="line">   Unrecognized parameters should be ignored. Unrecognized disposition</span><br><span class="line">   types should be treated as `attachment&apos;. The choice of `attachment&apos;</span><br><span class="line">   for unrecognized types is made because a sender who goes to the</span><br><span class="line">   trouble of producing a Content-Disposition header with a new</span><br><span class="line">   disposition type is more likely aiming for something more elaborate</span><br><span class="line">   than inline presentation.</span><br><span class="line"></span><br><span class="line">   Unless noted otherwise in the definition of a parameter, Content-</span><br><span class="line">   Disposition parameters are valid for all dispositions.  (In contrast</span><br><span class="line">   to [RFC 1521] content-type parameters, which are defined on a per-</span><br><span class="line">   content-type basis.) Thus, for example, the `filename&apos; parameter</span><br><span class="line">   still means the name of the file to which the part should be written,</span><br><span class="line">   even if the disposition itself is unrecognized.</span><br><span class="line"></span><br><span class="line">2.5  Content-Disposition and Multipart</span><br><span class="line"></span><br><span class="line">   If a Content-Disposition header is used on a multipart body part, it</span><br><span class="line">   applies to the multipart as a whole, not the individual subparts.</span><br><span class="line">   The disposition types of the subparts do not need to be consulted</span><br><span class="line">   until the multipart itself is presented.  When the multipart is</span><br><span class="line">   displayed, then the dispositions of the subparts should be respected.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 4]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   If the `inline&apos; disposition is used, the multipart should be</span><br><span class="line">   displayed as normal; however, an `attachment&apos; subpart should require</span><br><span class="line">   action from the user to display.</span><br><span class="line"></span><br><span class="line">   If the `attachment&apos; disposition is used, presentation of the</span><br><span class="line">   multipart should not proceed without explicit user action.  Once the</span><br><span class="line">   user has chosen to display the multipart, the individual subpart</span><br><span class="line">   dispositions should be consulted to determine how to present the</span><br><span class="line">   subparts.</span><br><span class="line"></span><br><span class="line">2.6  Content-Disposition and the Main Message</span><br><span class="line"></span><br><span class="line">   It is permissible to use Content-Disposition on the main body of an</span><br><span class="line">   [RFC 822] message.</span><br><span class="line"></span><br><span class="line">3.  Examples</span><br><span class="line"></span><br><span class="line">   Here is a an example of a body part containing a JPEG image that is</span><br><span class="line">   intended to be viewed by the user immediately:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: inline</span><br><span class="line">         Content-Description: just a small picture of me</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following body part contains a JPEG image that should be</span><br><span class="line">   displayed to the user only if the user requests it. If the JPEG is</span><br><span class="line">   written to a file, the file should be named &quot;genome.jpg&quot;:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: attachment; filename=genome.jpeg</span><br><span class="line">         Content-Description: a complete map of the human genome</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following is an example of the use of the `attachment&apos;</span><br><span class="line">   disposition with a multipart body part.  The user should see text-</span><br><span class="line">   part-1 immediately, then take some action to view multipart-2.  After</span><br><span class="line">   taking action to view multipart-2, the user will see text-part-2</span><br><span class="line">   right away, and be required to take action to view jpeg-1.  Subparts</span><br><span class="line">   are indented for clarity; they would not be so indented in a real</span><br><span class="line">   message.</span><br><span class="line"></span><br><span class="line">         Content-Type: multipart/mixed; boundary=outer</span><br><span class="line">         Content-Description: multipart-1</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 5]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">           Content-Type: text/plain</span><br><span class="line">           Content-Disposition: inline</span><br><span class="line">           Content-Description: text-part-1</span><br><span class="line"></span><br><span class="line">           Some text goes here</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line">           Content-Type: multipart/mixed; boundary=inner</span><br><span class="line">           Content-Disposition: attachment</span><br><span class="line">           Content-Description: multipart-2</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: text/plain</span><br><span class="line">             Content-Disposition: inline</span><br><span class="line">             Content-Description: text-part-2</span><br><span class="line"></span><br><span class="line">             Some more text here.</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: image/jpeg</span><br><span class="line">             Content-Disposition: attachment</span><br><span class="line">             Content-Description: jpeg-1</span><br><span class="line"></span><br><span class="line">             &lt;jpeg data&gt;</span><br><span class="line">           --inner--</span><br><span class="line">         --outer--</span><br><span class="line"></span><br><span class="line">4.  Summary</span><br><span class="line"></span><br><span class="line">   Content-Disposition takes one of two values, `inline&apos; and</span><br><span class="line">   `attachment&apos;.  &apos;Inline&apos; indicates that the entity should be</span><br><span class="line">   immediately displayed to the user, whereas `attachment&apos; means that</span><br><span class="line">   the user should take additional action to view the entity.</span><br><span class="line"></span><br><span class="line">   The `filename&apos; parameter can be used to suggest a filename for</span><br><span class="line">   storing the bodypart, if the user wishes to store it in an external</span><br><span class="line">   file.</span><br><span class="line"></span><br><span class="line">5.  Security Considerations</span><br><span class="line"></span><br><span class="line">   There are security issues involved any time users exchange data.</span><br><span class="line">   While these are not to be minimized, neither does this memo change</span><br><span class="line">   the status quo in that regard, except in one instance.</span><br><span class="line"></span><br><span class="line">   Since this memo provides a way for the sender to suggest a filename,</span><br><span class="line">   a receiving MUA must take care that the sender&apos;s suggested filename</span><br><span class="line">   does not represent a hazard. Using UNIX as an example, some hazards</span><br><span class="line">   would be:</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 6]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          + Creating startup files (e.g., &quot;.login&quot;).</span><br><span class="line"></span><br><span class="line">          + Creating or overwriting system files (e.g.,</span><br><span class="line">            &quot;/etc/passwd&quot;).</span><br><span class="line"></span><br><span class="line">          + Overwriting any existing file.</span><br><span class="line"></span><br><span class="line">          + Placing executable files into any command search path</span><br><span class="line">            (e.g., &quot;~/bin/more&quot;).</span><br><span class="line"></span><br><span class="line">          + Sending the file to a pipe (e.g., &quot;| sh&quot;).</span><br><span class="line"></span><br><span class="line">   In general, the receiving MUA should never name or place the file</span><br><span class="line">   such that it will get interpreted or executed without the user</span><br><span class="line">   explicitly initiating the action.</span><br><span class="line"></span><br><span class="line">   It is very important to note that this is not an exhaustive list; it</span><br><span class="line">   is intended as a small set of examples only.  Implementors must be</span><br><span class="line">   alert to the potential hazards on their target systems.</span><br><span class="line"></span><br><span class="line">6.  References</span><br><span class="line"></span><br><span class="line">    [RFC 1521]</span><br><span class="line">        Borenstein N., and N. Freed, &quot;MIME (Multipurpose Internet</span><br><span class="line">        Mail Extensions) Part One:  Mechanisms for Specifying and</span><br><span class="line">        Describing the Format of Internet Message Bodies&quot;,</span><br><span class="line">        RFC 1521, Bellcore, Innosoft, September 1993.</span><br><span class="line"></span><br><span class="line">    [RFC 822]</span><br><span class="line">        Crocker, D., &quot;Standard for the Format of ARPA Internet</span><br><span class="line">        Text Messages&quot;, STD 11, RFC 822, UDEL, August 1982.</span><br><span class="line"></span><br><span class="line">7.  Acknowledgements</span><br><span class="line"></span><br><span class="line">We gratefully acknowledge the help these people provided</span><br><span class="line">during the preparation of this draft:</span><br><span class="line"></span><br><span class="line">            Nathaniel Borenstein</span><br><span class="line">            Ned Freed</span><br><span class="line">            Keith Moore</span><br><span class="line">            Dave Crocker</span><br><span class="line">            Dan Pritchett</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 7]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">8.  Authors&apos; Addresses</span><br><span class="line"></span><br><span class="line">   Rens Troost</span><br><span class="line">   New Century Systems</span><br><span class="line">   324 East 41st Street #804</span><br><span class="line">   New York, NY, 10017 USA</span><br><span class="line"></span><br><span class="line">   Phone: +1 (212) 557-2050</span><br><span class="line">   Fax: +1 (212) 557-2049</span><br><span class="line">   EMail: rens@century.com</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Steve Dorner</span><br><span class="line">   QUALCOMM Incorporated</span><br><span class="line">   6455 Lusk Boulevard</span><br><span class="line">   San Diego, CA 92121</span><br><span class="line">   USA</span><br><span class="line"></span><br><span class="line">   EMail: sdorner@qualcomm.com</span><br></pre></td></tr></table></figure>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">upload file</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">设计模式</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/03/30/Content-Disposition header/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
 
   
-<nav id="article-nav">
   
-    <a href="/2019/03/30/CSRF攻击原理及防御/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          CSRF攻击原理及防御
-        
-      </div>
-    </a>
-  
-  
-    <a href="/2019/03/30/greenlet详解/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">greenlet 详解</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    目录，不存在的…
-                    </div>
-                </span>
-            </div>
-        </div>
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-  
-  
-  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
-<script src="/md5.min.js.1"></script>
-<script type="text/javascript">
-
-if(true){
-	var gitalk = new Gitalk({
-  	clientID: '461b2251eaec2cd711c1',
-  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
-  	repo: 'yangyaq.github.io',
-  	owner: 'yangyaq',
-  	admin: ['yangyaq'],
-  	id: md5(location.pathname),
-  	distractionFreeMode: 'true'
-})
-gitalk.render('gitalk-container') 
-}
-</script>
-
-  
-
+    
 
 
           </div>
@@ -375,9 +219,9 @@ gitalk.render('gitalk-container')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
+		isPost: false,
 		isArchive: false,
-		isTag: false,
+		isTag: true,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
