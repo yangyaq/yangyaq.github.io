@@ -144,6 +144,470 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-Content-Disposition header" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/Content-Disposition header/">Content-Disposition</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/Content-Disposition header/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:29:12.330Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Network Working Group                                          R. Troost</span><br><span class="line">Request for Comments: 1806                           New Century Systems</span><br><span class="line">Category: Experimental                                         S. Dorner</span><br><span class="line">                                                   QUALCOMM Incorporated</span><br><span class="line">                                                               June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">               Communicating Presentation Information in</span><br><span class="line">                           Internet Messages:</span><br><span class="line">                     The Content-Disposition Header</span><br><span class="line"></span><br><span class="line">Status of this Memo</span><br><span class="line"></span><br><span class="line">   This memo defines an Experimental Protocol for the Internet</span><br><span class="line">   community.  This memo does not specify an Internet standard of any</span><br><span class="line">   kind.  Discussion and suggestions for improvement are requested.</span><br><span class="line">   Distribution of this memo is unlimited.</span><br><span class="line"></span><br><span class="line">Abstract</span><br><span class="line"></span><br><span class="line">   This memo provides a mechanism whereby messages conforming to the</span><br><span class="line">   [RFC 1521] (&quot;MIME&quot;) specification can convey presentational</span><br><span class="line">   information.  It specifies a new &quot;Content-Disposition&quot; header,</span><br><span class="line">   optional and valid for any [RFC 1521] entity (&quot;message&quot; or &quot;body</span><br><span class="line">   part&quot;). Two values for this header are described in this memo; one</span><br><span class="line">   for the ordinary linear presentation of the body part, and another to</span><br><span class="line">   facilitate the use of mail to transfer files. It is expected that</span><br><span class="line">   more values will be defined in the future, and procedures are defined</span><br><span class="line">   for extending this set of values.</span><br><span class="line"></span><br><span class="line">   This document is intended as an extension to [RFC 1521]. As such, the</span><br><span class="line">   reader is assumed to be familiar with [RFC 1521], and [RFC 822]. The</span><br><span class="line">   information presented herein supplements but does not replace that</span><br><span class="line">   found in those documents.</span><br><span class="line"></span><br><span class="line">1.  Introduction</span><br><span class="line"></span><br><span class="line">   [RFC 1521] specifies a standard format for encapsulating multiple</span><br><span class="line">   pieces of data into a single Internet message. That document does not</span><br><span class="line">   address the issue of presentation styles; it provides a framework for</span><br><span class="line">   the interchange of message content, but leaves presentation issues</span><br><span class="line">   solely in the hands of mail user agent (MUA) implementors.</span><br><span class="line"></span><br><span class="line">   Two common ways of presenting multipart electronic messages are as a</span><br><span class="line">   main document with a list of separate attachments, and as a single</span><br><span class="line">   document with the various parts expanded (displayed) inline. The</span><br><span class="line">   display of an attachment is generally construed to require positive</span><br><span class="line">   action on the part of the recipient, while inline message components</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 1]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   are displayed automatically when the message is viewed. A mechanism</span><br><span class="line">   is needed to allow the sender to transmit this sort of presentational</span><br><span class="line">   information to the recipient; the Content-Disposition header provides</span><br><span class="line">   this mechanism, allowing each component of a message to be tagged</span><br><span class="line">   with an indication of its desired presentation semantics.</span><br><span class="line"></span><br><span class="line">   Tagging messages in this manner will often be sufficient for basic</span><br><span class="line">   message formatting. However, in many cases a more powerful and</span><br><span class="line">   flexible approach will be necessary. The definition of such</span><br><span class="line">   approaches is beyond the scope of this memo; however, such approaches</span><br><span class="line">   can benefit from additional Content-Disposition values and</span><br><span class="line">   parameters, to be defined at a later date.</span><br><span class="line"></span><br><span class="line">   In addition to allowing the sender to specify the presentational</span><br><span class="line">   disposition of a message component, it is desirable to allow her to</span><br><span class="line">   indicate a default archival disposition; a filename. The optional</span><br><span class="line">   &quot;filename&quot; parameter provides for this.</span><br><span class="line"></span><br><span class="line">2.  The Content-Disposition Header Field</span><br><span class="line"></span><br><span class="line">   Content-Disposition is an optional header; in its absence, the MUA</span><br><span class="line">   may use whatever presentation method it deems suitable.</span><br><span class="line"></span><br><span class="line">   It is desirable to keep the set of possible disposition types small</span><br><span class="line">   and well defined, to avoid needless complexity. Even so, evolving</span><br><span class="line">   usage will likely require the definition of additional disposition</span><br><span class="line">   types or parameters, so the set of disposition values is extensible;</span><br><span class="line">   see below.</span><br><span class="line"></span><br><span class="line">   In the extended BNF notation of [RFC 822], the Content-Disposition</span><br><span class="line">   header field is defined as follows:</span><br><span class="line"></span><br><span class="line">        disposition := &quot;Content-Disposition&quot; &quot;:&quot;</span><br><span class="line">                       disposition-type</span><br><span class="line">                       *(&quot;;&quot; disposition-parm)</span><br><span class="line"></span><br><span class="line">        disposition-type := &quot;inline&quot;</span><br><span class="line">                          / &quot;attachment&quot;</span><br><span class="line">                          / extension-token</span><br><span class="line">                          ; values are not case-sensitive</span><br><span class="line"></span><br><span class="line">        disposition-parm := filename-parm / parameter</span><br><span class="line"></span><br><span class="line">        filename-parm := &quot;filename&quot; &quot;=&quot; value;</span><br><span class="line"></span><br><span class="line">   `Extension-token&apos;, `parameter&apos; and `value&apos; are defined according to</span><br><span class="line">   [RFC 822] and [RFC 1521].</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 2]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">2.1  The Inline Disposition Type</span><br><span class="line"></span><br><span class="line">   A bodypart should be marked `inline&apos; if it is intended to be</span><br><span class="line">   displayed automatically upon display of the message. Inline bodyparts</span><br><span class="line">   should be presented in the order in which they occur, subject to the</span><br><span class="line">   normal semantics of multipart messages.</span><br><span class="line"></span><br><span class="line">2.2  The Attachment Disposition Type</span><br><span class="line"></span><br><span class="line">   Bodyparts can be designated `attachment&apos; to indicate that they are</span><br><span class="line">   separate from the main body of the mail message, and that their</span><br><span class="line">   display should not be automatic, but contingent upon some further</span><br><span class="line">   action of the user. The MUA might instead present the user of a</span><br><span class="line">   bitmap terminal with an iconic representation of the attachments, or,</span><br><span class="line">   on character terminals, with a list of attachments from which the</span><br><span class="line">   user could select for viewing or storage.</span><br><span class="line"></span><br><span class="line">2.3  The Filename Parameter</span><br><span class="line"></span><br><span class="line">   The sender may want to suggest a filename to be used if the entity is</span><br><span class="line">   detached and stored in a separate file. If the receiving MUA writes</span><br><span class="line">   the entity to a file, the suggested filename should be used as a</span><br><span class="line">   basis for the actual filename, where possible.</span><br><span class="line"></span><br><span class="line">   It is important that the receiving MUA not blindly use the suggested</span><br><span class="line">   filename.  The suggested filename should be checked (and possibly</span><br><span class="line">   changed) to see that it conforms to local filesystem conventions,</span><br><span class="line">   does not overwrite an existing file, and does not present a security</span><br><span class="line">   problem (see Security Considerations below).</span><br><span class="line"></span><br><span class="line">   The receiving MUA should not respect any directory path information</span><br><span class="line">   that may seem to be present in the filename parameter.  The filename</span><br><span class="line">   should be treated as a terminal component only.  Portable</span><br><span class="line">   specification of directory paths might possibly be done in the future</span><br><span class="line">   via a separate Content-Disposition parameter, but no provision is</span><br><span class="line">   made for it in this draft.</span><br><span class="line"></span><br><span class="line">   Current [RFC 1521] grammar restricts parameter values (and hence</span><br><span class="line">   Content-Disposition filenames) to US-ASCII.  We recognize the great</span><br><span class="line">   desirability of allowing arbitrary character sets in filenames, but</span><br><span class="line">   it is beyond the scope of this document to define the necessary</span><br><span class="line">   mechanisms.  We expect that the basic [RFC 1521] `value&apos;</span><br><span class="line">   specification will someday be amended to allow use of non-US-ASCII</span><br><span class="line">   characters, at which time the same mechanism should be used in the</span><br><span class="line">   Content-Disposition filename parameter.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 3]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Beyond the limitation to US-ASCII, the sending MUA may wish to bear</span><br><span class="line">   in mind the limitations of common filesystems.  Many have severe</span><br><span class="line">   length and character set restrictions.  Short alphanumeric filenames</span><br><span class="line">   are least likely to require modification by the receiving system.</span><br><span class="line"></span><br><span class="line">   The presence of the filename parameter does not force an</span><br><span class="line">   implementation to write the entity to a separate file. It is</span><br><span class="line">   perfectly acceptable for implementations to leave the entity as part</span><br><span class="line">   of the normal mail stream unless the user requests otherwise. As a</span><br><span class="line">   consequence, the parameter may be used on any MIME entity, even</span><br><span class="line">   `inline&apos; ones. These will not normally be written to files, but the</span><br><span class="line">   parameter could be used to provide a filename if the receiving user</span><br><span class="line">   should choose to write the part to a file.</span><br><span class="line"></span><br><span class="line">2.4  Future Extensions and Unrecognized Disposition Types</span><br><span class="line"></span><br><span class="line">   In the likely event that new parameters or disposition types are</span><br><span class="line">   needed, they should be registered with the IANA, in the manner</span><br><span class="line">   specified in [RFC 1521], appendix E.</span><br><span class="line"></span><br><span class="line">   Once new disposition types and parameters are defined, there is of</span><br><span class="line">   course the likelihood that implementations will see disposition types</span><br><span class="line">   and parameters they do not understand.  Furthermore, since x-tokens</span><br><span class="line">   are allowed, implementations may also see entirely unregistered</span><br><span class="line">   disposition types and parameters.</span><br><span class="line"></span><br><span class="line">   Unrecognized parameters should be ignored. Unrecognized disposition</span><br><span class="line">   types should be treated as `attachment&apos;. The choice of `attachment&apos;</span><br><span class="line">   for unrecognized types is made because a sender who goes to the</span><br><span class="line">   trouble of producing a Content-Disposition header with a new</span><br><span class="line">   disposition type is more likely aiming for something more elaborate</span><br><span class="line">   than inline presentation.</span><br><span class="line"></span><br><span class="line">   Unless noted otherwise in the definition of a parameter, Content-</span><br><span class="line">   Disposition parameters are valid for all dispositions.  (In contrast</span><br><span class="line">   to [RFC 1521] content-type parameters, which are defined on a per-</span><br><span class="line">   content-type basis.) Thus, for example, the `filename&apos; parameter</span><br><span class="line">   still means the name of the file to which the part should be written,</span><br><span class="line">   even if the disposition itself is unrecognized.</span><br><span class="line"></span><br><span class="line">2.5  Content-Disposition and Multipart</span><br><span class="line"></span><br><span class="line">   If a Content-Disposition header is used on a multipart body part, it</span><br><span class="line">   applies to the multipart as a whole, not the individual subparts.</span><br><span class="line">   The disposition types of the subparts do not need to be consulted</span><br><span class="line">   until the multipart itself is presented.  When the multipart is</span><br><span class="line">   displayed, then the dispositions of the subparts should be respected.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 4]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   If the `inline&apos; disposition is used, the multipart should be</span><br><span class="line">   displayed as normal; however, an `attachment&apos; subpart should require</span><br><span class="line">   action from the user to display.</span><br><span class="line"></span><br><span class="line">   If the `attachment&apos; disposition is used, presentation of the</span><br><span class="line">   multipart should not proceed without explicit user action.  Once the</span><br><span class="line">   user has chosen to display the multipart, the individual subpart</span><br><span class="line">   dispositions should be consulted to determine how to present the</span><br><span class="line">   subparts.</span><br><span class="line"></span><br><span class="line">2.6  Content-Disposition and the Main Message</span><br><span class="line"></span><br><span class="line">   It is permissible to use Content-Disposition on the main body of an</span><br><span class="line">   [RFC 822] message.</span><br><span class="line"></span><br><span class="line">3.  Examples</span><br><span class="line"></span><br><span class="line">   Here is a an example of a body part containing a JPEG image that is</span><br><span class="line">   intended to be viewed by the user immediately:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: inline</span><br><span class="line">         Content-Description: just a small picture of me</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following body part contains a JPEG image that should be</span><br><span class="line">   displayed to the user only if the user requests it. If the JPEG is</span><br><span class="line">   written to a file, the file should be named &quot;genome.jpg&quot;:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: attachment; filename=genome.jpeg</span><br><span class="line">         Content-Description: a complete map of the human genome</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following is an example of the use of the `attachment&apos;</span><br><span class="line">   disposition with a multipart body part.  The user should see text-</span><br><span class="line">   part-1 immediately, then take some action to view multipart-2.  After</span><br><span class="line">   taking action to view multipart-2, the user will see text-part-2</span><br><span class="line">   right away, and be required to take action to view jpeg-1.  Subparts</span><br><span class="line">   are indented for clarity; they would not be so indented in a real</span><br><span class="line">   message.</span><br><span class="line"></span><br><span class="line">         Content-Type: multipart/mixed; boundary=outer</span><br><span class="line">         Content-Description: multipart-1</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 5]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">           Content-Type: text/plain</span><br><span class="line">           Content-Disposition: inline</span><br><span class="line">           Content-Description: text-part-1</span><br><span class="line"></span><br><span class="line">           Some text goes here</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line">           Content-Type: multipart/mixed; boundary=inner</span><br><span class="line">           Content-Disposition: attachment</span><br><span class="line">           Content-Description: multipart-2</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: text/plain</span><br><span class="line">             Content-Disposition: inline</span><br><span class="line">             Content-Description: text-part-2</span><br><span class="line"></span><br><span class="line">             Some more text here.</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: image/jpeg</span><br><span class="line">             Content-Disposition: attachment</span><br><span class="line">             Content-Description: jpeg-1</span><br><span class="line"></span><br><span class="line">             &lt;jpeg data&gt;</span><br><span class="line">           --inner--</span><br><span class="line">         --outer--</span><br><span class="line"></span><br><span class="line">4.  Summary</span><br><span class="line"></span><br><span class="line">   Content-Disposition takes one of two values, `inline&apos; and</span><br><span class="line">   `attachment&apos;.  &apos;Inline&apos; indicates that the entity should be</span><br><span class="line">   immediately displayed to the user, whereas `attachment&apos; means that</span><br><span class="line">   the user should take additional action to view the entity.</span><br><span class="line"></span><br><span class="line">   The `filename&apos; parameter can be used to suggest a filename for</span><br><span class="line">   storing the bodypart, if the user wishes to store it in an external</span><br><span class="line">   file.</span><br><span class="line"></span><br><span class="line">5.  Security Considerations</span><br><span class="line"></span><br><span class="line">   There are security issues involved any time users exchange data.</span><br><span class="line">   While these are not to be minimized, neither does this memo change</span><br><span class="line">   the status quo in that regard, except in one instance.</span><br><span class="line"></span><br><span class="line">   Since this memo provides a way for the sender to suggest a filename,</span><br><span class="line">   a receiving MUA must take care that the sender&apos;s suggested filename</span><br><span class="line">   does not represent a hazard. Using UNIX as an example, some hazards</span><br><span class="line">   would be:</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 6]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          + Creating startup files (e.g., &quot;.login&quot;).</span><br><span class="line"></span><br><span class="line">          + Creating or overwriting system files (e.g.,</span><br><span class="line">            &quot;/etc/passwd&quot;).</span><br><span class="line"></span><br><span class="line">          + Overwriting any existing file.</span><br><span class="line"></span><br><span class="line">          + Placing executable files into any command search path</span><br><span class="line">            (e.g., &quot;~/bin/more&quot;).</span><br><span class="line"></span><br><span class="line">          + Sending the file to a pipe (e.g., &quot;| sh&quot;).</span><br><span class="line"></span><br><span class="line">   In general, the receiving MUA should never name or place the file</span><br><span class="line">   such that it will get interpreted or executed without the user</span><br><span class="line">   explicitly initiating the action.</span><br><span class="line"></span><br><span class="line">   It is very important to note that this is not an exhaustive list; it</span><br><span class="line">   is intended as a small set of examples only.  Implementors must be</span><br><span class="line">   alert to the potential hazards on their target systems.</span><br><span class="line"></span><br><span class="line">6.  References</span><br><span class="line"></span><br><span class="line">    [RFC 1521]</span><br><span class="line">        Borenstein N., and N. Freed, &quot;MIME (Multipurpose Internet</span><br><span class="line">        Mail Extensions) Part One:  Mechanisms for Specifying and</span><br><span class="line">        Describing the Format of Internet Message Bodies&quot;,</span><br><span class="line">        RFC 1521, Bellcore, Innosoft, September 1993.</span><br><span class="line"></span><br><span class="line">    [RFC 822]</span><br><span class="line">        Crocker, D., &quot;Standard for the Format of ARPA Internet</span><br><span class="line">        Text Messages&quot;, STD 11, RFC 822, UDEL, August 1982.</span><br><span class="line"></span><br><span class="line">7.  Acknowledgements</span><br><span class="line"></span><br><span class="line">We gratefully acknowledge the help these people provided</span><br><span class="line">during the preparation of this draft:</span><br><span class="line"></span><br><span class="line">            Nathaniel Borenstein</span><br><span class="line">            Ned Freed</span><br><span class="line">            Keith Moore</span><br><span class="line">            Dave Crocker</span><br><span class="line">            Dan Pritchett</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 7]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">8.  Authors&apos; Addresses</span><br><span class="line"></span><br><span class="line">   Rens Troost</span><br><span class="line">   New Century Systems</span><br><span class="line">   324 East 41st Street #804</span><br><span class="line">   New York, NY, 10017 USA</span><br><span class="line"></span><br><span class="line">   Phone: +1 (212) 557-2050</span><br><span class="line">   Fax: +1 (212) 557-2049</span><br><span class="line">   EMail: rens@century.com</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Steve Dorner</span><br><span class="line">   QUALCOMM Incorporated</span><br><span class="line">   6455 Lusk Boulevard</span><br><span class="line">   San Diego, CA 92121</span><br><span class="line">   USA</span><br><span class="line"></span><br><span class="line">   EMail: sdorner@qualcomm.com</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">upload file</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/Content-Disposition header/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-greenlet详解" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/greenlet详解/">greenlet 详解</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/greenlet详解/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:27:18.061Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="https://greenlet.readthedocs.io/en/latest/" target="_blank" rel="noopener">官网</a></p>
+<h3 id="简单使用介绍"><a href="#简单使用介绍" class="headerlink" title="简单使用介绍"></a>简单使用介绍</h3><p>​    A “greenlet” is a small independent pseudo-thread. Think about it as a small stack of frames; the outermost (bottom) frame is the initial function you called, and the innermost frame is the one in which the greenlet is currently paused. You work with greenlets by creating a number of such stacks and jumping execution between them. Jumps are never implicit: a greenlet must choose to jump to another greenlet, which will cause the former to suspend and the latter to resume where it was suspended. Jumping between greenlets is called “switching”.</p>
+<p>​    When you create a greenlet, it gets an initially empty stack; when you first switch to it, it starts to run a specified function, which may call other functions, switch out of the greenlet, etc. When eventually the outermost function finishes its execution, the greenlet’s stack becomes empty again and the greenlet is “dead”. Greenlets can also die of an uncaught exception.</p>
+<pre><code>一个 “greenlet” 是一个小型的独立伪线程。可以把它想像成一些栈帧，栈底是初始调用的函数，而栈顶是当前greenlet的暂停位置。你使用greenlet创建一堆这样的堆栈，然后在他们之间跳转执行。跳转必须**显式声明**的：一个greenlet必须选择要跳转到的另一个greenlet，这会让前一个挂起，而后一个在此前挂起处恢复执行。不同greenlets之间的跳转称为切换(switching) 。
+</code></pre><p>　　当你创建一个greenlet时，它得到一个开始时为空的栈；当你第一次切换到它时，它会执行指定的函数，这个函数可能会调用其他函数、切换跳出greenlet等等。当最终栈底的函数执行结束出栈时，这个greenlet的栈又变成空的，这个greenlet也就死掉了。greenlet也会因为一个未捕捉的异常死掉。</p>
+<p>示例1:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> greenlet <span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="number">12</span>)</span><br><span class="line">    gr2.switch()<span class="comment">#2.jumps to test2,print 56</span></span><br><span class="line">    print(<span class="number">34</span>)</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="number">56</span>)</span><br><span class="line">    gr1.switch()<span class="comment">#3.jumps to test1,print 34,then test1 finishes and gr1 dies</span></span><br><span class="line">    print(<span class="number">78</span>)</span><br><span class="line">    </span><br><span class="line">gr1 = greenlet(test1) <span class="comment">#create a new greenlet object gr1(without running it)</span></span><br><span class="line">gr2 = greenlet(test2) <span class="comment">#create a new greenlet object gr2(without running it)</span></span><br><span class="line"></span><br><span class="line">gr1.switch()<span class="comment">#1.jumps to test1,print 12 #4. back to here</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 78 is never printed , test2 is no dead</span></span><br></pre></td></tr></table></figure>
+<p>​    程序从<code>gr1.switch()</code>开始，运行<code>test1</code>，打印12，经<code>gr2.switch()</code>，切换到<code>test2</code>，打印56，经<code>gr1.switch()</code>切换到<code>test1</code>上次离开的地方，打印34，<code>test1</code>运行结束，切回到其parent，也就是<code>gr1.switch()</code>处，运行结束，而<code>test2</code>中的 78 没有执行到。</p>
+<p>​      接着看<code>示例2</code>，使用<code>dead</code>查看<code>greenlet</code>的状态。</p>
+<p>示例2:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> greenlet <span class="keyword">import</span> greenlet</span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(a)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> a</span><br><span class="line">    z = gr2.switch(<span class="string">'a to b'</span>)</span><br><span class="line">    <span class="keyword">print</span> z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(b)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> b</span><br><span class="line">    gr1.switch(<span class="string">'b to a'</span>)</span><br><span class="line">    <span class="keyword">print</span> b</span><br><span class="line"></span><br><span class="line">gr1 = greenlet(test1)</span><br><span class="line">gr2 = greenlet(test2)</span><br><span class="line"></span><br><span class="line">gr1.switch(<span class="string">'a'</span>)<span class="comment"># target.switch(value)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> (gr1.dead)</span><br><span class="line"><span class="keyword">print</span> (gr2.dead)<span class="comment">#False</span></span><br></pre></td></tr></table></figure>
+<p>打印结果</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">a</span><br><span class="line">a to b</span><br><span class="line">b to a <span class="comment">#切换到a后，a运行结束</span></span><br><span class="line">True</span><br><span class="line">False <span class="comment">#说明test2没有正常退出</span></span><br></pre></td></tr></table></figure>
+<h3 id="父parent"><a href="#父parent" class="headerlink" title="父parent"></a>父parent</h3><p>​    Let’s see where execution goes when a greenlet dies. Every greenlet has a “parent” greenlet. The parent greenlet is initially the one in which the greenlet was created (this can be changed at any time). The parent is where execution continues when a greenlet dies. This way, greenlets are organized in a tree. Top-level code that doesn’t run in a user-created greenlet runs in the implicit “main” greenlet, which is the root of the tree.</p>
+<p>​    In the above example, both gr1 and gr2 have the main greenlet as a parent. Whenever one of them dies, the execution comes back to “main”.</p>
+<p>　　Uncaught exceptions are propagated into the parent, too. For example, if the above test2() contained a typo, it would generate a NameError that would kill gr2, and the exception would go back directly into “main”. The traceback would show test2, but not test1. Remember, switches are not calls, but transfer of execution between parallel “stack containers”, and the “parent” defines which stack logically comes “below” the current one.</p>
+<p>　　现在看看一个greenlet结束时执行点去哪里。每个greenlet拥有一个父greenlet。每个greenlet最初在其父greenlet中创建(不过可以在任何时候改变)。当子greenlet结束时，执行位置从父greenlet那里继续。这样，greenlets之间就被组织成一棵树，顶级的代码并不在用户创建的 greenlet 中运行，而是运行在一个主greenlet中，也就是所有greenlet关系图的树根。</p>
+<p>​        在上面的例子中， <code>gr1</code> 和 <code>gr2</code> 都把主greenlet作为父greenlet。任何一个死掉，执行点都会回到主greenlet。</p>
+<p>　　未捕获的异常会传递给父greenlet。如果<code>示例1</code>的  <code>test2</code>包含一个打印错误(typo)，会生成一个  <code>NameError</code>而杀死 <code>gr2</code> ，然后异常被传递回主greenlet。traceback会显示  <code>test2</code>而不是 <code>test1</code> 。记住，<code>switchs are not calls</code>，而是执行点在并行的栈容器间交换，而父greenlet定义了这些栈之间的先后关系。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">return 到其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    z = gr2.switch(x+y)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'back z'</span>,z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    <span class="keyword">return</span> u</span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">'main:%s,gr1:%s,gr2:%s'</span>%(id(greenlet.getcurrent()),id(gr1),id(gr2))</span><br><span class="line"><span class="keyword">print</span> gr1.switch(<span class="string">'hello'</span>,<span class="string">' world'</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'back to main'</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main:4413943152,gr1:4413942832,gr2:4413943312</span><br><span class="line">4413942832 4413943152 <span class="comment"># gr1的parent是main greenlet</span></span><br><span class="line">4413943312 4413943152 <span class="comment"># gr2的paren是main greenlet</span></span><br><span class="line">hello world <span class="comment">#gr1把值返回给main greenlet</span></span><br><span class="line">back to main</span><br></pre></td></tr></table></figure>
+<p>​        每个<code>greenlet</code>都有一个<code>parent</code>，parent取决于greenlet的创生环境。当<code>return</code>时，将值传递到其parent，而这个parent在任何地方都可以改变。</p>
+<p>​    如下：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">return 到其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    z = gr2.switch(x+y)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'back z'</span>,z</span><br><span class="line">    <span class="keyword">return</span> z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    gr2.parent = gr1 <span class="comment">#指定gr2的parent是gr1</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    <span class="keyword">return</span> u</span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2) <span class="comment">#或者在这里指定,gr2 = greenlet.greenlet(test2,parent=gr1)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">'main:%s,gr1:%s,gr2:%s'</span>%(id(greenlet.getcurrent()),id(gr1),id(gr2))</span><br><span class="line"><span class="keyword">print</span> gr1.switch(<span class="string">'hello'</span>,<span class="string">' world'</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'back to main'</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main:4328455536,gr1:4328455216,gr2:4328455696</span><br><span class="line">4328455216 4328455536 <span class="comment">#gr1的parent是main greenlet（greenlet关系图的树根）</span></span><br><span class="line">4328455696 4328455216 <span class="comment">#gr2的parent是gr1 greenlet</span></span><br><span class="line">back z hello world <span class="comment">#gr2 将值返回给gr1</span></span><br><span class="line">hello world <span class="comment">#gr1将值返回给main greenlet</span></span><br><span class="line">back to main</span><br></pre></td></tr></table></figure>
+<p>​    同样，子greenlet抛出的异常也传递给parent。         </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">异常抛至其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"><span class="keyword">import</span> traceback</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        z = gr2.switch(<span class="string">'x+y'</span>)</span><br><span class="line">    <span class="keyword">except</span> Exception:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'catch Exception in test1'</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    <span class="keyword">assert</span> <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    gr1.switch(<span class="string">"hello"</span>,<span class="string">" world"</span>)</span><br><span class="line"><span class="keyword">except</span> Exception,e:</span><br><span class="line">    traceback.print_exc(e)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'catch Exception in main'</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"4.py"</span>, line 23, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    gr1.switch(<span class="string">"hello"</span>,<span class="string">" world"</span>)</span><br><span class="line">  File <span class="string">"4.py"</span>, line 17, <span class="keyword">in</span> test2   <span class="comment">#### switch not calls</span></span><br><span class="line">    assert False</span><br><span class="line">AssertionError</span><br><span class="line">catch Exception <span class="keyword">in</span> main</span><br></pre></td></tr></table></figure>
+<p>​    greenlet 中也提供了，监控greenlet切换的接口tracing</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">trace 监控greenlet切换</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_greenlet_tracing</span><span class="params">()</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">callback</span><span class="params">(event, args)</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'callback'</span>, event, <span class="string">'from'</span>, id(args[<span class="number">0</span>]), <span class="string">'to'</span>, id(args[<span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dummy</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'dummpy'</span></span><br><span class="line">        g2.switch()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dummyexception</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'dummpyexception'</span></span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">'execp in dummyexecption'</span>)</span><br><span class="line"></span><br><span class="line">    main = greenlet.getcurrent()</span><br><span class="line">    g1 = greenlet.greenlet(dummy)</span><br><span class="line">	g2 = greenlet.greenlet(dummyexception)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'main id %s, g1 id %s, g2 id %s'</span> %(id(main),id(g1),id(g2))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    oldtrace = greenlet.settrace(callback)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        g1.switch()</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'Exception'</span></span><br><span class="line"></span><br><span class="line">    greenlet.settrace(oldtrace)</span><br><span class="line"></span><br><span class="line">test_greenlet_tracing()</span><br></pre></td></tr></table></figure>
+<p><code>event</code>：事件<code>throw</code> or <code>switch</code></p>
+<p><code>args</code>：二元组<code>(origin,target)</code></p>
+<p>运行结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main id 4444089392, g1 id 4444089872, g2 id 4444090192</span><br><span class="line">callback switch from 4444089392 to 4444089872 <span class="comment">#main-&gt;g1</span></span><br><span class="line">dummpy</span><br><span class="line">callback switch from 4444089872 to 4444090192 <span class="comment">#g1-&gt;g2</span></span><br><span class="line">dummpyexception</span><br><span class="line">callback throw from 4444090192 to 4444089392 <span class="comment">#g2-&gt;main</span></span><br><span class="line">Exception</span><br></pre></td></tr></table></figure>
+<h3 id="实例化"><a href="#实例化" class="headerlink" title="实例化"></a>实例化</h3><p><code>greenlet.greenlet</code>是greenlet 类型，支持以下操作：</p>
+<p><code>greenlet(run=None，parent=None)</code></p>
+<p>​      创建一个新的<code>greenlet</code>对象（不执行），<code>run</code> 是这个<code>greenlet</code>要执行的回调函数，<code>parent</code>是其父  greenlet，默认是当前<code>greenlet</code>。</p>
+<p><code>greenlet.getcurrent()</code></p>
+<p>​         返回调用当前方法的<code>greenlet</code></p>
+<p> <code>greenlet.GreenletExit</code></p>
+<p>​         这个特定的异常不会波及到父greenlet，它用于干掉一个greenlet。</p>
+<p>  greenlet.greenlet可以被继承，继承的子类实现<code>run</code>方法，并且不用再创建时显示指定run参数。</p>
+<h3 id="greenlets-之间的切换"><a href="#greenlets-之间的切换" class="headerlink" title="greenlets 之间的切换"></a>greenlets 之间的切换</h3><p>​    Switches between greenlets occur when the method switch() of a greenlet is called, in which case execution jumps to the greenlet whose switch() is called, or when a greenlet dies, in which case execution jumps to the parent greenlet. During a switch, an object or an exception is “sent” to the target greenlet; this can be used as a convenient way to pass information between greenlets. </p>
+<p>​    当greenlet调用<code>switch()</code>方法，或该greenlet执行结束要回其parent greenlet时，就会发生greenlets之间的切换。在切换时，一个对象或者异常被发送到目标greenlet，这便可以作为greenlet之间的传递信息的方式。            </p>
+<p>​      <code>g.switch(*args,**kwargs)</code>：切换到g，并发送给定的参数，如果g还没有运行就让它运行。</p>
+<p>​      run方法运行结束后，子greenlt return的值或者异常传递给父greenlet（ 除了异常是<code>greenlt.GreenletExit</code>）</p>
+<h3 id="greenlet的方法和属性"><a href="#greenlet的方法和属性" class="headerlink" title="greenlet的方法和属性"></a>greenlet的方法和属性</h3><p><code>g.switch(*args,**kwargs)</code></p>
+<p><code>g.run</code></p>
+<p><code>g.parent</code></p>
+<p><code>g.gr_frame</code></p>
+<p><code>g.dead</code></p>
+<p><code>bool(g)</code> ：未执行或者执行结束为<code>False</code></p>
+<p><code>g.throw(typ,[val,[tb]])</code>：默认typ<code>greenlet.GreenletExit</code></p>
+<h3 id="greenlets和Python线程"><a href="#greenlets和Python线程" class="headerlink" title="greenlets和Python线程"></a><strong>greenlets和Python线程</strong></h3><p>​    Greenlets can be combined with Python threads; in this case, each thread contains an independent “main” greenlet with a tree of sub-greenlets. It is not possible to mix or switch between greenlets belonging to different threads.</p>
+<p>　　greenlets可以与Python线程一起使用；在这种情况下，每个线程包含一个独立的 main greenlet，并拥有自己的greenlet树。不同线程之间不可以互相切换greenlet。</p>
+<h3 id="垃圾收集活跃的greenlets"><a href="#垃圾收集活跃的greenlets" class="headerlink" title="垃圾收集活跃的greenlets"></a><strong>垃圾收集活跃的greenlets</strong></h3><p>​    If all the references to a greenlet object go away (including the references from the parent attribute of other greenlets), then there is no way to ever switch back to this greenlet. In this case, a GreenletExit exception is generated into the greenlet. This is the only case where a greenlet receives the execution asynchronously. This gives try:finally: blocks a chance to clean up resources held by the greenlet. This feature also enables a programming style in which greenlets are infinite loops waiting for data and processing it. Such loops are automatically interrupted when the last reference to the greenlet goes away.</p>
+<p>　　The greenlet is expected to either die or be resurrected by having a new reference to it stored somewhere; just catching and ignoring the GreenletExit is likely to lead to an infinite loop.</p>
+<p>　　Greenlets do not participate in garbage collection; cycles involving data that is present in a greenlet’s frames will not be detected. Storing references to other greenlets cyclically may lead to leaks.</p>
+<p>　　如果不再有对greenlet对象的引用时(包括其他greenlet的parent)，还是没有办法切换回greenlet。这种情况下会生成一个 GreenletExit 异常到greenlet。这是greenlet收到异步异常的唯一情况。应该给出一个 try .. finally 用于清理greenlet内的资源。这个功能同时允许greenlet中无限循环的编程风格。这样循环可以在最后一个引用消失时自动中断。</p>
+<p>　　如果不希望greenlet死掉或者把引用放到别处，只需要捕捉和忽略 GreenletExit 异常即可。</p>
+<p>　　greenlet不参与垃圾收集；greenlet帧的循环引用数据会被检测到。将引用传递到其他的循环greenlet会引起内存泄露。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">协程</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">greenlet</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">python</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/greenlet详解/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-tornado的事件循环机制" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/06/tornado的事件循环机制/">tornado的事件循环机制</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/06/tornado的事件循环机制/" class="archive-article-date">
+  	<time datetime="2019-03-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Tornado的事件循环机制，核心就是ioloop（异步机制的核心）</p>
+<ol>
+<li><p>获取ioloop实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">io_lo0p = ioloop.IOLoop.current(instance=<span class="keyword">True</span>)  <span class="comment"># 默认是true</span></span><br></pre></td></tr></table></figure>
+<p>获取ioloop实例时，如果当前没有实例并且instance为真，则创建一个新的ioloop实例， 如果当前已经有该实例，则返回当前实例。</p>
+</li>
+</ol>
+<p>​    <strong>ioloop实例是单例的</strong>。</p>
+<ol start="2">
+<li><p>ioloop.add_handler(fd, callback, events)</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_handler</span><span class="params">(self, fd, handler, events)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    fd : 可以是整数的文件描述符</span></span><br><span class="line"><span class="string">    events: 常量 可以是 OLoop.READ / IOLoop.WRITE / IOLoop.ERROR</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">   	以后...会运行 handler（fd, event) </span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="comment"># 注册事件到epoll/select/kqueue中</span></span><br><span class="line">    fd, obj = self.split_fd(fd)</span><br><span class="line">    <span class="comment"># _handler字典中保存着obj文件描述符， handler：当该文件描述符准备好时需要调用的方法</span></span><br><span class="line">    self._handlers[fd] = (obj, stack_context.wrap(handler))</span><br><span class="line">    <span class="comment"># 将文件描述符注册到epoll/select/kqueue列表中</span></span><br><span class="line">    self._impl.register(fd, events | self.ERROR)  <span class="comment"># 自动加上error事件</span></span><br></pre></td></tr></table></figure>
+<p>self._impl 可能是 select.epoll() / select.kqueue() / select.select()</p>
+</li>
+<li><p>ioloop.start()</p>
+<p>ioloop的主循环，主要监测这三类事件：</p>
+<ul>
+<li><p>可立即执行的事件</p>
+<p>通过 iolooop.add_callback(callback， *args， **kwargs)  :  将callback加到self._callbacks队列中的事件</p>
+</li>
+<li><p>timer定时事件</p>
+<p>通过 ioloop.call_at(self, deadline, callback, *args, **kwargs)  ：将_Timeout对象 push到 <code>self.\_timeouts</code> 堆中的事件</p>
+</li>
+<li><p>io事件，注册到io复用机制中的事件</p>
+<p>通过 ioloop.add_handler(fd, callback, events)，update_handler，remove_handler注册的io事件</p>
+</li>
+</ul>
+</li>
+</ol>
+   <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">	...</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">            <span class="comment"># Prevent IO event starvation by delaying new callbacks</span></span><br><span class="line">            <span class="comment"># to the next iteration of the event loop.</span></span><br><span class="line">            <span class="comment"># 上次循环添加的立即执行的事件</span></span><br><span class="line">            ncallbacks = len(self._callbacks)</span><br><span class="line">         </span><br><span class="line">            <span class="comment"># Add any timeouts that have come due to the callback list.</span></span><br><span class="line">            <span class="comment"># Do not run anything until we have determined which ones</span></span><br><span class="line">            <span class="comment"># are ready, so timeouts that call add_timeout cannot</span></span><br><span class="line">            <span class="comment"># schedule anything in this iteration.</span></span><br><span class="line">            due_timeouts = []</span><br><span class="line">            <span class="keyword">if</span> self._timeouts:</span><br><span class="line">                now = self.time()</span><br><span class="line">                <span class="keyword">while</span> self._timeouts:</span><br><span class="line">                    <span class="comment"># 把取消的事件（事件取消会将callback设置为None）在堆中弹出,相应数量减一 </span></span><br><span class="line">                    <span class="keyword">if</span> self._timeouts[<span class="number">0</span>].callback <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">                        <span class="comment"># _timeouts 弹出堆顶元素</span></span><br><span class="line">                        heapq.heappop(self._timeouts)</span><br><span class="line">                        self._cancellations -= <span class="number">1</span></span><br><span class="line">                    <span class="comment"># 把到时间的_Timeout事件弹出，添加到due_timeouts中</span></span><br><span class="line">                    <span class="keyword">elif</span> self._timeouts[<span class="number">0</span>].deadline &lt;= now:</span><br><span class="line">                        due_timeouts.append(heapq.heappop(self._timeouts))</span><br><span class="line">                    <span class="keyword">else</span>:</span><br><span class="line">                        <span class="keyword">break</span></span><br><span class="line">                </span><br><span class="line">                <span class="comment"># 若超过一半的定时事件取消，则遍历并取出所有的未取消的定时事件，并建堆。</span></span><br><span class="line">                <span class="keyword">if</span> (self._cancellations &gt; <span class="number">512</span> <span class="keyword">and</span></span><br><span class="line">                        self._cancellations &gt; (len(self._timeouts) &gt;&gt; 	<span class="number">1</span>)):</span><br><span class="line">                    <span class="comment"># Clean up the timeout queue when it gets large and it's</span></span><br><span class="line">                    <span class="comment"># more than half cancellations.</span></span><br><span class="line">                    self._cancellations = <span class="number">0</span></span><br><span class="line">                    self._timeouts = [x <span class="keyword">for</span> x <span class="keyword">in</span> self._timeouts</span><br><span class="line">                                      <span class="keyword">if</span> x.callback <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>]</span><br><span class="line">                    heapq.heapify(self._timeouts)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 执行所有可以立即执行的事件</span></span><br><span class="line">            <span class="keyword">for</span> i <span class="keyword">in</span> range(ncallbacks):</span><br><span class="line">                self._run_callback(self._callbacks.popleft())</span><br><span class="line">            <span class="comment"># 执行所有已经到时间的事件</span></span><br><span class="line">            <span class="keyword">for</span> timeout <span class="keyword">in</span> due_timeouts:</span><br><span class="line">                <span class="keyword">if</span> timeout.callback <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                    self._run_callback(timeout.callback)</span><br><span class="line">            <span class="comment"># Closures may be holding on to a lot of memory, so allow</span></span><br><span class="line">            <span class="comment"># them to be freed before we go into our poll wait.</span></span><br><span class="line">            due_timeouts = timeout = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> self._callbacks:</span><br><span class="line">                <span class="comment"># If any callbacks or timeouts called add_callback,</span></span><br><span class="line">                <span class="comment"># we don't want to wait in poll() before we run them.</span></span><br><span class="line">                poll_timeout = <span class="number">0.0</span></span><br><span class="line">            <span class="keyword">elif</span> self._timeouts:</span><br><span class="line">                <span class="comment"># If there are any timeouts, schedule the first one.</span></span><br><span class="line">                <span class="comment"># Use self.time() instead of 'now' to account for time</span></span><br><span class="line">                <span class="comment"># spent running callbacks.</span></span><br><span class="line">                poll_timeout = self._timeouts[<span class="number">0</span>].deadline - self.time()</span><br><span class="line">                poll_timeout = max(<span class="number">0</span>, min(poll_timeout, _POLL_TIMEOUT))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># No timeouts and no callbacks, so use the default.</span></span><br><span class="line">                poll_timeout = _POLL_TIMEOUT</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> self._running:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> self._blocking_signal_threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                <span class="comment"># clear alarm so it doesn't fire while poll is waiting for</span></span><br><span class="line">                <span class="comment"># events.</span></span><br><span class="line">                signal.setitimer(signal.ITIMER_REAL, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="comment"># epoll等机制返回准备好的事件键值对</span></span><br><span class="line">                event_pairs = self._impl.poll(poll_timeout)</span><br><span class="line">            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                <span class="comment"># Depending on python version and IOLoop implementation,</span></span><br><span class="line">                <span class="comment"># different exception types may be thrown and there are</span></span><br><span class="line">                <span class="comment"># two ways EINTR might be signaled:</span></span><br><span class="line">                <span class="comment"># * e.errno == errno.EINTR</span></span><br><span class="line">                <span class="comment"># * e.args is like (errno.EINTR, 'Interrupted system call')</span></span><br><span class="line">                <span class="keyword">if</span> errno_from_exception(e) == errno.EINTR:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">raise</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> self._blocking_signal_threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                signal.setitimer(signal.ITIMER_REAL,</span><br><span class="line">                                 self._blocking_signal_threshold, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># Pop one fd at a time from the set of pending fds and run</span></span><br><span class="line">            <span class="comment"># its handler. Since that handler may perform actions on</span></span><br><span class="line">            <span class="comment"># other file descriptors, there may be reentrant calls to</span></span><br><span class="line">            <span class="comment"># this IOLoop that modify self._events</span></span><br><span class="line">            <span class="comment"># 更新准备好的事件列表</span></span><br><span class="line">            self._events.update(event_pairs)</span><br><span class="line">            <span class="keyword">while</span> self._events:</span><br><span class="line">                fd, events = self._events.popitem()</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    fd_obj, handler_func = self._handlers[fd]</span><br><span class="line">                    <span class="comment"># 执行每个准备好的事件对应的回调函数</span></span><br><span class="line">                    handler_func(fd_obj, events)</span><br><span class="line">                <span class="keyword">except</span> (OSError, IOError) <span class="keyword">as</span> e:</span><br><span class="line">                    <span class="keyword">if</span> errno_from_exception(e) == errno.EPIPE:</span><br><span class="line">                        <span class="comment"># Happens when the client closes the connection</span></span><br><span class="line">                        <span class="keyword">pass</span></span><br><span class="line">                    <span class="keyword">else</span>:</span><br><span class="line">                        self.handle_callback_exception(self._handlers.get(fd))</span><br><span class="line">                <span class="keyword">except</span> Exception:</span><br><span class="line">                    self.handle_callback_exception(self._handlers.get(fd))</span><br><span class="line">            fd_obj = handler_func = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="comment"># reset the stopped flag so another start/stop pair can be issued</span></span><br><span class="line">        self._stopped = <span class="keyword">False</span></span><br><span class="line">        <span class="keyword">if</span> self._blocking_signal_threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">            signal.setitimer(signal.ITIMER_REAL, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">if</span> old_current <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">            IOLoop.clear_current()</span><br><span class="line">        <span class="keyword">elif</span> old_current <span class="keyword">is</span> <span class="keyword">not</span> self:</span><br><span class="line">            old_current.make_current()</span><br><span class="line">        <span class="keyword">if</span> old_wakeup_fd <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">            signal.set_wakeup_fd(old_wakeup_fd)</span><br></pre></td></tr></table></figure>
+<p>   其大概主要流程如下：</p>
+<ul>
+<li>开始一个事件循环（event loop）</li>
+<li>将未取消的timer事件放入due_timeouts的列表</li>
+<li>执行<code>_callback</code>队列中的事件(可以立即执行的事件)的回调函数</li>
+<li>执行due_timeouts中的事件（符合时间限制条件的事件）回调函数</li>
+<li>执行epoll机制中准备好的事件（通过add_handler注册的事件）</li>
+<li>进入下一次循环</li>
+</ul>
+<ol start="4">
+<li><p>ioloop._run_callback(self, callback)</p>
+<p>执行回调函数，回调有返回结果的封装在Future对象中。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_run_callback</span><span class="params">(self, callback)</span>:</span></span><br><span class="line">       <span class="string">"""Runs a callback with error handling.</span></span><br><span class="line"><span class="string">      </span></span><br><span class="line"><span class="string">       For use in subclasses.</span></span><br><span class="line"><span class="string">       """</span></span><br><span class="line">       <span class="keyword">try</span>:</span><br><span class="line">           ret = callback()</span><br><span class="line">           <span class="keyword">if</span> ret <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">               <span class="keyword">from</span> tornado <span class="keyword">import</span> gen</span><br><span class="line">               <span class="comment"># Functions that return Futures typically swallow all</span></span><br><span class="line">               <span class="comment"># exceptions and store them in the Future.  If a Future</span></span><br><span class="line">               <span class="comment"># makes it out to the IOLoop, ensure its exception (if any)</span></span><br><span class="line">               <span class="comment"># gets logged too.</span></span><br><span class="line">               <span class="keyword">try</span>:</span><br><span class="line">                   ret = gen.convert_yielded(ret)</span><br><span class="line">               <span class="keyword">except</span> gen.BadYieldError:</span><br><span class="line">                   <span class="comment"># It's not unusual for add_callback to be used with</span></span><br><span class="line">                   <span class="comment"># methods returning a non-None and non-yieldable</span></span><br><span class="line">                   <span class="comment"># result, which should just be ignored.</span></span><br><span class="line">                   <span class="keyword">pass</span></span><br><span class="line">               <span class="keyword">else</span>:</span><br><span class="line">                   self.add_future(ret, self._discard_future_result)</span><br><span class="line">       <span class="keyword">except</span> Exception:</span><br><span class="line">           self.handle_callback_exception(callback)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ol start="5">
+<li><p>例子</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> iostream</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> errno</span><br><span class="line"><span class="keyword">import</span> functools</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">handler_connection</span><span class="params">(connection)</span>:</span></span><br><span class="line">    stream = iostream.IOStream(connection)</span><br><span class="line">    message = <span class="keyword">await</span> stream.read_until(<span class="string">b'\r\n'</span>)</span><br><span class="line">    print(<span class="string">"message from client: "</span>, message.decode().strip())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">connection_ready</span><span class="params">(sock, fd, addr)</span>:</span></span><br><span class="line">    print(fd, addr)</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            connection, addr = sock.accept()</span><br><span class="line">            print(addr)</span><br><span class="line">        <span class="keyword">except</span> socket.error <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">if</span> e.args[<span class="number">0</span>] <span class="keyword">not</span> <span class="keyword">in</span> (errno.EWOULDBLOCK, errno.EAGAIN):</span><br><span class="line">                <span class="keyword">raise</span></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        connection.setblocking(<span class="keyword">False</span>)</span><br><span class="line">        loop = ioloop.IOLoop.current()</span><br><span class="line">        loop.add_callback(handler_connection, connection)</span><br><span class="line"></span><br><span class="line">        <span class="comment">#  self._callbacks.append(functools.partial(</span></span><br><span class="line">        <span class="comment">#             stack_context.wrap(callback), *args, **kwargs))</span></span><br><span class="line">        <span class="comment"># self._run_callback(self._callbacks.popleft())</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, <span class="number">0</span>)  <span class="comment"># 创造一个TCP的socket</span></span><br><span class="line">    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)  <span class="comment"># 允许套接口和一个已在使用中的地址捆绑</span></span><br><span class="line">    <span class="comment"># 套接字由相关五元组构成，协议、本地地址、本地端口、远程地址、远程端口。SO_REUSEADDR 仅仅表示可以重用本地本地地址、本地端口</span></span><br><span class="line">    sock.setblocking(<span class="keyword">False</span>)</span><br><span class="line">    sock.bind((<span class="string">""</span>, <span class="number">8888</span>))</span><br><span class="line">    sock.listen(<span class="number">128</span>)</span><br><span class="line"></span><br><span class="line">    io_loop = ioloop.IOLoop.current()</span><br><span class="line">    callback = functools.partial(connection_ready, sock)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># io event</span></span><br><span class="line">    io_loop.add_handler(sock.fileno(), callback, io_loop.READ)</span><br><span class="line">    io_loop.start()</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">ioloop</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/06/tornado的事件循环机制/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-理解OAuth" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/12/20/理解OAuth/">理解OAuth2.0</a>
+    </h1>
+  
+
+        
+        <a href="/2018/12/20/理解OAuth/" class="archive-article-date">
+  	<time datetime="2018-12-20T06:37:19.268Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-12-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="官方的认证流程"><a href="#官方的认证流程" class="headerlink" title="官方的认证流程"></a>官方的认证流程</h2><p><img src="/2018/12/20/理解OAuth/OAuth2.0认证流程.png" alt="OAuth2.0认证流程"></p>
+<h2 id="豆瓣和微博的授权示例"><a href="#豆瓣和微博的授权示例" class="headerlink" title="豆瓣和微博的授权示例"></a>豆瓣和微博的授权示例</h2><p>用户在第一次授权时，总共需要点击三次（点击第三方微博登录（填写账号和密码），点击登录， 再点击授权允许链接）</p>
+<p>用户在第二次以后，点击一次微博登录即可。<br><img src="/2018/12/20/理解OAuth/OAuth_douban.png" alt="OAuth_douban"></p>
+<ol>
+<li><p>点击微博登录按钮。</p>
+</li>
+<li><p>豆瓣模拟用户发送get请求，并附带上微博授权登录所需要的参数，到微博验证服务器</p>
+<p>url:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://api.weibo.com/oauth2/authorize</span><br></pre></td></tr></table></figure>
+<p>下面是跳转时所携带的参数</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">state: QSU3TTCcj4Y%21douban-web-anony-home%21https%3A//www.douban.com/ <span class="comment">#用于保持请求和回调的状态，在回调时，会在Query Parameter中回传该参数。开发者可以用这个参数验证请求有效性，也可以记录用户请求授权页前的位置。这个参数可用于防止跨站请求伪造（CSRF）攻击</span></span><br><span class="line">redirect_uri: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8= <span class="comment">#授权回调地址，站外应用需与设置的回调地址一致，站内应用需填写canvas page的地址。</span></span><br><span class="line">response_type: code </span><br><span class="line">client_id: 1994016063 <span class="comment"># 申请应用时分配的AppKey。</span></span><br><span class="line">scope:   <span class="comment">#申请scope权限所需参数，可一次申请多个scope权限，用逗号分隔。</span></span><br><span class="line">display: default <span class="comment">#默认的授权页面，适用于web浏览器。</span></span><br></pre></td></tr></table></figure>
+<p>返回的html页面中的form表单中含有action，appkey，veriftytoken等信息</p>
+</li>
+<li><p>输入账号密码，点击登录</p>
+</li>
+</ol>
+<ul>
+<li><p>登录(新浪微博的账号密码登录)</p>
+<p>URL：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://api.weibo.com/oauth2/authorize</span><br></pre></td></tr></table></figure>
+<p>Form-data:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">action: login</span><br><span class="line">display: default</span><br><span class="line">withOfficalFlag: 0</span><br><span class="line">quick_auth: <span class="literal">false</span></span><br><span class="line">withOfficalAccount: </span><br><span class="line">scope: </span><br><span class="line">ticket: ST-NjAwMzM5NzcwNQ==-1545120807-tc-BAE68B224DF7C1D426BF3AAB8362B489-1</span><br><span class="line">isLoginSina: </span><br><span class="line">response_type: code</span><br><span class="line">regCallback: https%3A%2F%2Fapi.weibo.com%2F2%2Foauth2%2Fauthorize%3Fclient_id%3D1994016063%26response_type%3Dcode%26display%3Ddefault%26redirect_uri%3Dhttps%253A%252F%252Faccounts.douban.com%252Fconnect%252Fsina_weibo%252FcallbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8%253D%26from%3D%26with_cookie%3D</span><br><span class="line">redirect_uri: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=</span><br><span class="line">client_id: 1994016063</span><br><span class="line">appkey62: 3dgQLd</span><br><span class="line">state: QSU3TTCcj4Y%21douban-web-anony-home%21https%3A%2F%2Fwww.douban.com%2F</span><br><span class="line">verifyToken: null</span><br><span class="line">from: </span><br><span class="line">switchLogin: 0</span><br><span class="line">userId: </span><br><span class="line">passwd:</span><br></pre></td></tr></table></figure>
+<p>登录完成后，微博将一些用户信息（uid，veriftyToken）放到html页面中返回</p>
+</li>
+</ul>
+<p>4 . 点击允许豆瓣登录后的权限（分享到微博，获取评论，302重定向自己并模拟用户发送POST请求）</p>
+<ul>
+<li><p>授权（302）POST</p>
+<p>URL</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://api.weibo.com/oauth2/authorize</span><br></pre></td></tr></table></figure>
+<p>Form Data</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">display: default</span><br><span class="line">action: authorize</span><br><span class="line">scope: </span><br><span class="line">withOfficalFlag: 0</span><br><span class="line">withOfficalAccount: </span><br><span class="line">ticket: </span><br><span class="line">isLoginSina: </span><br><span class="line">response_type: code</span><br><span class="line">regCallback: https%3A%2F%2Fapi.weibo.com%2F2%2Foauth2%2Fauthorize%3Fclient_id%3D1994016063%26response_type%3Dcode%26display%3Ddefault%26redirect_uri%3Dhttps%253A%252F%252Faccounts.douban.com%252Fconnect%252Fsina_weibo%252FcallbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8%253D%26from%3D%26with_cookie%3D</span><br><span class="line">redirect_uri: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=</span><br><span class="line">client_id: 1994016063</span><br><span class="line">appkey62: 3dgQLd</span><br><span class="line">state: QSU3TTCcj4Y%21douban-web-anony-home%21https%3A%2F%2Fwww.douban.com%2F</span><br><span class="line">from: </span><br><span class="line">uid: 6003397705</span><br><span class="line">url: https://api.weibo.com/oauth2/authorize?state=QSU3TTCcj4Y%2521douban-web-anony-home%2521https%253A//www.douban.com/&amp;redirect_uri=https%3A//accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8%3D&amp;response_type=code&amp;client_id=1994016063&amp;scope=&amp;display=default</span><br><span class="line">verifyToken: e2ca692998261f462eb692413b402250</span><br><span class="line">visible: 0</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>授权验证成功后（302重定向到返回到豆瓣认证时给新浪的callback页面），并将授权所得到的code填充到请求参数中。</p>
+<p>此时URL如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=?state=QSU3TTCcj4Y!douban-web-anony-home!https://www.douban.com/&amp;code=b306670cd1908fa36dc1eb4167a5ac7c</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>手机号未注册完成注册</p>
+<p>填入手机号，获取验证码，此时授权完毕，返回首页，授权成功返回code成功后，至豆瓣首页（200）</p>
+</li>
+</ul>
+<p>url</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://www.douban.com/</span><br></pre></td></tr></table></figure>
+<p>此时豆瓣将code值放在了 headers中的refer字段</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Referer: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=?state=QSU3TTCcj4Y%21douban-web-anony-home%21https%3A%2F%2Fwww.douban.com%2F&amp;code=b306670cd1908fa36dc1eb4167a5ac7c</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">OAuth</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/12/20/理解OAuth/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-tornado-motor" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -382,6 +846,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">mysql</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">python3</a>
               </li>
              
@@ -399,6 +867,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">ioloop</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">算法</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">最短路径</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">存储过程</a>
               </li>
              
               <li class="article-tag-list-item">

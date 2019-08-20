@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Archives: 2018/11 | yangyaq</title>
+  <title>存储过程 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/archives/2018/11/index.html">
+  <meta name="description" content="[TOC] 基本知识 mysql 中所有的变量都必须以@开始  表数据表内容如下    Score Id     3.5 1   3.65 2   4 3   3.86 4   4 5   3.65 6    创建一个存储过程用来求平均分数 创建存储过程create procedure avgscore()begin	select avg(Score) from Scoresend 执行存储过程c">
+<meta name="keywords" content="mysql,存储过程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="存储过程">
+<meta property="og:url" content="https://yangyaq.github.io/2019/08/20/存储过程/index.html">
 <meta property="og:site_name" content="yangyaq">
+<meta property="og:description" content="[TOC] 基本知识 mysql 中所有的变量都必须以@开始  表数据表内容如下    Score Id     3.5 1   3.65 2   4 3   3.86 4   4 5   3.65 6    创建一个存储过程用来求平均分数 创建存储过程create procedure avgscore()begin	select avg(Score) from Scoresend 执行存储过程c">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-20T09:53:33.479Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="yangyaq">
+<meta name="twitter:title" content="存储过程">
+<meta name="twitter:description" content="[TOC] 基本知识 mysql 中所有的变量都必须以@开始  表数据表内容如下    Score Id     3.5 1   3.65 2   4 3   3.86 4   4 5   3.65 6    创建一个存储过程用来求平均分数 创建存储过程create procedure avgscore()begin	select avg(Score) from Scoresend 执行存储过程c">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -142,65 +147,307 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-存储过程" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/tornado-motor/" class="archive-article-date">
-  	<time datetime="2018-11-06T06:23:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>18-11-06</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/11/06/tornado-motor/">tornado+motor</a>
+    <h1 class="article-title" itemprop="name">
+      存储过程
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/08/20/存储过程/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:53:33.479Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>[TOC]</p>
+<h5 id="基本知识"><a href="#基本知识" class="headerlink" title="基本知识"></a>基本知识</h5><ul>
+<li>mysql 中所有的变量都必须以@开始</li>
+</ul>
+<h5 id="表数据"><a href="#表数据" class="headerlink" title="表数据"></a>表数据</h5><p>表内容如下</p>
+<table>
+<thead>
+<tr>
+<th>Score</th>
+<th>Id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.5</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3.65</td>
+<td>2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+</tr>
+<tr>
+<td>3.86</td>
+<td>4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3.65</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<p>创建一个存储过程用来求平均分数</p>
+<h6 id="创建存储过程"><a href="#创建存储过程" class="headerlink" title="创建存储过程"></a>创建存储过程</h6><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create procedure avgscore()</span><br><span class="line">begin</span><br><span class="line">	select avg(Score) from Scores</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h6 id="执行存储过程"><a href="#执行存储过程" class="headerlink" title="执行存储过程"></a>执行存储过程</h6><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">call avgscore();</span><br><span class="line">-- 返回结果</span><br><span class="line">-- avg(Score)</span><br><span class="line">-- 3.776667</span><br></pre></td></tr></table></figure>
+<p>一般存储过程不直接返回结果，而是把结果返回给指定变量。</p>
+<p>创建一个存储过程用来求平均分，最高分，最低分，分别返回给三个变量</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create procedure getscore(</span><br><span class="line">	out avgscore decimal(8,2), -- 十进制的 8位数，2位精度</span><br><span class="line">  out maxscore decimal(8,2),</span><br><span class="line">  out minscore decimal(8,2)</span><br><span class="line">)</span><br><span class="line">begin</span><br><span class="line">	select avg(Score) into avgscore from Scores;</span><br><span class="line">	select max(Score) into maxscore from Scores;</span><br><span class="line">	select min(Score) into minScore from Scores;</span><br><span class="line">end</span><br><span class="line">-- 调用存储过程并覆值</span><br><span class="line">call getscore(@avgscore,@maxscore,@minscore);</span><br><span class="line">-- 查询结果</span><br><span class="line">select @avgscore,@maxscore,@minscore</span><br><span class="line">-- 结果</span><br><span class="line">-- @avgscore @maxscore @minscore</span><br><span class="line">-- 3.78       4        3.5</span><br></pre></td></tr></table></figure>
+<p>注意：</p>
+<p>不能通过一个参数返回多个行和列。所以通过多个输出参数来传递。</p>
+<p>创建一个含有输入参数和输出参数的存储过程</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create procedure scorebysid(</span><br><span class="line">	in sid int,</span><br><span class="line">	out sscore decimal(8,2)</span><br><span class="line">)</span><br><span class="line">begin</span><br><span class="line">	select Score into sscore from Scores where Id = sid;</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line">call scorebysid(1,@sscore)</span><br><span class="line"></span><br><span class="line">select @sscore</span><br><span class="line">-- sscore</span><br><span class="line">-- 3.5</span><br></pre></td></tr></table></figure>
+<p>优点：</p>
+<p>​    简单、安全、高性能</p>
+<h5 id="游标"><a href="#游标" class="headerlink" title="游标"></a>游标</h5><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 创建游标</span><br><span class="line"></span><br><span class="line">create procedure processscores()</span><br><span class="line">begin</span><br><span class="line">  -- 声明局部变量 </span><br><span class="line">	declare done boolean default 0;</span><br><span class="line">	declare o decimal(2,1);</span><br><span class="line">	-- 声明游标</span><br><span class="line">	declare ss cursor for select Score from Scores;</span><br><span class="line">	-- 声明 continue handler</span><br><span class="line">	declare continue handler for sqlstate &apos;02000&apos; set done=1;</span><br><span class="line">	-- 创建表存储结果</span><br><span class="line">	create table if not exists sscores(s decimal(2,1));</span><br><span class="line">	-- 打开游标</span><br><span class="line">	open ss;</span><br><span class="line">	-- 循环所有行</span><br><span class="line">	repeat</span><br><span class="line">		fetch ss into o;</span><br><span class="line">		insert into sscores(s) values(o);</span><br><span class="line">	until done end repeat;</span><br><span class="line">	-- 关闭游标</span><br><span class="line">	close ss;</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line">call processscores();</span><br><span class="line">select * from sscores;</span><br></pre></td></tr></table></figure>
+<h5 id="触发器"><a href="#触发器" class="headerlink" title="触发器"></a>触发器</h5><p> 用于：在某条语句（或某些语句）在事件发生时自动执行</p>
+<p> 支持：</p>
+<ul>
+<li>仅仅支持delete，insert， update （其他的语句不支持触发器）</li>
+<li>只有表支持触发器，视图不支持（临时表也不支持）</li>
+</ul>
+<h6 id="创建触发器"><a href="#创建触发器" class="headerlink" title="创建触发器"></a>创建触发器</h6><p>​    需要给出4条信息</p>
+<ul>
+<li>唯一的触发器名</li>
+<li>触发器相关联的表</li>
+<li>触发器应该响应的活动（delete、insert、update）</li>
+<li>触发器何时执行（after delete 或 after insert 或 after update 或 before delete 或 before insert 或 before update）</li>
+</ul>
+<p><strong>insert触发器可以访问new虚拟表</strong></p>
+<p><strong>delete，update触发器可以访问old虚拟表</strong></p>
+<p><strong>old虚拟表的值只读，new的值插入之前可更改</strong></p>
+<p><strong>触发器不能自己对自己更改，需要借助虚拟表</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 借助new虚拟表，new的值可更改</span><br><span class="line">create trigger tmp</span><br><span class="line">before insert on Scores</span><br><span class="line">for each row</span><br><span class="line">set new.time=NOW();</span><br><span class="line"></span><br><span class="line">-- 借助old虚拟表，old表中的数据只读</span><br><span class="line">create trigger tmpdelete</span><br><span class="line">after delete on Scores</span><br><span class="line">for each row</span><br><span class="line">insert newscore(score) values(old.Score)</span><br></pre></td></tr></table></figure>
+<h5 id="事务处理"><a href="#事务处理" class="headerlink" title="事务处理"></a>事务处理</h5><p>Inoodb引擎支持事务处理</p>
+<p>mysiam引擎不支持</p>
+<p><strong>名词： 事务，提交，回退，保留点。</strong></p>
+<ul>
+<li>事务（transaction）：一组sql语句</li>
+<li>提交（commit）：将未存储的sql语句执行结果写入到数据库表</li>
+<li>回退（rollback）：撤销指定sql语句执行的过程（只能回退delete，insert， update）</li>
+<li>保留点（save point）：事务处理中设置的临时占位符，可以对他发布回退(与回退整个事务处理不同)</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select * from newscore</span><br><span class="line">start transaction</span><br><span class="line">delete from newscore</span><br><span class="line">select * from newscore</span><br><span class="line">rollback -- 结束事务</span><br><span class="line">select * from newscore</span><br></pre></td></tr></table></figure>
+<p>rollback，commit 将会隐含的结束事务</p>
+<p>可以使用 <code>savepoint **</code> <code>rollback to **</code> 到**保留点，保留点在<code>rollback</code>或者<code>commit</code>释放</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">start transaction;</span><br><span class="line">savepoint d0;</span><br><span class="line">delete from newscore where score=65.5;</span><br><span class="line">savepoint d1;</span><br><span class="line">delete from newscore where score=85.5;</span><br><span class="line">rollback to d0;</span><br></pre></td></tr></table></figure>
+<p><strong>autocommit的值在myisam引擎中无影响</strong></p>
+<p><strong>autocommit 的值在（innodb）事务中不受影响，事务中使用不自动提交的方式</strong></p>
+<p>当<code>autocommit=on</code> 时，在事务外修改数据后，不<code>commit</code>,使用<code>rollback</code>，不会回滚，值还是修改后的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; set autocommit=1;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; insert into newscore(score) values(65.5);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; rollback;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br></pre></td></tr></table></figure>
+<p>当<code>autocommit=off</code>时，在事务外修改数据后，未<code>commit</code>使用<code>rollback</code>，会回滚，值还是修改前的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; set autocommit=off;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; insert into newscore(score) values(75.5);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; rollback;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>当<code>autocommit=off</code>时，在事务外修改数据后，使用<code>commit</code>后使用<code>rollback</code>，不会回滚，值还是修改后的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; set autocommit=off;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; insert into newscore(score) values(85.5);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; commit;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; rollback;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>也就是<code>commit</code>后使其永久化，永久化后不能回滚（<strong>但是原子性语句崩溃未执行成功会回滚</strong>）</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">motor</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">mysql</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">存储过程</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/08/20/存储过程/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+    <a href="/2019/08/20/乐观锁和悲观锁/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          乐观锁与悲观锁
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/08/20/mysql基础操作/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">mysql基础</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#基本知识"><span class="toc-number">1.</span> <span class="toc-text">基本知识</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#表数据"><span class="toc-number">2.</span> <span class="toc-text">表数据</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#创建存储过程"><span class="toc-number">2.1.</span> <span class="toc-text">创建存储过程</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#执行存储过程"><span class="toc-number">2.2.</span> <span class="toc-text">执行存储过程</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#游标"><span class="toc-number">3.</span> <span class="toc-text">游标</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#触发器"><span class="toc-number">4.</span> <span class="toc-text">触发器</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#创建触发器"><span class="toc-number">4.1.</span> <span class="toc-text">创建触发器</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#事务处理"><span class="toc-number">5.</span> <span class="toc-text">事务处理</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/md5.min.js.1"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: md5(location.pathname),
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -223,8 +470,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

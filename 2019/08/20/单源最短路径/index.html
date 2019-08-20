@@ -6,15 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Archives: 2018/11 | yangyaq</title>
+  <title>单源最短路径 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/archives/2018/11/index.html">
+  <meta name="description" content="[TOC] 求单源最短路径 G图如下：  Dijkstra实现 将源点加入堆，并调整堆。  选出堆顶元素u（即代价最小的元素），从堆中删除，并对堆进行调整。  处理与u相邻的，未被访问过的，满足三角不等式的顶点 1):若该点在堆里，更新距离，并调整该元素在堆中的位置。 2):若该点不在堆里，加入堆，更新堆。  若取到的u为终点，结束算法；否则重复步骤2、3。   示例1: visited=[]">
+<meta name="keywords" content="算法,最短路径">
+<meta property="og:type" content="article">
+<meta property="og:title" content="单源最短路径">
+<meta property="og:url" content="https://yangyaq.github.io/2019/08/20/单源最短路径/index.html">
 <meta property="og:site_name" content="yangyaq">
+<meta property="og:description" content="[TOC] 求单源最短路径 G图如下：  Dijkstra实现 将源点加入堆，并调整堆。  选出堆顶元素u（即代价最小的元素），从堆中删除，并对堆进行调整。  处理与u相邻的，未被访问过的，满足三角不等式的顶点 1):若该点在堆里，更新距离，并调整该元素在堆中的位置。 2):若该点不在堆里，加入堆，更新堆。  若取到的u为终点，结束算法；否则重复步骤2、3。   示例1: visited=[]">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://yangyaq.github.io/2019/08/20/单源最短路径/屏幕快照%202019-06-11%2015.09.20.png">
+<meta property="og:updated_time" content="2019-08-20T09:56:17.568Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="yangyaq">
+<meta name="twitter:title" content="单源最短路径">
+<meta name="twitter:description" content="[TOC] 求单源最短路径 G图如下：  Dijkstra实现 将源点加入堆，并调整堆。  选出堆顶元素u（即代价最小的元素），从堆中删除，并对堆进行调整。  处理与u相邻的，未被访问过的，满足三角不等式的顶点 1):若该点在堆里，更新距离，并调整该元素在堆中的位置。 2):若该点不在堆里，加入堆，更新堆。  若取到的u为终点，结束算法；否则重复步骤2、3。   示例1: visited=[]">
+<meta name="twitter:image" content="https://yangyaq.github.io/2019/08/20/单源最短路径/屏幕快照%202019-06-11%2015.09.20.png">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -142,65 +149,246 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-单源最短路径" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/tornado-motor/" class="archive-article-date">
-  	<time datetime="2018-11-06T06:23:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>18-11-06</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/11/06/tornado-motor/">tornado+motor</a>
+    <h1 class="article-title" itemprop="name">
+      单源最短路径
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/08/20/单源最短路径/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:56:17.572Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>[TOC]</p>
+<p>求单源最短路径</p>
+<p>G图如下：</p>
+<p><img src="/2019/08/20/单源最短路径/屏幕快照 2019-06-11 15.09.20.png" alt="屏幕快照 2019-06-11 15.09.20"></p>
+<h3 id="Dijkstra实现"><a href="#Dijkstra实现" class="headerlink" title="Dijkstra实现"></a>Dijkstra实现</h3><ol>
+<li><p>将源点加入<a href="https://baike.baidu.com/item/堆" target="_blank" rel="noopener">堆</a>，并调整堆。</p>
+</li>
+<li><p>选出堆顶元素u（即代价最小的元素），从堆中删除，并对堆进行调整。</p>
+</li>
+<li><p>处理与u相邻的，未被访问过的，满足三角不等式的顶点</p>
+<p>1):若该点在堆里，更新距离，并调整该元素在堆中的位置。</p>
+<p>2):若该点不在堆里，加入堆，更新堆。</p>
+</li>
+<li><p>若取到的u为终点，结束算法；否则重复步骤2、3。</p>
+</li>
+</ol>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>1: visited=[]  heap=[(0,E)]</p>
+<p>2: 弹出(0,E)，visited=[E] heap=[(1,B),(3,F)]</p>
+<p>3: 弹出(1,B)，visited=[E,B]  heap=[(3,A),(4,D),(3,F)]</p>
+<p>4: 弹出(3,A)，visited=[E,B,A] heap=[(8,C),(4,D),(3,F)]</p>
+<p>5: 弹出(3,F)，visited=[E,B,A,F] heap=[(6,C),(8,C),(4,D)]</p>
+<p>6: 弹出(6,C)，visited=[E,B,A,F,C] , C为终点， 返会路径长度为6</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="string">"""求单源点的最短路径</span></span><br><span class="line"><span class="string">    挑点</span></span><br><span class="line"><span class="string">    usage：</span></span><br><span class="line"><span class="string">        输入 图G，起点，终点</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> heapq</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">dijkstra</span><span class="params">(graph, start, end)</span>:</span></span><br><span class="line">    heap = [(<span class="number">0</span>, start)]</span><br><span class="line">    visited = []</span><br><span class="line">    <span class="keyword">while</span> heap:</span><br><span class="line">        print(heap)</span><br><span class="line">        <span class="comment"># pop the smallest value</span></span><br><span class="line">        (cost, u) = heapq.heappop(heap)</span><br><span class="line">        print(<span class="string">'pop '</span>, (cost, u))</span><br><span class="line">        <span class="keyword">if</span> u <span class="keyword">in</span> visited:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">        visited.append(u)</span><br><span class="line">        <span class="comment"># print(visited)</span></span><br><span class="line">        <span class="keyword">if</span> u == end:</span><br><span class="line">            <span class="keyword">return</span> cost</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> v, c <span class="keyword">in</span> graph[u]:</span><br><span class="line">            <span class="keyword">if</span> v <span class="keyword">in</span> visited:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            next = cost + c</span><br><span class="line">            heapq.heappush(heap, (next, v))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>, <span class="number">-1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line"></span><br><span class="line">    G = &#123;</span><br><span class="line">        <span class="string">'A'</span>: [[<span class="string">'B'</span>, <span class="number">2</span>], [<span class="string">'C'</span>, <span class="number">5</span>]],</span><br><span class="line">        <span class="string">'B'</span>: [[<span class="string">'A'</span>, <span class="number">2</span>], [<span class="string">'D'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">1</span>]],</span><br><span class="line">        <span class="string">'C'</span>: [[<span class="string">'A'</span>, <span class="number">5</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'D'</span>: [[<span class="string">'B'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'E'</span>: [[<span class="string">'B'</span>, <span class="number">1</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'F'</span>: [[<span class="string">'C'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">3</span>]]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    short_d = dijkstra(G, <span class="string">'E'</span>, <span class="string">'C'</span>)</span><br><span class="line">    print(short_d)</span><br></pre></td></tr></table></figure>
+<p>e为边数</p>
+<p>每次取出最短路径的复杂度降为O(1) , 堆调整的复杂度为O(elogn)</p>
+<p>时间复杂度最大为O(nloge)</p>
+<h3 id="弗洛伊德-实现"><a href="#弗洛伊德-实现" class="headerlink" title="弗洛伊德 实现"></a>弗洛伊德 实现</h3><h3 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h3><ol>
+<li>visited=[] heap=[(0,E,E)]</li>
+<li>弹出（0,E,E）, visited=[(E,E)],  heap=[(1,E,B),(3,E,F)]</li>
+<li>弹出（1,E,B）, visited=[(E,E),(E,B)],  heap=[(3,B, A),(4,B,D),(2,B,E),(3,E,F)]</li>
+<li>弹出（2,B,E）,  (B, E)等同于(E,B)访问过,  heap=[(3,B, A),(4,B,D),(3,E,F)]</li>
+<li>弹出（3,B,A)  ,  visited=[(E,E),(E,B),(B,A)],  heap=[(8,A, C),(4,B,D),(3,E,F)]</li>
+<li>弹出（3,E,F）,  visited=[(E,E),(E,B),(B,A),(E,F)], heap=[(8,A, C),(4,B,D),(6,F,C)]</li>
+<li>弹出（6,F,C）,  C结束，最短路径为6</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">弗洛伊德算法</span></span><br><span class="line"><span class="string">挑边</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="keyword">import</span> heapq</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bellman_ford</span><span class="params">(G, start, end)</span>:</span></span><br><span class="line">    heap = [(<span class="number">0</span>, start, start)]</span><br><span class="line">    visited = []</span><br><span class="line">    <span class="keyword">while</span> heap:</span><br><span class="line">        <span class="comment"># 弹出值最小的边</span></span><br><span class="line">        cost, u, v = heapq.heappop(heap)</span><br><span class="line">        print(u, v)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> v == end:</span><br><span class="line">            <span class="keyword">return</span> cost</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (u, v) <span class="keyword">in</span> visited <span class="keyword">or</span> (v, u) <span class="keyword">in</span> visited:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">        visited.append((u, v))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> _v, c <span class="keyword">in</span> G[v]:</span><br><span class="line">            <span class="keyword">if</span> (v, _v) <span class="keyword">in</span> visited <span class="keyword">or</span> (_v, v) <span class="keyword">in</span> visited:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            next_c = cost + c</span><br><span class="line">            heapq.heappush(heap, (next_c, v, _v))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    G = &#123;</span><br><span class="line">        <span class="string">'A'</span>: [[<span class="string">'B'</span>, <span class="number">2</span>], [<span class="string">'C'</span>, <span class="number">5</span>]],</span><br><span class="line">        <span class="string">'B'</span>: [[<span class="string">'A'</span>, <span class="number">2</span>], [<span class="string">'D'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">1</span>]],</span><br><span class="line">        <span class="string">'C'</span>: [[<span class="string">'A'</span>, <span class="number">5</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'D'</span>: [[<span class="string">'B'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'E'</span>: [[<span class="string">'B'</span>, <span class="number">1</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'F'</span>: [[<span class="string">'C'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">3</span>]]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    short_d = bellman_ford(G, <span class="string">'E'</span>, <span class="string">'C'</span>)</span><br><span class="line">    print(short_d)</span><br></pre></td></tr></table></figure>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>1.单源最短路径（最基础）</p>
+<p>2.单目的地最短路径</p>
+<p>3.单节点对最短路径</p>
+<p>4.所有节点对最短路径</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">motor</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">算法</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">最短路径</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/08/20/单源最短路径/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+  
+    <a href="/2019/08/20/乐观锁和悲观锁/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">乐观锁与悲观锁</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Dijkstra实现"><span class="toc-number">1.</span> <span class="toc-text">Dijkstra实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#示例"><span class="toc-number">2.</span> <span class="toc-text">示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#弗洛伊德-实现"><span class="toc-number">3.</span> <span class="toc-text">弗洛伊德 实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#示例-1"><span class="toc-number">4.</span> <span class="toc-text">示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#其他"><span class="toc-number">5.</span> <span class="toc-text">其他</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/md5.min.js.1"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: md5(location.pathname),
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -223,8 +411,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,

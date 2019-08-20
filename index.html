@@ -144,6 +144,1073 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-单源最短路径" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/单源最短路径/">单源最短路径</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/单源最短路径/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:56:17.572Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>[TOC]</p>
+<p>求单源最短路径</p>
+<p>G图如下：</p>
+<p><img src="/2019/08/20/单源最短路径/屏幕快照 2019-06-11 15.09.20.png" alt="屏幕快照 2019-06-11 15.09.20"></p>
+<h3 id="Dijkstra实现"><a href="#Dijkstra实现" class="headerlink" title="Dijkstra实现"></a>Dijkstra实现</h3><ol>
+<li><p>将源点加入<a href="https://baike.baidu.com/item/堆" target="_blank" rel="noopener">堆</a>，并调整堆。</p>
+</li>
+<li><p>选出堆顶元素u（即代价最小的元素），从堆中删除，并对堆进行调整。</p>
+</li>
+<li><p>处理与u相邻的，未被访问过的，满足三角不等式的顶点</p>
+<p>1):若该点在堆里，更新距离，并调整该元素在堆中的位置。</p>
+<p>2):若该点不在堆里，加入堆，更新堆。</p>
+</li>
+<li><p>若取到的u为终点，结束算法；否则重复步骤2、3。</p>
+</li>
+</ol>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>1: visited=[]  heap=[(0,E)]</p>
+<p>2: 弹出(0,E)，visited=[E] heap=[(1,B),(3,F)]</p>
+<p>3: 弹出(1,B)，visited=[E,B]  heap=[(3,A),(4,D),(3,F)]</p>
+<p>4: 弹出(3,A)，visited=[E,B,A] heap=[(8,C),(4,D),(3,F)]</p>
+<p>5: 弹出(3,F)，visited=[E,B,A,F] heap=[(6,C),(8,C),(4,D)]</p>
+<p>6: 弹出(6,C)，visited=[E,B,A,F,C] , C为终点， 返会路径长度为6</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="string">"""求单源点的最短路径</span></span><br><span class="line"><span class="string">    挑点</span></span><br><span class="line"><span class="string">    usage：</span></span><br><span class="line"><span class="string">        输入 图G，起点，终点</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> heapq</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">dijkstra</span><span class="params">(graph, start, end)</span>:</span></span><br><span class="line">    heap = [(<span class="number">0</span>, start)]</span><br><span class="line">    visited = []</span><br><span class="line">    <span class="keyword">while</span> heap:</span><br><span class="line">        print(heap)</span><br><span class="line">        <span class="comment"># pop the smallest value</span></span><br><span class="line">        (cost, u) = heapq.heappop(heap)</span><br><span class="line">        print(<span class="string">'pop '</span>, (cost, u))</span><br><span class="line">        <span class="keyword">if</span> u <span class="keyword">in</span> visited:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">        visited.append(u)</span><br><span class="line">        <span class="comment"># print(visited)</span></span><br><span class="line">        <span class="keyword">if</span> u == end:</span><br><span class="line">            <span class="keyword">return</span> cost</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> v, c <span class="keyword">in</span> graph[u]:</span><br><span class="line">            <span class="keyword">if</span> v <span class="keyword">in</span> visited:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            next = cost + c</span><br><span class="line">            heapq.heappush(heap, (next, v))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>, <span class="number">-1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line"></span><br><span class="line">    G = &#123;</span><br><span class="line">        <span class="string">'A'</span>: [[<span class="string">'B'</span>, <span class="number">2</span>], [<span class="string">'C'</span>, <span class="number">5</span>]],</span><br><span class="line">        <span class="string">'B'</span>: [[<span class="string">'A'</span>, <span class="number">2</span>], [<span class="string">'D'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">1</span>]],</span><br><span class="line">        <span class="string">'C'</span>: [[<span class="string">'A'</span>, <span class="number">5</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'D'</span>: [[<span class="string">'B'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'E'</span>: [[<span class="string">'B'</span>, <span class="number">1</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'F'</span>: [[<span class="string">'C'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">3</span>]]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    short_d = dijkstra(G, <span class="string">'E'</span>, <span class="string">'C'</span>)</span><br><span class="line">    print(short_d)</span><br></pre></td></tr></table></figure>
+<p>e为边数</p>
+<p>每次取出最短路径的复杂度降为O(1) , 堆调整的复杂度为O(elogn)</p>
+<p>时间复杂度最大为O(nloge)</p>
+<h3 id="弗洛伊德-实现"><a href="#弗洛伊德-实现" class="headerlink" title="弗洛伊德 实现"></a>弗洛伊德 实现</h3><h3 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h3><ol>
+<li>visited=[] heap=[(0,E,E)]</li>
+<li>弹出（0,E,E）, visited=[(E,E)],  heap=[(1,E,B),(3,E,F)]</li>
+<li>弹出（1,E,B）, visited=[(E,E),(E,B)],  heap=[(3,B, A),(4,B,D),(2,B,E),(3,E,F)]</li>
+<li>弹出（2,B,E）,  (B, E)等同于(E,B)访问过,  heap=[(3,B, A),(4,B,D),(3,E,F)]</li>
+<li>弹出（3,B,A)  ,  visited=[(E,E),(E,B),(B,A)],  heap=[(8,A, C),(4,B,D),(3,E,F)]</li>
+<li>弹出（3,E,F）,  visited=[(E,E),(E,B),(B,A),(E,F)], heap=[(8,A, C),(4,B,D),(6,F,C)]</li>
+<li>弹出（6,F,C）,  C结束，最短路径为6</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">弗洛伊德算法</span></span><br><span class="line"><span class="string">挑边</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="keyword">import</span> heapq</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bellman_ford</span><span class="params">(G, start, end)</span>:</span></span><br><span class="line">    heap = [(<span class="number">0</span>, start, start)]</span><br><span class="line">    visited = []</span><br><span class="line">    <span class="keyword">while</span> heap:</span><br><span class="line">        <span class="comment"># 弹出值最小的边</span></span><br><span class="line">        cost, u, v = heapq.heappop(heap)</span><br><span class="line">        print(u, v)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> v == end:</span><br><span class="line">            <span class="keyword">return</span> cost</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (u, v) <span class="keyword">in</span> visited <span class="keyword">or</span> (v, u) <span class="keyword">in</span> visited:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">        visited.append((u, v))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> _v, c <span class="keyword">in</span> G[v]:</span><br><span class="line">            <span class="keyword">if</span> (v, _v) <span class="keyword">in</span> visited <span class="keyword">or</span> (_v, v) <span class="keyword">in</span> visited:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">            next_c = cost + c</span><br><span class="line">            heapq.heappush(heap, (next_c, v, _v))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    G = &#123;</span><br><span class="line">        <span class="string">'A'</span>: [[<span class="string">'B'</span>, <span class="number">2</span>], [<span class="string">'C'</span>, <span class="number">5</span>]],</span><br><span class="line">        <span class="string">'B'</span>: [[<span class="string">'A'</span>, <span class="number">2</span>], [<span class="string">'D'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">1</span>]],</span><br><span class="line">        <span class="string">'C'</span>: [[<span class="string">'A'</span>, <span class="number">5</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'D'</span>: [[<span class="string">'B'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'E'</span>: [[<span class="string">'B'</span>, <span class="number">1</span>], [<span class="string">'F'</span>, <span class="number">3</span>]],</span><br><span class="line">        <span class="string">'F'</span>: [[<span class="string">'C'</span>, <span class="number">3</span>], [<span class="string">'E'</span>, <span class="number">3</span>]]</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    short_d = bellman_ford(G, <span class="string">'E'</span>, <span class="string">'C'</span>)</span><br><span class="line">    print(short_d)</span><br></pre></td></tr></table></figure>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>1.单源最短路径（最基础）</p>
+<p>2.单目的地最短路径</p>
+<p>3.单节点对最短路径</p>
+<p>4.所有节点对最短路径</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">算法</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">最短路径</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/单源最短路径/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-乐观锁和悲观锁" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/乐观锁和悲观锁/">乐观锁与悲观锁</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/乐观锁和悲观锁/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:53:33.569Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="悲观锁"><a href="#悲观锁" class="headerlink" title="悲观锁"></a>悲观锁</h2><p>​    修改数据库数据之前对这条数据加锁，避免别人同时修改。</p>
+<p>​    这种利用数据库锁机制在修改数据之前先锁定，再修改的方式称为悲观并发控制，又名“悲观锁”，Pessimistic Concurrency Control，缩写“PCC”）。</p>
+<p>​    <strong>之所以叫做悲观锁，是因为这是一种对数据的修改抱有悲观态度的并发控制方式。我们一般认为数据被并发修改的概率比较大，所以需要在修改之前先加锁。</strong></p>
+<p>​    悲观并发控制实际上是“先取锁再访问”的保守策略，为数据处理的安全提供了保证。</p>
+<p>​    线程1加排它锁-&gt;加锁成功后进行数据更新-&gt;更新事务提交，锁释放-&gt;线程2加锁成功-&gt;线程2更新</p>
+<p>​    <strong>效率方面，处理加锁的机制会让数据库产生额外的开销，还有增加产生死锁的机会；另外降低了并行性，一个事务锁定了某行数据，其他事务就必须等待该事务处理完才可以处理那行数据。</strong></p>
+<h2 id="乐观锁"><a href="#乐观锁" class="headerlink" title="乐观锁"></a>乐观锁</h2><p>​    乐观锁（ Optimistic Locking ） 是相对悲观锁而言的，乐观锁假设数据一般情况下不会造成冲突，所以在数据进行提交更新的时候，才会正式对数据的冲突与否进行检测，如果发现冲突了，则让返回用户错误的信息，让用户决定如何去做。</p>
+<p>​    <strong>相对于悲观锁，在对数据库进行处理的时候，乐观锁并不会使用数据库提供的锁机制。一般的实现乐观锁的方式就是记录数据版本。</strong></p>
+<p>​    ￼乐观并发控制相信事务之间的数据竞争(data race)的概率是比较小的，因此尽可能直接做下去，直到提交的时候才去锁定，所以不会产生任何锁和死锁。</p>
+<h2 id="悲观锁实现方式"><a href="#悲观锁实现方式" class="headerlink" title="悲观锁实现方式"></a>悲观锁实现方式</h2><p>悲观锁的实现，往往依靠数据库提供的锁机制。在数据库中，悲观锁的流程如下：</p>
+<ul>
+<li>在对记录进行修改前，先尝试为该记录加上排他锁（exclusive locking）。</li>
+<li>如果加锁失败，说明该记录正在被修改，那么当前查询可能要等待或者抛出异常。具体响应方式由开发者根据实际需要决定。</li>
+<li>如果成功加锁，那么就可以对记录做修改，事务完成后就会解锁了。</li>
+<li>其间如果有其他对该记录做修改或加排他锁的操作，都会等待我们解锁或直接抛出异常。</li>
+</ul>
+<p>我们拿比较常用的MySql Innodb引擎举例，来说明一下在SQL中如何使用悲观锁。</p>
+<blockquote>
+<p>要使用悲观锁，我们必须关闭mysql数据库的自动提交属性，因为MySQL默认使用autocommit模式，也就是说，当你执行一个更新操作后，MySQL会立刻将结果进行提交。set autocommit=0;</p>
+</blockquote>
+<p>我们举一个简单的例子，如淘宝下单过程中扣减库存的需求说明一下如何使用悲观锁：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//0.开始事务</span><br><span class="line">begin; </span><br><span class="line">//1.查询出商品库存信息</span><br><span class="line">select quantity from items where id=1 for update;</span><br><span class="line">//2.修改商品库存为2</span><br><span class="line">update items set quantity=2 where id = 1;</span><br><span class="line">//3.提交事务</span><br><span class="line">commit;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>以上，在对id = 1的记录修改前，先通过for update的方式进行加锁，然后再进行修改。这就是比较典型的悲观锁策略。</p>
+<p>如果以上修改库存的代码发生并发，同一时间只有一个线程可以开启事务并获得id=1的锁，其它的事务必须等本次事务提交之后才能执行。这样我们可以保证当前的数据不会被其它事务修改。</p>
+<blockquote>
+<p>上面我们提到，使用select…for update会把数据给锁住，不过我们需要注意一些锁的级别，MySQL InnoDB默认行级锁。行级锁都是基于索引的，如果一条SQL语句用不到索引是不会使用行级锁的，会使用表级锁把整张表锁住，这点需要注意。</p>
+</blockquote>
+<h2 id="乐观锁实现方式"><a href="#乐观锁实现方式" class="headerlink" title="乐观锁实现方式"></a>乐观锁实现方式</h2><p>使用乐观锁就不需要借助数据库的锁机制了。</p>
+<p>乐观锁的概念中其实已经阐述了他的具体实现细节：主要就是两个步骤：冲突检测和数据更新。其实现方式有一种比较典型的就是Compare and Swap(CAS)。</p>
+<p>CAS是项乐观锁技术，当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试。</p>
+<p>比如前面的扣减库存问题，通过乐观锁可以实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//查询出商品库存信息，quantity = 3</span><br><span class="line">select quantity from items where id=1</span><br><span class="line">//修改商品库存为2</span><br><span class="line">update items set quantity=2 where id=1 and quantity = 3;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>以上，我们在更新之前，先查询一下库存表中当前库存数（quantity），然后在做update的时候，以库存数作为一个修改条件。当我们提交更新的时候，判断数据库表对应记录的当前库存数与第一次取出来的库存数进行比对，如果数据库表当前库存数与第一次取出来的库存数相等，则予以更新，否则认为是过期数据。</p>
+<p>以上更新语句存在一个比较重要的问题，即传说中的ABA问题。</p>
+<p>比如说一个线程one从数据库中取出库存数3，这时候另一个线程two也从数据库中库存数3，并且two进行了一些操作变成了2，然后two又将库存数变成3，这时候线程one进行CAS操作发现数据库中仍然是3，然后one操作成功。尽管线程one的CAS操作成功，但是不代表这个过程就是没有问题的。</p>
+<p>￼有一个比较好的办法可以解决ABA问题，那就是通过一个单独的可以顺序递增的version字段。改为以下方式即可：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//查询出商品信息，version = 1</span><br><span class="line">select version from items where id=1</span><br><span class="line">//修改商品库存为2</span><br><span class="line">update items set quantity=2,version = 3 where id=1 and version = 2;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>乐观锁每次在执行数据的修改操作时，都会带上一个版本号，一旦版本号和数据的版本号一致就可以执行修改操作并对版本号执行+1操作，否则就执行失败。因为每次操作的版本号都会随之增加，所以不会出现ABA问题，因为版本号只会增加不会减少。</p>
+<p>￼除了version以外，还可以使用时间戳，因为时间戳天然具有顺序递增性。</p>
+<p>以上SQL其实还是有一定的问题的，就是<strong>一旦发上高并发的时候，就只有一个线程可以修改成功，那么就会存在大量的失败。</strong></p>
+<p>对于像淘宝这样的电商网站，高并发是常有的事，总让用户感知到失败显然是不合理的。所以，还是要想办法减少乐观锁的粒度的。</p>
+<p>有一条比较好的建议，可以减小乐观锁力度，最大程度的提升吞吐率，提高并发能力！如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//修改商品库存</span><br><span class="line">update item </span><br><span class="line">set quantity=quantity - 1 </span><br><span class="line">where id = 1 and quantity - 1 &gt; 0</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>以上SQL语句中，如果用户下单数为1，则通过<code>quantity - 1 &gt; 0</code>的方式进行乐观锁控制。</p>
+<p>以上update语句，在执行过程中，会在一次原子操作中自己查询一遍quantity的值，并将其扣减掉1。</p>
+<p><strong>高并发环境下锁粒度把控是一门重要的学问，选择一个好的锁，在保证数据安全的情况下，可以大大提升吞吐率，进而提升性能。</strong></p>
+<p>如何选择</p>
+<p>在乐观锁与悲观锁的选择上面，主要看下两者的区别以及适用场景就可以了。</p>
+<p>1、乐观锁并未真正加锁，效率高。一旦锁的粒度掌握不好，更新失败的概率就会比较高，容易发生业务失败。 </p>
+<p>2、悲观锁依赖数据库锁，效率低。更新失败的概率比较低。</p>
+<p><strong>随着互联网三高架构（高并发、高性能、高可用）的提出，悲观锁已经越来越少的被使用到生产环境中了，尤其是并发量比较大的业务场景。</strong></p>
+<p>转自[漫话编程]</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">mysql</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/乐观锁和悲观锁/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-存储过程" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/存储过程/">存储过程</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/存储过程/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:53:33.479Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>[TOC]</p>
+<h5 id="基本知识"><a href="#基本知识" class="headerlink" title="基本知识"></a>基本知识</h5><ul>
+<li>mysql 中所有的变量都必须以@开始</li>
+</ul>
+<h5 id="表数据"><a href="#表数据" class="headerlink" title="表数据"></a>表数据</h5><p>表内容如下</p>
+<table>
+<thead>
+<tr>
+<th>Score</th>
+<th>Id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.5</td>
+<td>1</td>
+</tr>
+<tr>
+<td>3.65</td>
+<td>2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+</tr>
+<tr>
+<td>3.86</td>
+<td>4</td>
+</tr>
+<tr>
+<td>4</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3.65</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<p>创建一个存储过程用来求平均分数</p>
+<h6 id="创建存储过程"><a href="#创建存储过程" class="headerlink" title="创建存储过程"></a>创建存储过程</h6><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create procedure avgscore()</span><br><span class="line">begin</span><br><span class="line">	select avg(Score) from Scores</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h6 id="执行存储过程"><a href="#执行存储过程" class="headerlink" title="执行存储过程"></a>执行存储过程</h6><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">call avgscore();</span><br><span class="line">-- 返回结果</span><br><span class="line">-- avg(Score)</span><br><span class="line">-- 3.776667</span><br></pre></td></tr></table></figure>
+<p>一般存储过程不直接返回结果，而是把结果返回给指定变量。</p>
+<p>创建一个存储过程用来求平均分，最高分，最低分，分别返回给三个变量</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create procedure getscore(</span><br><span class="line">	out avgscore decimal(8,2), -- 十进制的 8位数，2位精度</span><br><span class="line">  out maxscore decimal(8,2),</span><br><span class="line">  out minscore decimal(8,2)</span><br><span class="line">)</span><br><span class="line">begin</span><br><span class="line">	select avg(Score) into avgscore from Scores;</span><br><span class="line">	select max(Score) into maxscore from Scores;</span><br><span class="line">	select min(Score) into minScore from Scores;</span><br><span class="line">end</span><br><span class="line">-- 调用存储过程并覆值</span><br><span class="line">call getscore(@avgscore,@maxscore,@minscore);</span><br><span class="line">-- 查询结果</span><br><span class="line">select @avgscore,@maxscore,@minscore</span><br><span class="line">-- 结果</span><br><span class="line">-- @avgscore @maxscore @minscore</span><br><span class="line">-- 3.78       4        3.5</span><br></pre></td></tr></table></figure>
+<p>注意：</p>
+<p>不能通过一个参数返回多个行和列。所以通过多个输出参数来传递。</p>
+<p>创建一个含有输入参数和输出参数的存储过程</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create procedure scorebysid(</span><br><span class="line">	in sid int,</span><br><span class="line">	out sscore decimal(8,2)</span><br><span class="line">)</span><br><span class="line">begin</span><br><span class="line">	select Score into sscore from Scores where Id = sid;</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line">call scorebysid(1,@sscore)</span><br><span class="line"></span><br><span class="line">select @sscore</span><br><span class="line">-- sscore</span><br><span class="line">-- 3.5</span><br></pre></td></tr></table></figure>
+<p>优点：</p>
+<p>​    简单、安全、高性能</p>
+<h5 id="游标"><a href="#游标" class="headerlink" title="游标"></a>游标</h5><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 创建游标</span><br><span class="line"></span><br><span class="line">create procedure processscores()</span><br><span class="line">begin</span><br><span class="line">  -- 声明局部变量 </span><br><span class="line">	declare done boolean default 0;</span><br><span class="line">	declare o decimal(2,1);</span><br><span class="line">	-- 声明游标</span><br><span class="line">	declare ss cursor for select Score from Scores;</span><br><span class="line">	-- 声明 continue handler</span><br><span class="line">	declare continue handler for sqlstate &apos;02000&apos; set done=1;</span><br><span class="line">	-- 创建表存储结果</span><br><span class="line">	create table if not exists sscores(s decimal(2,1));</span><br><span class="line">	-- 打开游标</span><br><span class="line">	open ss;</span><br><span class="line">	-- 循环所有行</span><br><span class="line">	repeat</span><br><span class="line">		fetch ss into o;</span><br><span class="line">		insert into sscores(s) values(o);</span><br><span class="line">	until done end repeat;</span><br><span class="line">	-- 关闭游标</span><br><span class="line">	close ss;</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line">call processscores();</span><br><span class="line">select * from sscores;</span><br></pre></td></tr></table></figure>
+<h5 id="触发器"><a href="#触发器" class="headerlink" title="触发器"></a>触发器</h5><p> 用于：在某条语句（或某些语句）在事件发生时自动执行</p>
+<p> 支持：</p>
+<ul>
+<li>仅仅支持delete，insert， update （其他的语句不支持触发器）</li>
+<li>只有表支持触发器，视图不支持（临时表也不支持）</li>
+</ul>
+<h6 id="创建触发器"><a href="#创建触发器" class="headerlink" title="创建触发器"></a>创建触发器</h6><p>​    需要给出4条信息</p>
+<ul>
+<li>唯一的触发器名</li>
+<li>触发器相关联的表</li>
+<li>触发器应该响应的活动（delete、insert、update）</li>
+<li>触发器何时执行（after delete 或 after insert 或 after update 或 before delete 或 before insert 或 before update）</li>
+</ul>
+<p><strong>insert触发器可以访问new虚拟表</strong></p>
+<p><strong>delete，update触发器可以访问old虚拟表</strong></p>
+<p><strong>old虚拟表的值只读，new的值插入之前可更改</strong></p>
+<p><strong>触发器不能自己对自己更改，需要借助虚拟表</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 借助new虚拟表，new的值可更改</span><br><span class="line">create trigger tmp</span><br><span class="line">before insert on Scores</span><br><span class="line">for each row</span><br><span class="line">set new.time=NOW();</span><br><span class="line"></span><br><span class="line">-- 借助old虚拟表，old表中的数据只读</span><br><span class="line">create trigger tmpdelete</span><br><span class="line">after delete on Scores</span><br><span class="line">for each row</span><br><span class="line">insert newscore(score) values(old.Score)</span><br></pre></td></tr></table></figure>
+<h5 id="事务处理"><a href="#事务处理" class="headerlink" title="事务处理"></a>事务处理</h5><p>Inoodb引擎支持事务处理</p>
+<p>mysiam引擎不支持</p>
+<p><strong>名词： 事务，提交，回退，保留点。</strong></p>
+<ul>
+<li>事务（transaction）：一组sql语句</li>
+<li>提交（commit）：将未存储的sql语句执行结果写入到数据库表</li>
+<li>回退（rollback）：撤销指定sql语句执行的过程（只能回退delete，insert， update）</li>
+<li>保留点（save point）：事务处理中设置的临时占位符，可以对他发布回退(与回退整个事务处理不同)</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select * from newscore</span><br><span class="line">start transaction</span><br><span class="line">delete from newscore</span><br><span class="line">select * from newscore</span><br><span class="line">rollback -- 结束事务</span><br><span class="line">select * from newscore</span><br></pre></td></tr></table></figure>
+<p>rollback，commit 将会隐含的结束事务</p>
+<p>可以使用 <code>savepoint **</code> <code>rollback to **</code> 到**保留点，保留点在<code>rollback</code>或者<code>commit</code>释放</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">start transaction;</span><br><span class="line">savepoint d0;</span><br><span class="line">delete from newscore where score=65.5;</span><br><span class="line">savepoint d1;</span><br><span class="line">delete from newscore where score=85.5;</span><br><span class="line">rollback to d0;</span><br></pre></td></tr></table></figure>
+<p><strong>autocommit的值在myisam引擎中无影响</strong></p>
+<p><strong>autocommit 的值在（innodb）事务中不受影响，事务中使用不自动提交的方式</strong></p>
+<p>当<code>autocommit=on</code> 时，在事务外修改数据后，不<code>commit</code>,使用<code>rollback</code>，不会回滚，值还是修改后的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; set autocommit=1;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; insert into newscore(score) values(65.5);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; rollback;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br></pre></td></tr></table></figure>
+<p>当<code>autocommit=off</code>时，在事务外修改数据后，未<code>commit</code>使用<code>rollback</code>，会回滚，值还是修改前的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; set autocommit=off;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; insert into newscore(score) values(75.5);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; rollback;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>当<code>autocommit=off</code>时，在事务外修改数据后，使用<code>commit</code>后使用<code>rollback</code>，不会回滚，值还是修改后的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; set autocommit=off;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; insert into newscore(score) values(85.5);</span><br><span class="line">Query OK, 1 row affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; commit;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; rollback;</span><br><span class="line">Query OK, 0 rows affected (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select * from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">+-------+</span><br><span class="line">2 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<p>也就是<code>commit</code>后使其永久化，永久化后不能回滚（<strong>但是原子性语句崩溃未执行成功会回滚</strong>）</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">mysql</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">存储过程</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/存储过程/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-mysql基础操作" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/mysql基础操作/">mysql基础</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/mysql基础操作/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:53:33.388Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>[TOC]</p>
+<h3 id="查看表的列的信息"><a href="#查看表的列的信息" class="headerlink" title="查看表的列的信息"></a>查看表的列的信息</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select columns from &lt;table_name&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">desc &lt;table_name&gt;</span><br></pre></td></tr></table></figure>
+<p>示例</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; desc Scores;</span><br><span class="line">+-------+--------------+------+-----+---------+----------------+</span><br><span class="line">| Field | Type         | Null | Key | Default | Extra          |</span><br><span class="line">+-------+--------------+------+-----+---------+----------------+</span><br><span class="line">| Score | float(255,2) | YES  |     | NULL    |                |</span><br><span class="line">| Id    | int(11)      | NO   | PRI | NULL    | auto_increment |</span><br><span class="line">| time  | datetime     | YES  |     | NULL    |                |</span><br><span class="line">+-------+--------------+------+-----+---------+----------------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show columns from Scores;</span><br><span class="line">+-------+--------------+------+-----+---------+----------------+</span><br><span class="line">| Field | Type         | Null | Key | Default | Extra          |</span><br><span class="line">+-------+--------------+------+-----+---------+----------------+</span><br><span class="line">| Score | float(255,2) | YES  |     | NULL    |                |</span><br><span class="line">| Id    | int(11)      | NO   | PRI | NULL    | auto_increment |</span><br><span class="line">| time  | datetime     | YES  |     | NULL    |                |</span><br><span class="line">+-------+--------------+------+-----+---------+----------------+</span><br><span class="line">3 rows in set (0.01 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="查看创建语句"><a href="#查看创建语句" class="headerlink" title="查看创建语句"></a>查看创建语句</h3><h4 id="查看创建表语句"><a href="#查看创建表语句" class="headerlink" title="查看创建表语句"></a>查看创建表语句</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">show create table &lt;table_name&gt;</span><br></pre></td></tr></table></figure>
+<p>示例</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; show create table newscore\G;</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Table: newscore</span><br><span class="line">Create Table: CREATE TABLE `newscore` (</span><br><span class="line">  `score` decimal(3,1) DEFAULT NULL</span><br><span class="line">) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci</span><br></pre></td></tr></table></figure>
+<h4 id="查看创建库语句"><a href="#查看创建库语句" class="headerlink" title="查看创建库语句"></a>查看创建库语句</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">show create database &lt;db_name&gt;</span><br></pre></td></tr></table></figure>
+<p>示例</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; show create database pricatice\G;</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Database: pricatice</span><br><span class="line">Create Database: CREATE DATABASE `pricatice` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION=&apos;N&apos; */</span><br></pre></td></tr></table></figure>
+<h3 id="查询不重复的某列值"><a href="#查询不重复的某列值" class="headerlink" title="查询不重复的某列值"></a>查询不重复的某列值</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select distinct(score) from newscore;</span><br><span class="line">--or: select distinct score from newscore</span><br></pre></td></tr></table></figure>
+<h3 id="限制查询返回的行数"><a href="#限制查询返回的行数" class="headerlink" title="限制查询返回的行数"></a>限制查询返回的行数</h3><p>返回从start行开始包括start总共num条记录</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select score from newscore limit [start],[num]</span><br></pre></td></tr></table></figure>
+<p>示例:  记录下标 从0 开始， start默认为0</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; select score from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  85.5 |</span><br><span class="line">|  65.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">+-------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; select score from newscore limit 1,3;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  65.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="使用完全限定的表名查询"><a href="#使用完全限定的表名查询" class="headerlink" title="使用完全限定的表名查询"></a>使用完全限定的表名查询</h3><p>表名.列名 == 列名</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; select newscore.score from newscore;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  85.5 |</span><br><span class="line">|  65.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">+-------+</span><br><span class="line">4 rows in set (0.01 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="排序检索数据"><a href="#排序检索数据" class="headerlink" title="排序检索数据"></a>排序检索数据</h3><p>默认asc(升序)，desc(降序), 可按多个列排序（优先级按照列的书写顺序）（多个列的降序排序需要在每个列指定顺序）</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; select newscore.score from newscore order by score desc;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  85.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">|  65.5 |</span><br><span class="line">+-------+</span><br><span class="line">4 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h3 id="where子句操作符"><a href="#where子句操作符" class="headerlink" title="where子句操作符"></a>where子句操作符</h3><table>
+<thead>
+<tr>
+<th>操作符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>=</td>
+<td>等于</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>小于</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>大于</td>
+</tr>
+<tr>
+<td>&lt;&gt;</td>
+<td>不等于</td>
+</tr>
+<tr>
+<td>!=</td>
+<td>不等于</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td>小于等于</td>
+</tr>
+<tr>
+<td>&gt;=</td>
+<td>大于等于</td>
+</tr>
+<tr>
+<td>Between 60 and 70</td>
+<td>在60和70之间</td>
+</tr>
+<tr>
+<td>is null</td>
+<td>是否是null，专为检查是否是空值</td>
+</tr>
+</tbody>
+</table>
+<h4 id="in-or-and-not操作符"><a href="#in-or-and-not操作符" class="headerlink" title="in/or/and/not操作符"></a>in/or/and/not操作符</h4><p>in（1002，1003） 取值为1002或者1003，<strong>而不是区间</strong></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">select * <span class="keyword">from</span> scores where id <span class="keyword">in</span> (<span class="number">40</span>,<span class="number">41</span>);</span><br></pre></td></tr></table></figure>
+<p>条件1 or 条件2</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">select * <span class="keyword">from</span> scores where id=<span class="number">40</span> <span class="keyword">or</span> id=<span class="number">41</span>;</span><br></pre></td></tr></table></figure>
+<p>条件1 and 条件2</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">select * <span class="keyword">from</span> scores where id=<span class="number">40</span> <span class="keyword">and</span> score=<span class="number">5.5</span>;</span><br></pre></td></tr></table></figure>
+<p>not 条件子句： 否定not后跟的所有条件子句</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">mysql&gt; select score from newscore where score not between 60 and 70;</span><br><span class="line">+-------+</span><br><span class="line">| score |</span><br><span class="line">+-------+</span><br><span class="line">|  85.5 |</span><br><span class="line">|  85.5 |</span><br><span class="line">|  75.5 |</span><br><span class="line">+-------+</span><br><span class="line">3 rows in set (0.00 sec)</span><br></pre></td></tr></table></figure>
+<h5 id="IN操作符的优点"><a href="#IN操作符的优点" class="headerlink" title="IN操作符的优点"></a>IN操作符的优点</h5><ul>
+<li><p>选项清单较多时，in写法更直观</p>
+</li>
+<li><p>使用IN时，计算的次序更容易管理（使用的操作符更少）</p>
+</li>
+<li><p><strong>IN操作符比or操作符清单执行更快</strong></p>
+</li>
+<li><p><strong>IN可以包含其他select语句，可以更动态的创建where子句。</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select * from scores where score in (select score from newscore);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="通配符过滤"><a href="#通配符过滤" class="headerlink" title="通配符过滤"></a>通配符过滤</h3><blockquote>
+<p>通配符(wildcard) 用来匹配值的一部分的特殊字符。</p>
+</blockquote>
+<blockquote>
+<p>搜索模式(search pattern)1 由字面值、通配符或两者组合构成的搜索条件。 </p>
+</blockquote>
+<h4 id="、-通配符"><a href="#、-通配符" class="headerlink" title="%、_ 通配符"></a>%、_ 通配符</h4><p>使用通配符必须配合使用like操作符</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 查找有0.5的分数，正数部分有两位数</span><br><span class="line">select * from newscore where score like  &apos;__.5&apos;;</span><br><span class="line"></span><br><span class="line">-- 查找有0.5的分数</span><br><span class="line">select * from newscore where score like  &apos;%.5&apos;;</span><br></pre></td></tr></table></figure>
+<p>_ ：仅仅代表任何字符出现一次</p>
+<p>%：代表任何字符出现任何次数</p>
+<blockquote>
+<p><strong>区分大小写</strong> 根据MySQL的配置方式，搜索可以是区分大小<br>写的。如果区分大小写，’jet%’与JetPack 1000将不匹配。</p>
+</blockquote>
+<blockquote>
+<p><strong>注意尾空格</strong> 尾空格可能会干扰通配符匹配。例如，在保存词<br>anvil时，如果它后面有一个或多个空格，则子句WHERE<br>prod_name LIKE ‘%anvil’将不会匹配它们，因为在最后的l<br>后有多余的字符。解决这个问题的一个简单的办法是在搜索模<br>式最后附加一个%。</p>
+</blockquote>
+<p>可使用RTrim() 去除尾空格、LTrime去除左空格、Trime去除两边的空格。</p>
+<blockquote>
+<p><strong>注意NULL</strong> 虽然似乎%通配符可以匹配任何东西，但有一个例<br>外，即NULL。即使是WHERE prod_name LIKE ‘%’也不能匹配<br>用值NULL作为产品名的行。</p>
+</blockquote>
+<h4 id="使用通配符的技巧"><a href="#使用通配符的技巧" class="headerlink" title="使用通配符的技巧"></a>使用通配符的技巧</h4><blockquote>
+<p>通配符搜索的处理一般要比前面讨论的其他搜索所花时间更长。</p>
+</blockquote>
+<ul>
+<li>非必要情况下不使用</li>
+<li>非必要下，不将通配符放在开头（在开头搜索起来更慢）</li>
+<li>仔细注意通配符的位置。如果放错地方，可能不会返回想要的数据</li>
+</ul>
+<h4 id="使用正则表达式进行搜索"><a href="#使用正则表达式进行搜索" class="headerlink" title="使用正则表达式进行搜索"></a>使用正则表达式进行搜索</h4><p>正则表达式可用来匹配文本</p>
+<h4 id="基本字符匹配"><a href="#基本字符匹配" class="headerlink" title="基本字符匹配"></a>基本字符匹配</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 查找有0.5的分数，正数部分有两位数(特殊字符加前导\\)</span><br><span class="line">select * from newscore where score regexp &apos;^.&#123;2&#125;\\.5$&apos;;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>不区分大小写，可使用BINARY关键字，如WHERE prod_name REGEXP<br>BINARY ‘JetPack .000’。</p>
+</blockquote>
+<h4 id="OR匹配"><a href="#OR匹配" class="headerlink" title="OR匹配"></a>OR匹配</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select * from scores where id regexp &apos;^40|41$&apos;;</span><br><span class="line">-- </span><br><span class="line">select * from scores where id regexp &apos;^4[01]$&apos;;</span><br><span class="line">--</span><br><span class="line">select * from scores where id regexp &apos;^4[0-1]$&apos;;</span><br></pre></td></tr></table></figure>
+<h4 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h4><blockquote>
+<p>^的双重用途 ^有两种用法。在集合中(用[和]定义)，用它<br>来否定该集合，否则，用来指串的开始处。</p>
+</blockquote>
+<blockquote>
+<p>使REGEXP起类似LIKE的作用 本章前面说过，LIKE和REGEXP<br>的不同在于，LIKE匹配整个串而REGEXP匹配子串。利用定位<br>符，通过用^开始每个表达式，用$结束每个表达式，可以使<br>REGEXP的作用与LIKE一样。</p>
+</blockquote>
+<h3 id="创建计算字段"><a href="#创建计算字段" class="headerlink" title="创建计算字段"></a>创建计算字段</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select CONCAT(id,&apos;(&apos;,score,&apos;)&apos;) as id_score from scores;</span><br></pre></td></tr></table></figure>
+<p>其中计算字段为id_scores</p>
+<h3 id="使用函数"><a href="#使用函数" class="headerlink" title="使用函数"></a>使用函数</h3><h4 id="文本函数"><a href="#文本函数" class="headerlink" title="文本函数"></a>文本函数</h4><p>常用函数</p>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lower()</td>
+<td>将串转小写</td>
+</tr>
+<tr>
+<td>Upper()</td>
+<td>将串转大写</td>
+</tr>
+<tr>
+<td>LTrim()</td>
+<td>去掉左边空格</td>
+</tr>
+<tr>
+<td>RTrim()</td>
+<td>去掉右边空格</td>
+</tr>
+<tr>
+<td>Trime()</td>
+<td>去掉两边的空格</td>
+</tr>
+<tr>
+<td>Left()</td>
+<td>返回串左边的字符</td>
+</tr>
+<tr>
+<td>Right()</td>
+<td>返回串右边的字符</td>
+</tr>
+<tr>
+<td>SubString()</td>
+<td>返回子串的字符</td>
+</tr>
+<tr>
+<td>Soundex()</td>
+<td>返回串的SOUNDINDEX值</td>
+</tr>
+</tbody>
+</table>
+<h4 id="日期函数"><a href="#日期函数" class="headerlink" title="日期函数"></a>日期函数</h4><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AddDate()</td>
+<td>增加一个日期(天、周等)</td>
+</tr>
+<tr>
+<td>AddTime()</td>
+<td>增加一个时间(时、分等)</td>
+</tr>
+<tr>
+<td>CurDate()</td>
+<td>返回当前日期</td>
+</tr>
+<tr>
+<td>CurTime()</td>
+<td>返回当前时间</td>
+</tr>
+<tr>
+<td>Date()</td>
+<td>返回日期时间的日期部分</td>
+</tr>
+<tr>
+<td>DateDiff()</td>
+<td>计算两个日期之差</td>
+</tr>
+<tr>
+<td>Date_Add()</td>
+<td>高度灵活的日期运算函数</td>
+</tr>
+<tr>
+<td>Now()</td>
+<td>返回当前时间</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 增加1周</span><br><span class="line">update scores set time=ADDDATE(time,interval 1 WEEK) where id=41;</span><br><span class="line">-- 增加1天</span><br><span class="line">update scores set time=ADDDATE(time,interval 1 day) where id=41;</span><br><span class="line">-- 加一分钟</span><br><span class="line">update scores set time=ADDTIME(time, &apos;00:01:00&apos;) where id=41;</span><br><span class="line">-- 加一小时</span><br><span class="line">update scores set time=ADDTIME(time, &apos;01:00:00&apos;) where id=41;</span><br></pre></td></tr></table></figure>
+<h4 id="数值处理函数"><a href="#数值处理函数" class="headerlink" title="数值处理函数"></a>数值处理函数</h4><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Abs()</td>
+<td>返回一个数的绝对值</td>
+</tr>
+<tr>
+<td>Cos()</td>
+<td>返回一个角度的余弦</td>
+</tr>
+<tr>
+<td>Exp()</td>
+<td>返回一个数的指数值</td>
+</tr>
+<tr>
+<td>Mod()</td>
+<td>返回除操作的余数</td>
+</tr>
+<tr>
+<td>Pi()</td>
+<td>返回圆周率</td>
+</tr>
+<tr>
+<td>Sin()</td>
+<td>返回一个角度的正弦</td>
+</tr>
+<tr>
+<td>Sqrt()</td>
+<td>返回一个数的平方根</td>
+</tr>
+<tr>
+<td>Tan()</td>
+<td>正切值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="数据汇总"><a href="#数据汇总" class="headerlink" title="数据汇总"></a>数据汇总</h3><blockquote>
+<p>MySQL查询可用于检索数据，以便分析和报表生成。</p>
+</blockquote>
+<p>使用场景</p>
+<blockquote>
+<p>􏰀 确定表中行数(或者满足某个条件或包含某个特定值的行数)。 􏰀</p>
+<p> 获得表中行组的和。</p>
+<p> 找出表列(或所有行或某些特定的行)的最大值、最小值和平均值。 </p>
+</blockquote>
+<h4 id="聚集函数"><a href="#聚集函数" class="headerlink" title="聚集函数"></a>聚集函数</h4><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>avg()</td>
+<td>返回某列的平均值</td>
+</tr>
+<tr>
+<td>count()</td>
+<td>返回某列的行数</td>
+</tr>
+<tr>
+<td>max()</td>
+<td>返回某列的最大值</td>
+</tr>
+<tr>
+<td>min()</td>
+<td>返回某列的最小值</td>
+</tr>
+<tr>
+<td>sum()</td>
+<td>返回某列值之和</td>
+</tr>
+</tbody>
+</table>
+<h4 id="分组数据"><a href="#分组数据" class="headerlink" title="分组数据"></a>分组数据</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-- 返回每个供应商提供的产品数目</span><br><span class="line">select count(*) as num_prods from products group by vend_id;</span><br></pre></td></tr></table></figure>
+<p>GROUP BY</p>
+<ul>
+<li>GROUP BY子句可以包含任意数目的列。</li>
+<li>GROUP BY子句中列出的每个列都必须是检索列或有效的表达式。(但不能是聚集函数)。如果在SELECT中使用表达式，则必须在GROUP BY子句中指定相同的表达式。不能使用别名。</li>
+<li>除聚集计算语句外，SELECT语句中的每个列都必须在GROUP BY子句中给出。</li>
+<li>如果分组列中具有NULL值，则NULL将作为一个分组返回。如果列中有多行NULL值，它们将分为一组。</li>
+<li>GROUP BY子句必须出现在WHERE子句之后，ORDER BY子句之前。</li>
+</ul>
+<h4 id="having过滤分组"><a href="#having过滤分组" class="headerlink" title="having过滤分组"></a>having过滤分组</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select cust_id, count(*) as orders from orders</span><br><span class="line">group by cust_id</span><br><span class="line">having count(*) &gt;= 2</span><br></pre></td></tr></table></figure>
+<h4 id="WHERE与HAVING的区别"><a href="#WHERE与HAVING的区别" class="headerlink" title="WHERE与HAVING的区别"></a>WHERE与HAVING的区别</h4><ul>
+<li>WHERE在数据分组前进行过滤，HAVING在数据分组后进行过滤</li>
+<li>WHERE排除的行不包括在分组中。这可能会改变计算值，从而影响HAVING子句中基于这些值过滤掉的分组。</li>
+</ul>
+<h3 id="SELECT子句顺序"><a href="#SELECT子句顺序" class="headerlink" title="SELECT子句顺序"></a>SELECT子句顺序</h3><table>
+<thead>
+<tr>
+<th>子句</th>
+<th>说明</th>
+<th>是否必须使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>select</td>
+<td>要返回的列或者表达式</td>
+<td>是</td>
+</tr>
+<tr>
+<td>from</td>
+<td>从中检索数据的表</td>
+<td>仅在从表选择数据时使用</td>
+</tr>
+<tr>
+<td>where</td>
+<td>行级过滤</td>
+<td>否</td>
+</tr>
+<tr>
+<td>group by</td>
+<td>分组说明</td>
+<td>仅在按组计算聚集时使用</td>
+</tr>
+<tr>
+<td>having</td>
+<td>组级过滤</td>
+<td>否</td>
+</tr>
+<tr>
+<td>order by</td>
+<td>输出排序顺序</td>
+<td>否</td>
+</tr>
+<tr>
+<td>limit</td>
+<td>要检索的行数</td>
+<td>否</td>
+</tr>
+</tbody>
+</table>
+<h3 id="联结表"><a href="#联结表" class="headerlink" title="联结表"></a>联结表</h3><blockquote>
+<p><strong>外键(foreignkey)</strong>  外键为某个表中的一列，它包含另一个表的主键值，定义了两个表之间的关系。</p>
+</blockquote>
+<p>内联结：inner join</p>
+<p>左（外）联结： left join</p>
+<p>右（外）联结：right join</p>
+<h3 id="组合查询"><a href="#组合查询" class="headerlink" title="组合查询"></a>组合查询</h3><p>将结果组合在一个结果集中（可应用于不同表）。重复行会自动取消</p>
+<p>tip：使用union all 时不取消重复行</p>
+<p>union规则：</p>
+<ul>
+<li><p>UNION必须由两条或两条以上的SELECT语句组成，语句之间用关键字UNION分隔(因此，如果组合4条SELECT语句，将要使用3个UNION关键字)。</p>
+</li>
+<li><p>UNION中的每个查询必须包含相同的列、表达式或聚集函数(不过各个列不需要以相同的次序列出)。</p>
+</li>
+<li><p>列数据类型必须兼容:类型不必完全相同，但必须是DBMS可以 </p>
+<p>隐含地转换的类型(例如，不同的数值类型或不同的日期类型)。 </p>
+</li>
+</ul>
+<h3 id="全文本搜索"><a href="#全文本搜索" class="headerlink" title="全文本搜索"></a>全文本搜索</h3><p>需要建立索引，FULLTEXT(col)，仅在MyISAM引擎中才支持。</p>
+<p>使用 where Match(col) Against(‘rabbit’) : 搜索包含<strong>词</strong>rabbit的行</p>
+<h4 id="扩展查询"><a href="#扩展查询" class="headerlink" title="扩展查询"></a>扩展查询</h4><p>where Match(col) Against(‘rabbit’ WITH QUERY EXPANSION)</p>
+<h4 id="布尔文本搜索"><a href="#布尔文本搜索" class="headerlink" title="布尔文本搜索"></a>布尔文本搜索</h4><p>没有定义FULLTEXT索引也可以使用，但是非常缓慢。性能随着数据量的增加而降低。</p>
+<p>使用：</p>
+<p>where Match(col) Against(‘heavey -rope* IN BOOLEAN MODE’ )</p>
+<table>
+<thead>
+<tr>
+<th>布尔操作符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+</td>
+<td>包含，词必须存在</td>
+</tr>
+<tr>
+<td>-</td>
+<td>不包含，词必须不出现</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>包含，而且增加等级值</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>包含，且减少等级值</td>
+</tr>
+<tr>
+<td>()</td>
+<td>把词组成子表达式(允许这些子表达式作为一个组被包含、排除、排列等)</td>
+</tr>
+<tr>
+<td>～</td>
+<td>取消一个词的排序值</td>
+</tr>
+<tr>
+<td>*</td>
+<td>词尾的通配符</td>
+</tr>
+<tr>
+<td>“”</td>
+<td>定义一个短语(与单个词的列表不一样，它匹配整个短语以便包含或者排除这个短语</td>
+</tr>
+</tbody>
+</table>
+<p>搜索包含词rabbit和bait的行</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select note_text from productnotes</span><br><span class="line">where Match(note_text) Against(&apos;+rabbit +bait&apos; IN BOOLEAN MODE)</span><br></pre></td></tr></table></figure>
+<p>没有指定操作符，搜索匹配包含的rabbit和bait中的至少一个词的行</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select note_text from productnotes</span><br><span class="line">where Match(note_text) Against(&apos;rabbit bait&apos; IN BOOLEAN MODE)</span><br></pre></td></tr></table></figure>
+<p>搜索匹配短语rabbit bait的行</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select note_text from productnotes</span><br><span class="line">where Match(note_text) Against(&apos;&quot;rabbit bait&quot;&apos; IN BOOLEAN MODE)</span><br></pre></td></tr></table></figure>
+<p>匹配rabbit和carrot，增加前者的等级，降低后者的等级</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select note_text from productnotes</span><br><span class="line">where Match(note_text) Against(&apos;&gt;rabbit &lt;carrot&apos; IN BOOLEAN MODE)</span><br></pre></td></tr></table></figure>
+<p>匹配搜索词safe和combination，降低后者的等级</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">select note_text from productnotes</span><br><span class="line">where Match(note_text) Against(&apos;+safe +(&lt;combination)&apos; IN BOOLEAN MODE)</span><br></pre></td></tr></table></figure>
+<h4 id="全文本搜索的使用说明"><a href="#全文本搜索的使用说明" class="headerlink" title="全文本搜索的使用说明"></a>全文本搜索的使用说明</h4><ul>
+<li>索引全文本时短词（3个和小于3个字符的词，3这个数目可以设置）被忽略且从索引中排除。</li>
+<li>MYSQL的内建的非用词列表（可以覆盖这个列表），在索引全文本数据时会被忽略。</li>
+<li>许多词出现的频率很高，搜索它们没有用处，因此，mysql规定了一条50%规则，如果一个词出现在50%以上的行中，则将它作为一个非用词省略，50%规则不用于IN BOOLEAN MODE。</li>
+<li>如果表中的行数少于3行，则全文本 搜索不返回结果（因为每个词出现或者不出现，或者至少出现在50%的行中）</li>
+<li>忽略单词中的单引号。例如（don‘t 索引尾dont）</li>
+<li>不具有词分隔符的语言（汉语，日语）不能恰当返回全文本搜索的结果</li>
+<li>仅在MyISAM数据库中支持全文本搜索。</li>
+</ul>
+<h3 id="插入数据"><a href="#插入数据" class="headerlink" title="插入数据"></a>插入数据</h3><p>可插入完整的行/插入行的一部分/插入多行/插入某些查询的结果。</p>
+<p><strong>省略列</strong> 如果表的定义允许，则可以在INSERT操作中省略某些列（省略的列需要满足<strong>允许为NULL</strong>或者<strong>有默认值）</strong></p>
+<p><strong>提高整体性能</strong> 当insert和select的同时操作时，可降低插入的优先级（insert low_priority into），因为插入可能比较耗费时间（若有索引需要更新，有可能降低等待处理的select语句的性能）</p>
+<p><strong>提高insert性能</strong> MySQL用单条INSERT语句处理多个插入比使用多条INSERT语句快。</p>
+<h3 id="更新数据"><a href="#更新数据" class="headerlink" title="更新数据"></a>更新数据</h3><p><strong>IGNORE关键字</strong> 如果用UPDATE语句更新多行，并且在更新时由于一个出错而整个更新操作被取消（被更新的回滚到更新之前的值）。若想即使发生错误，也继续进行更新，可使用ignore关键字（update ignore customers … ）</p>
+<h3 id="删除数据"><a href="#删除数据" class="headerlink" title="删除数据"></a>删除数据</h3><p><strong>更快的删除</strong>  TURNCATE TABLE（TRUNCATE实际是删除原来的表并重新创建一个表，而不<br>是逐行删除表中的数据)。</p>
+<h4 id="创建数据表"><a href="#创建数据表" class="headerlink" title="创建数据表"></a>创建数据表</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">create table customers if not exists</span><br><span class="line">(</span><br><span class="line">	cust_id	int 	not null	AUTO_INCREMENT,</span><br><span class="line">	cust_name char(50) not null,</span><br><span class="line">	cust_address char(50)null ,</span><br><span class="line">	cust_city char(50) null ,</span><br><span class="line">	cust_state char(5) null,</span><br><span class="line">	cust_zip char(10) null,</span><br><span class="line">	cust_country char(50) null,</span><br><span class="line">	cust_contact char(50) null,</span><br><span class="line">	cust_email char(255) null,</span><br><span class="line">	primary key (cust_id)</span><br><span class="line">)engine=INNODB;</span><br></pre></td></tr></table></figure>
+<h3 id="提示"><a href="#提示" class="headerlink" title="提示"></a>提示</h3><h4 id="大小写"><a href="#大小写" class="headerlink" title="大小写"></a>大小写</h4><p>语句不区分大小写</p>
+<p>表名，列名，数据库名等区分大小写</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">mysql</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/mysql基础操作/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-创建型" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="第一批设计模式"><a href="#第一批设计模式" class="headerlink" title="第一批设计模式"></a>第一批设计模式</h1><hr>
+<p>title: 创建型设计模式</p>
+<p>toc: true</p>
+<p>tags: </p>
+<ul>
+<li><p>设计模式</p>
+</li>
+<li><p>创建型</p>
+</li>
+</ul>
+<hr>
+<p>[TOC]</p>
+<h2 id="简单工厂模式"><a href="#简单工厂模式" class="headerlink" title="简单工厂模式"></a>简单工厂模式</h2><p>定义:</p>
+<p>​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。</p>
+<p>三个角色</p>
+<ul>
+<li>工厂类：DBFactory</li>
+<li>抽象产品类：AbstractDataBase</li>
+<li>具体产品类：MysqlDataBase  MongoDataBase</li>
+</ul>
+<p>UML类图</p>
+<p>使用示例：</p>
+<p>根据传入的参数mysql，返回mysql的数据库连接实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mysql'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
+<p>返回mongodb的数据库连接实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mongo'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
+<p>代码示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 简单工厂模式</span></span><br><span class="line"><span class="comment"># 比如创建不同数据库（mysql/mongo）的连接</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDataBase</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""抽象数据库"""</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mongo数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mysql数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""工厂类"""</span></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(name, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> name == <span class="string">'mongo'</span>:</span><br><span class="line">            <span class="keyword">return</span> MongoDataBase().create_db_connect(host, port, db_name)</span><br><span class="line">        <span class="keyword">elif</span> name == <span class="string">'mysql'</span>:</span><br><span class="line">            <span class="keyword">return</span> MysqlDataBase().create_db_connect(host, port, db_name)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出 连接mysql数据库</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">数据库使用者-&gt;数据库创建工厂: 创建一个mongo数据库连接</span><br><span class="line">Note right of 数据库创建工厂: 创建好对应的实例</span><br><span class="line">数据库创建工厂--&gt;数据库使用者: 返回mongo连接实例</span><br></pre></td></tr></table></figure>
+<p>优缺点：</p>
+<ul>
+<li>优点：实现对象的创建和对象的使用分离，将对象的创建交给专门的工厂类负责，</li>
+<li>缺点：工厂类不够灵活，增加新的具体产品需要修改工厂类的判断逻辑代码，而且产品较多时，工厂方法代码将会非常复杂。</li>
+</ul>
+<h2 id="工厂方法模式"><a href="#工厂方法模式" class="headerlink" title="工厂方法模式"></a>工厂方法模式</h2><p>对简单工厂进行优化，取消统一的工厂类，<strong>针对不同的产品提供与之对应的工厂类</strong>。</p>
+<p>定义：</p>
+<p>​    定义了一个创建对象的接口，但由子类决定将哪个类实例化。让一个类的实例化推迟到子类。</p>
+<p>使用示例:</p>
+<p>​    仅仅需要知道工厂名，就可以创建出对应的实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">mongo_factory = MongoFactory()</span><br><span class="line">db = mongo_factory.get_db()</span><br><span class="line">db.connect(<span class="string">'127.0.0.1'</span>, <span class="number">27017</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line">mysql_factory = MysqlFactory()</span><br><span class="line">db1 = mongo_factory.get_db()</span><br><span class="line">db1.connect(<span class="string">'127.0.0.1'</span>, <span class="number">3306</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:27017 db:test</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:3306 db:test</span></span><br></pre></td></tr></table></figure>
+<p>四个角色：</p>
+<ul>
+<li>抽象产品类: DB</li>
+<li>具体产品类:  MysqlDB MongoDB</li>
+<li>抽象工厂类 : AbstractDBFactory</li>
+<li>具体工厂类 : MongoFactory MysqlFactory</li>
+</ul>
+<p>代码示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DB</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;DB:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MongoDB:</span></span><br><span class="line">        <span class="keyword">return</span> MongoDB()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MysqlDB:</span></span><br><span class="line">        <span class="keyword">return</span> MysqlDB()</span><br></pre></td></tr></table></figure>
+<p>工厂方法模式是典型的解耦框架。</p>
+<p>应用场景：</p>
+<p>用来处理对象的创建，并将这样的行为封装在子类中。这样客户端程序中关于超类的代码就和子类对象的创建代码解藕了。</p>
+<h2 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h2><p>定义：</p>
+<p>​    提供一个创建一系列相关或者相互依赖的接口，而无需指定他们具体的类。（在抽象工厂模式中，每一个具体工厂都提供了多个工厂方法用于产生多种不同类型的对象）</p>
+<p>四个角色：</p>
+<ul>
+<li><p>抽象产品： 为每种对象声明接口，在其中声明了对象的所有业务方法</p>
+</li>
+<li><p>具体产品： 它定义具体工厂生产的具体对象。</p>
+</li>
+<li><p>抽象工厂：声明了一组用于创建对象的方法，注意是一组。</p>
+</li>
+<li><p>具体工厂：它实现了在抽象工厂中声明的创建对象的方法，生成一组具体对象。</p>
+</li>
+</ul>
+<h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><p>定义:</p>
+<p>​    确保一个类只有一个实例，并提供一个全局访问点。</p>
+<p>示例：(三种方法实现单例)</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 单例对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 1.重写new的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> getattr(cls, <span class="string">'instance'</span>)</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__new__(cls, *args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">b = A()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2.使用元类的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(type)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__call__(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Myclass</span><span class="params">(object, metaclass=B)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Myclass()</span><br><span class="line">b = Myclass()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 使用装饰器的方式</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">singleton</span><span class="params">(cls)</span>:</span></span><br><span class="line">    instance = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">if</span> cls <span class="keyword">in</span> instance:</span><br><span class="line">            <span class="keyword">return</span> instance[cls]</span><br><span class="line">        instance[cls] = cls()</span><br><span class="line">        <span class="keyword">return</span> instance[cls]</span><br><span class="line">    <span class="keyword">return</span> _</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@singleton</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span><span class="params">(object)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Singleton()</span><br><span class="line">b = Singleton()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="抽象工厂模式和工厂方法模式区别"><a href="#抽象工厂模式和工厂方法模式区别" class="headerlink" title="抽象工厂模式和工厂方法模式区别"></a>抽象工厂模式和工厂方法模式区别</h3><ul>
+<li>抽象工厂模式：提供一个接口，用于创建相关或依赖对象的家族，而不需要明确指定具体类。</li>
+<li>工厂方法模式：定义了一个创建对象的接口，单由子类决定要实例化的类是哪一个。工厂方法让类吧实例化推迟到子类。</li>
+</ul>
+<p>OO原则：</p>
+<ul>
+<li>多用组合，少用继承。</li>
+<li>针对接口编程，不针对实现编程。</li>
+<li><strong>依赖抽象，不要依赖具体产品</strong></li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/创建型/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-IO模型" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -283,129 +1350,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2019/08/20/IO模型/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-创建型" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="第一批设计模式"><a href="#第一批设计模式" class="headerlink" title="第一批设计模式"></a>第一批设计模式</h1><p>-–</p>
-<p>title: 创建型设计模式</p>
-<p>toc: true</p>
-<p>tags: </p>
-<p>  - 设计模式</p>
-<p>  - 创建型</p>
-<p>-–</p>
-<p>[TOC]</p>
-<h2 id="简单工厂模式"><a href="#简单工厂模式" class="headerlink" title="简单工厂模式"></a>简单工厂模式</h2><p>定义:</p>
-<p>​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。</p>
-<p>三个角色</p>
-<ul>
-<li>工厂类：DBFactory</li>
-<li>抽象产品类：AbstractDataBase</li>
-<li>具体产品类：MysqlDataBase  MongoDataBase</li>
-</ul>
-<p>UML类图</p>
-<p>使用示例：</p>
-<p>根据传入的参数mysql，返回mysql的数据库连接实例。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mysql'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
-<p>返回mongodb的数据库连接实例。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mongo'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
-<p>代码示例：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 简单工厂模式</span></span><br><span class="line"><span class="comment"># 比如创建不同数据库（mysql/mongo）的连接</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDataBase</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""抽象数据库"""</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mongo数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mysql数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""工厂类"""</span></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(name, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> name == <span class="string">'mongo'</span>:</span><br><span class="line">            <span class="keyword">return</span> MongoDataBase().create_db_connect(host, port, db_name)</span><br><span class="line">        <span class="keyword">elif</span> name == <span class="string">'mysql'</span>:</span><br><span class="line">            <span class="keyword">return</span> MysqlDataBase().create_db_connect(host, port, db_name)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出 连接mysql数据库</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">数据库使用者-&gt;数据库创建工厂: 创建一个mongo数据库连接</span><br><span class="line">Note right of 数据库创建工厂: 创建好对应的实例</span><br><span class="line">数据库创建工厂--&gt;数据库使用者: 返回mongo连接实例</span><br></pre></td></tr></table></figure>
-<p>优缺点：</p>
-<ul>
-<li>优点：实现对象的创建和对象的使用分离，将对象的创建交给专门的工厂类负责，</li>
-<li>缺点：工厂类不够灵活，增加新的具体产品需要修改工厂类的判断逻辑代码，而且产品较多时，工厂方法代码将会非常复杂。</li>
-</ul>
-<h2 id="工厂方法模式"><a href="#工厂方法模式" class="headerlink" title="工厂方法模式"></a>工厂方法模式</h2><p>对简单工厂进行优化，取消统一的工厂类，<strong>针对不同的产品提供与之对应的工厂类</strong>。</p>
-<p>定义：</p>
-<p>​    定义了一个创建对象的接口，但由子类决定将哪个类实例化。让一个类的实例化推迟到子类。</p>
-<p>使用示例:</p>
-<p>​    仅仅需要知道工厂名，就可以创建出对应的实例。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">mongo_factory = MongoFactory()</span><br><span class="line">db = mongo_factory.get_db()</span><br><span class="line">db.connect(<span class="string">'127.0.0.1'</span>, <span class="number">27017</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line">mysql_factory = MysqlFactory()</span><br><span class="line">db1 = mongo_factory.get_db()</span><br><span class="line">db1.connect(<span class="string">'127.0.0.1'</span>, <span class="number">3306</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:27017 db:test</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:3306 db:test</span></span><br></pre></td></tr></table></figure>
-<p>四个角色：</p>
-<ul>
-<li>抽象产品类: DB</li>
-<li>具体产品类:  MysqlDB MongoDB</li>
-<li>抽象工厂类 : AbstractDBFactory</li>
-<li>具体工厂类 : MongoFactory MysqlFactory</li>
-</ul>
-<p>代码示例：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DB</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;DB:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MongoDB:</span></span><br><span class="line">        <span class="keyword">return</span> MongoDB()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MysqlDB:</span></span><br><span class="line">        <span class="keyword">return</span> MysqlDB()</span><br></pre></td></tr></table></figure>
-<p>工厂方法模式是典型的解耦框架。</p>
-<p>应用场景：</p>
-<p>用来处理对象的创建，并将这样的行为封装在子类中。这样客户端程序中关于超类的代码就和子类对象的创建代码解藕了。</p>
-<h2 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h2><p>定义：</p>
-<p>​    提供一个创建一系列相关或者相互依赖的接口，而无需指定他们具体的类。（在抽象工厂模式中，每一个具体工厂都提供了多个工厂方法用于产生多种不同类型的对象）</p>
-<p>四个角色：</p>
-<ul>
-<li><p>抽象产品： 为每种对象声明接口，在其中声明了对象的所有业务方法</p>
-</li>
-<li><p>具体产品： 它定义具体工厂生产的具体对象。</p>
-</li>
-<li><p>抽象工厂：声明了一组用于创建对象的方法，注意是一组。</p>
-</li>
-<li><p>具体工厂：它实现了在抽象工厂中声明的创建对象的方法，生成一组具体对象。</p>
-</li>
-</ul>
-<h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><p>定义:</p>
-<p>​    确保一个类只有一个实例，并提供一个全局访问点。</p>
-<p>示例：(三种方法实现单例)</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 单例对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 1.重写new的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> getattr(cls, <span class="string">'instance'</span>)</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__new__(cls, *args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">b = A()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2.使用元类的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(type)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__call__(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Myclass</span><span class="params">(object, metaclass=B)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Myclass()</span><br><span class="line">b = Myclass()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 使用装饰器的方式</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">singleton</span><span class="params">(cls)</span>:</span></span><br><span class="line">    instance = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">if</span> cls <span class="keyword">in</span> instance:</span><br><span class="line">            <span class="keyword">return</span> instance[cls]</span><br><span class="line">        instance[cls] = cls()</span><br><span class="line">        <span class="keyword">return</span> instance[cls]</span><br><span class="line">    <span class="keyword">return</span> _</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@singleton</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span><span class="params">(object)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Singleton()</span><br><span class="line">b = Singleton()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br></pre></td></tr></table></figure>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="抽象工厂模式和工厂方法模式区别"><a href="#抽象工厂模式和工厂方法模式区别" class="headerlink" title="抽象工厂模式和工厂方法模式区别"></a>抽象工厂模式和工厂方法模式区别</h3><ul>
-<li>抽象工厂模式：提供一个接口，用于创建相关或依赖对象的家族，而不需要明确指定具体类。</li>
-<li>工厂方法模式：定义了一个创建对象的接口，单由子类决定要实例化的类是哪一个。工厂方法让类吧实例化推迟到子类。</li>
-</ul>
-<p>OO原则：</p>
-<ul>
-<li>多用组合，少用继承。</li>
-<li>针对接口编程，不针对实现编程。</li>
-<li><strong>依赖抽象，不要依赖具体产品</strong></li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/20/创建型/">展开全文 >></a>
         </p>
       
 
@@ -990,470 +1934,6 @@
 
 
   
-    <article id="post-Content-Disposition header" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/30/Content-Disposition header/">Content-Disposition</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/30/Content-Disposition header/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:29:12.330Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Network Working Group                                          R. Troost</span><br><span class="line">Request for Comments: 1806                           New Century Systems</span><br><span class="line">Category: Experimental                                         S. Dorner</span><br><span class="line">                                                   QUALCOMM Incorporated</span><br><span class="line">                                                               June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">               Communicating Presentation Information in</span><br><span class="line">                           Internet Messages:</span><br><span class="line">                     The Content-Disposition Header</span><br><span class="line"></span><br><span class="line">Status of this Memo</span><br><span class="line"></span><br><span class="line">   This memo defines an Experimental Protocol for the Internet</span><br><span class="line">   community.  This memo does not specify an Internet standard of any</span><br><span class="line">   kind.  Discussion and suggestions for improvement are requested.</span><br><span class="line">   Distribution of this memo is unlimited.</span><br><span class="line"></span><br><span class="line">Abstract</span><br><span class="line"></span><br><span class="line">   This memo provides a mechanism whereby messages conforming to the</span><br><span class="line">   [RFC 1521] (&quot;MIME&quot;) specification can convey presentational</span><br><span class="line">   information.  It specifies a new &quot;Content-Disposition&quot; header,</span><br><span class="line">   optional and valid for any [RFC 1521] entity (&quot;message&quot; or &quot;body</span><br><span class="line">   part&quot;). Two values for this header are described in this memo; one</span><br><span class="line">   for the ordinary linear presentation of the body part, and another to</span><br><span class="line">   facilitate the use of mail to transfer files. It is expected that</span><br><span class="line">   more values will be defined in the future, and procedures are defined</span><br><span class="line">   for extending this set of values.</span><br><span class="line"></span><br><span class="line">   This document is intended as an extension to [RFC 1521]. As such, the</span><br><span class="line">   reader is assumed to be familiar with [RFC 1521], and [RFC 822]. The</span><br><span class="line">   information presented herein supplements but does not replace that</span><br><span class="line">   found in those documents.</span><br><span class="line"></span><br><span class="line">1.  Introduction</span><br><span class="line"></span><br><span class="line">   [RFC 1521] specifies a standard format for encapsulating multiple</span><br><span class="line">   pieces of data into a single Internet message. That document does not</span><br><span class="line">   address the issue of presentation styles; it provides a framework for</span><br><span class="line">   the interchange of message content, but leaves presentation issues</span><br><span class="line">   solely in the hands of mail user agent (MUA) implementors.</span><br><span class="line"></span><br><span class="line">   Two common ways of presenting multipart electronic messages are as a</span><br><span class="line">   main document with a list of separate attachments, and as a single</span><br><span class="line">   document with the various parts expanded (displayed) inline. The</span><br><span class="line">   display of an attachment is generally construed to require positive</span><br><span class="line">   action on the part of the recipient, while inline message components</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 1]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   are displayed automatically when the message is viewed. A mechanism</span><br><span class="line">   is needed to allow the sender to transmit this sort of presentational</span><br><span class="line">   information to the recipient; the Content-Disposition header provides</span><br><span class="line">   this mechanism, allowing each component of a message to be tagged</span><br><span class="line">   with an indication of its desired presentation semantics.</span><br><span class="line"></span><br><span class="line">   Tagging messages in this manner will often be sufficient for basic</span><br><span class="line">   message formatting. However, in many cases a more powerful and</span><br><span class="line">   flexible approach will be necessary. The definition of such</span><br><span class="line">   approaches is beyond the scope of this memo; however, such approaches</span><br><span class="line">   can benefit from additional Content-Disposition values and</span><br><span class="line">   parameters, to be defined at a later date.</span><br><span class="line"></span><br><span class="line">   In addition to allowing the sender to specify the presentational</span><br><span class="line">   disposition of a message component, it is desirable to allow her to</span><br><span class="line">   indicate a default archival disposition; a filename. The optional</span><br><span class="line">   &quot;filename&quot; parameter provides for this.</span><br><span class="line"></span><br><span class="line">2.  The Content-Disposition Header Field</span><br><span class="line"></span><br><span class="line">   Content-Disposition is an optional header; in its absence, the MUA</span><br><span class="line">   may use whatever presentation method it deems suitable.</span><br><span class="line"></span><br><span class="line">   It is desirable to keep the set of possible disposition types small</span><br><span class="line">   and well defined, to avoid needless complexity. Even so, evolving</span><br><span class="line">   usage will likely require the definition of additional disposition</span><br><span class="line">   types or parameters, so the set of disposition values is extensible;</span><br><span class="line">   see below.</span><br><span class="line"></span><br><span class="line">   In the extended BNF notation of [RFC 822], the Content-Disposition</span><br><span class="line">   header field is defined as follows:</span><br><span class="line"></span><br><span class="line">        disposition := &quot;Content-Disposition&quot; &quot;:&quot;</span><br><span class="line">                       disposition-type</span><br><span class="line">                       *(&quot;;&quot; disposition-parm)</span><br><span class="line"></span><br><span class="line">        disposition-type := &quot;inline&quot;</span><br><span class="line">                          / &quot;attachment&quot;</span><br><span class="line">                          / extension-token</span><br><span class="line">                          ; values are not case-sensitive</span><br><span class="line"></span><br><span class="line">        disposition-parm := filename-parm / parameter</span><br><span class="line"></span><br><span class="line">        filename-parm := &quot;filename&quot; &quot;=&quot; value;</span><br><span class="line"></span><br><span class="line">   `Extension-token&apos;, `parameter&apos; and `value&apos; are defined according to</span><br><span class="line">   [RFC 822] and [RFC 1521].</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 2]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">2.1  The Inline Disposition Type</span><br><span class="line"></span><br><span class="line">   A bodypart should be marked `inline&apos; if it is intended to be</span><br><span class="line">   displayed automatically upon display of the message. Inline bodyparts</span><br><span class="line">   should be presented in the order in which they occur, subject to the</span><br><span class="line">   normal semantics of multipart messages.</span><br><span class="line"></span><br><span class="line">2.2  The Attachment Disposition Type</span><br><span class="line"></span><br><span class="line">   Bodyparts can be designated `attachment&apos; to indicate that they are</span><br><span class="line">   separate from the main body of the mail message, and that their</span><br><span class="line">   display should not be automatic, but contingent upon some further</span><br><span class="line">   action of the user. The MUA might instead present the user of a</span><br><span class="line">   bitmap terminal with an iconic representation of the attachments, or,</span><br><span class="line">   on character terminals, with a list of attachments from which the</span><br><span class="line">   user could select for viewing or storage.</span><br><span class="line"></span><br><span class="line">2.3  The Filename Parameter</span><br><span class="line"></span><br><span class="line">   The sender may want to suggest a filename to be used if the entity is</span><br><span class="line">   detached and stored in a separate file. If the receiving MUA writes</span><br><span class="line">   the entity to a file, the suggested filename should be used as a</span><br><span class="line">   basis for the actual filename, where possible.</span><br><span class="line"></span><br><span class="line">   It is important that the receiving MUA not blindly use the suggested</span><br><span class="line">   filename.  The suggested filename should be checked (and possibly</span><br><span class="line">   changed) to see that it conforms to local filesystem conventions,</span><br><span class="line">   does not overwrite an existing file, and does not present a security</span><br><span class="line">   problem (see Security Considerations below).</span><br><span class="line"></span><br><span class="line">   The receiving MUA should not respect any directory path information</span><br><span class="line">   that may seem to be present in the filename parameter.  The filename</span><br><span class="line">   should be treated as a terminal component only.  Portable</span><br><span class="line">   specification of directory paths might possibly be done in the future</span><br><span class="line">   via a separate Content-Disposition parameter, but no provision is</span><br><span class="line">   made for it in this draft.</span><br><span class="line"></span><br><span class="line">   Current [RFC 1521] grammar restricts parameter values (and hence</span><br><span class="line">   Content-Disposition filenames) to US-ASCII.  We recognize the great</span><br><span class="line">   desirability of allowing arbitrary character sets in filenames, but</span><br><span class="line">   it is beyond the scope of this document to define the necessary</span><br><span class="line">   mechanisms.  We expect that the basic [RFC 1521] `value&apos;</span><br><span class="line">   specification will someday be amended to allow use of non-US-ASCII</span><br><span class="line">   characters, at which time the same mechanism should be used in the</span><br><span class="line">   Content-Disposition filename parameter.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 3]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Beyond the limitation to US-ASCII, the sending MUA may wish to bear</span><br><span class="line">   in mind the limitations of common filesystems.  Many have severe</span><br><span class="line">   length and character set restrictions.  Short alphanumeric filenames</span><br><span class="line">   are least likely to require modification by the receiving system.</span><br><span class="line"></span><br><span class="line">   The presence of the filename parameter does not force an</span><br><span class="line">   implementation to write the entity to a separate file. It is</span><br><span class="line">   perfectly acceptable for implementations to leave the entity as part</span><br><span class="line">   of the normal mail stream unless the user requests otherwise. As a</span><br><span class="line">   consequence, the parameter may be used on any MIME entity, even</span><br><span class="line">   `inline&apos; ones. These will not normally be written to files, but the</span><br><span class="line">   parameter could be used to provide a filename if the receiving user</span><br><span class="line">   should choose to write the part to a file.</span><br><span class="line"></span><br><span class="line">2.4  Future Extensions and Unrecognized Disposition Types</span><br><span class="line"></span><br><span class="line">   In the likely event that new parameters or disposition types are</span><br><span class="line">   needed, they should be registered with the IANA, in the manner</span><br><span class="line">   specified in [RFC 1521], appendix E.</span><br><span class="line"></span><br><span class="line">   Once new disposition types and parameters are defined, there is of</span><br><span class="line">   course the likelihood that implementations will see disposition types</span><br><span class="line">   and parameters they do not understand.  Furthermore, since x-tokens</span><br><span class="line">   are allowed, implementations may also see entirely unregistered</span><br><span class="line">   disposition types and parameters.</span><br><span class="line"></span><br><span class="line">   Unrecognized parameters should be ignored. Unrecognized disposition</span><br><span class="line">   types should be treated as `attachment&apos;. The choice of `attachment&apos;</span><br><span class="line">   for unrecognized types is made because a sender who goes to the</span><br><span class="line">   trouble of producing a Content-Disposition header with a new</span><br><span class="line">   disposition type is more likely aiming for something more elaborate</span><br><span class="line">   than inline presentation.</span><br><span class="line"></span><br><span class="line">   Unless noted otherwise in the definition of a parameter, Content-</span><br><span class="line">   Disposition parameters are valid for all dispositions.  (In contrast</span><br><span class="line">   to [RFC 1521] content-type parameters, which are defined on a per-</span><br><span class="line">   content-type basis.) Thus, for example, the `filename&apos; parameter</span><br><span class="line">   still means the name of the file to which the part should be written,</span><br><span class="line">   even if the disposition itself is unrecognized.</span><br><span class="line"></span><br><span class="line">2.5  Content-Disposition and Multipart</span><br><span class="line"></span><br><span class="line">   If a Content-Disposition header is used on a multipart body part, it</span><br><span class="line">   applies to the multipart as a whole, not the individual subparts.</span><br><span class="line">   The disposition types of the subparts do not need to be consulted</span><br><span class="line">   until the multipart itself is presented.  When the multipart is</span><br><span class="line">   displayed, then the dispositions of the subparts should be respected.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 4]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   If the `inline&apos; disposition is used, the multipart should be</span><br><span class="line">   displayed as normal; however, an `attachment&apos; subpart should require</span><br><span class="line">   action from the user to display.</span><br><span class="line"></span><br><span class="line">   If the `attachment&apos; disposition is used, presentation of the</span><br><span class="line">   multipart should not proceed without explicit user action.  Once the</span><br><span class="line">   user has chosen to display the multipart, the individual subpart</span><br><span class="line">   dispositions should be consulted to determine how to present the</span><br><span class="line">   subparts.</span><br><span class="line"></span><br><span class="line">2.6  Content-Disposition and the Main Message</span><br><span class="line"></span><br><span class="line">   It is permissible to use Content-Disposition on the main body of an</span><br><span class="line">   [RFC 822] message.</span><br><span class="line"></span><br><span class="line">3.  Examples</span><br><span class="line"></span><br><span class="line">   Here is a an example of a body part containing a JPEG image that is</span><br><span class="line">   intended to be viewed by the user immediately:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: inline</span><br><span class="line">         Content-Description: just a small picture of me</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following body part contains a JPEG image that should be</span><br><span class="line">   displayed to the user only if the user requests it. If the JPEG is</span><br><span class="line">   written to a file, the file should be named &quot;genome.jpg&quot;:</span><br><span class="line"></span><br><span class="line">         Content-Type: image/jpeg</span><br><span class="line">         Content-Disposition: attachment; filename=genome.jpeg</span><br><span class="line">         Content-Description: a complete map of the human genome</span><br><span class="line"></span><br><span class="line">         &lt;jpeg data&gt;</span><br><span class="line"></span><br><span class="line">   The following is an example of the use of the `attachment&apos;</span><br><span class="line">   disposition with a multipart body part.  The user should see text-</span><br><span class="line">   part-1 immediately, then take some action to view multipart-2.  After</span><br><span class="line">   taking action to view multipart-2, the user will see text-part-2</span><br><span class="line">   right away, and be required to take action to view jpeg-1.  Subparts</span><br><span class="line">   are indented for clarity; they would not be so indented in a real</span><br><span class="line">   message.</span><br><span class="line"></span><br><span class="line">         Content-Type: multipart/mixed; boundary=outer</span><br><span class="line">         Content-Description: multipart-1</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 5]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">           Content-Type: text/plain</span><br><span class="line">           Content-Disposition: inline</span><br><span class="line">           Content-Description: text-part-1</span><br><span class="line"></span><br><span class="line">           Some text goes here</span><br><span class="line"></span><br><span class="line">         --outer</span><br><span class="line">           Content-Type: multipart/mixed; boundary=inner</span><br><span class="line">           Content-Disposition: attachment</span><br><span class="line">           Content-Description: multipart-2</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: text/plain</span><br><span class="line">             Content-Disposition: inline</span><br><span class="line">             Content-Description: text-part-2</span><br><span class="line"></span><br><span class="line">             Some more text here.</span><br><span class="line"></span><br><span class="line">           --inner</span><br><span class="line">             Content-Type: image/jpeg</span><br><span class="line">             Content-Disposition: attachment</span><br><span class="line">             Content-Description: jpeg-1</span><br><span class="line"></span><br><span class="line">             &lt;jpeg data&gt;</span><br><span class="line">           --inner--</span><br><span class="line">         --outer--</span><br><span class="line"></span><br><span class="line">4.  Summary</span><br><span class="line"></span><br><span class="line">   Content-Disposition takes one of two values, `inline&apos; and</span><br><span class="line">   `attachment&apos;.  &apos;Inline&apos; indicates that the entity should be</span><br><span class="line">   immediately displayed to the user, whereas `attachment&apos; means that</span><br><span class="line">   the user should take additional action to view the entity.</span><br><span class="line"></span><br><span class="line">   The `filename&apos; parameter can be used to suggest a filename for</span><br><span class="line">   storing the bodypart, if the user wishes to store it in an external</span><br><span class="line">   file.</span><br><span class="line"></span><br><span class="line">5.  Security Considerations</span><br><span class="line"></span><br><span class="line">   There are security issues involved any time users exchange data.</span><br><span class="line">   While these are not to be minimized, neither does this memo change</span><br><span class="line">   the status quo in that regard, except in one instance.</span><br><span class="line"></span><br><span class="line">   Since this memo provides a way for the sender to suggest a filename,</span><br><span class="line">   a receiving MUA must take care that the sender&apos;s suggested filename</span><br><span class="line">   does not represent a hazard. Using UNIX as an example, some hazards</span><br><span class="line">   would be:</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 6]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">          + Creating startup files (e.g., &quot;.login&quot;).</span><br><span class="line"></span><br><span class="line">          + Creating or overwriting system files (e.g.,</span><br><span class="line">            &quot;/etc/passwd&quot;).</span><br><span class="line"></span><br><span class="line">          + Overwriting any existing file.</span><br><span class="line"></span><br><span class="line">          + Placing executable files into any command search path</span><br><span class="line">            (e.g., &quot;~/bin/more&quot;).</span><br><span class="line"></span><br><span class="line">          + Sending the file to a pipe (e.g., &quot;| sh&quot;).</span><br><span class="line"></span><br><span class="line">   In general, the receiving MUA should never name or place the file</span><br><span class="line">   such that it will get interpreted or executed without the user</span><br><span class="line">   explicitly initiating the action.</span><br><span class="line"></span><br><span class="line">   It is very important to note that this is not an exhaustive list; it</span><br><span class="line">   is intended as a small set of examples only.  Implementors must be</span><br><span class="line">   alert to the potential hazards on their target systems.</span><br><span class="line"></span><br><span class="line">6.  References</span><br><span class="line"></span><br><span class="line">    [RFC 1521]</span><br><span class="line">        Borenstein N., and N. Freed, &quot;MIME (Multipurpose Internet</span><br><span class="line">        Mail Extensions) Part One:  Mechanisms for Specifying and</span><br><span class="line">        Describing the Format of Internet Message Bodies&quot;,</span><br><span class="line">        RFC 1521, Bellcore, Innosoft, September 1993.</span><br><span class="line"></span><br><span class="line">    [RFC 822]</span><br><span class="line">        Crocker, D., &quot;Standard for the Format of ARPA Internet</span><br><span class="line">        Text Messages&quot;, STD 11, RFC 822, UDEL, August 1982.</span><br><span class="line"></span><br><span class="line">7.  Acknowledgements</span><br><span class="line"></span><br><span class="line">We gratefully acknowledge the help these people provided</span><br><span class="line">during the preparation of this draft:</span><br><span class="line"></span><br><span class="line">            Nathaniel Borenstein</span><br><span class="line">            Ned Freed</span><br><span class="line">            Keith Moore</span><br><span class="line">            Dave Crocker</span><br><span class="line">            Dan Pritchett</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Troost &amp; Dorner               Experimental                      [Page 7]</span><br><span class="line"></span><br><span class="line">RFC 1806                  Content-Disposition                  June 1995</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">8.  Authors&apos; Addresses</span><br><span class="line"></span><br><span class="line">   Rens Troost</span><br><span class="line">   New Century Systems</span><br><span class="line">   324 East 41st Street #804</span><br><span class="line">   New York, NY, 10017 USA</span><br><span class="line"></span><br><span class="line">   Phone: +1 (212) 557-2050</span><br><span class="line">   Fax: +1 (212) 557-2049</span><br><span class="line">   EMail: rens@century.com</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Steve Dorner</span><br><span class="line">   QUALCOMM Incorporated</span><br><span class="line">   6455 Lusk Boulevard</span><br><span class="line">   San Diego, CA 92121</span><br><span class="line">   USA</span><br><span class="line"></span><br><span class="line">   EMail: sdorner@qualcomm.com</span><br></pre></td></tr></table></figure>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">upload file</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/30/Content-Disposition header/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-greenlet详解" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/30/greenlet详解/">greenlet 详解</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/30/greenlet详解/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:27:18.061Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="https://greenlet.readthedocs.io/en/latest/" target="_blank" rel="noopener">官网</a></p>
-<h3 id="简单使用介绍"><a href="#简单使用介绍" class="headerlink" title="简单使用介绍"></a>简单使用介绍</h3><p>​    A “greenlet” is a small independent pseudo-thread. Think about it as a small stack of frames; the outermost (bottom) frame is the initial function you called, and the innermost frame is the one in which the greenlet is currently paused. You work with greenlets by creating a number of such stacks and jumping execution between them. Jumps are never implicit: a greenlet must choose to jump to another greenlet, which will cause the former to suspend and the latter to resume where it was suspended. Jumping between greenlets is called “switching”.</p>
-<p>​    When you create a greenlet, it gets an initially empty stack; when you first switch to it, it starts to run a specified function, which may call other functions, switch out of the greenlet, etc. When eventually the outermost function finishes its execution, the greenlet’s stack becomes empty again and the greenlet is “dead”. Greenlets can also die of an uncaught exception.</p>
-<pre><code>一个 “greenlet” 是一个小型的独立伪线程。可以把它想像成一些栈帧，栈底是初始调用的函数，而栈顶是当前greenlet的暂停位置。你使用greenlet创建一堆这样的堆栈，然后在他们之间跳转执行。跳转必须**显式声明**的：一个greenlet必须选择要跳转到的另一个greenlet，这会让前一个挂起，而后一个在此前挂起处恢复执行。不同greenlets之间的跳转称为切换(switching) 。
-</code></pre><p>　　当你创建一个greenlet时，它得到一个开始时为空的栈；当你第一次切换到它时，它会执行指定的函数，这个函数可能会调用其他函数、切换跳出greenlet等等。当最终栈底的函数执行结束出栈时，这个greenlet的栈又变成空的，这个greenlet也就死掉了。greenlet也会因为一个未捕捉的异常死掉。</p>
-<p>示例1:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> greenlet <span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="number">12</span>)</span><br><span class="line">    gr2.switch()<span class="comment">#2.jumps to test2,print 56</span></span><br><span class="line">    print(<span class="number">34</span>)</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">()</span>:</span></span><br><span class="line">    print(<span class="number">56</span>)</span><br><span class="line">    gr1.switch()<span class="comment">#3.jumps to test1,print 34,then test1 finishes and gr1 dies</span></span><br><span class="line">    print(<span class="number">78</span>)</span><br><span class="line">    </span><br><span class="line">gr1 = greenlet(test1) <span class="comment">#create a new greenlet object gr1(without running it)</span></span><br><span class="line">gr2 = greenlet(test2) <span class="comment">#create a new greenlet object gr2(without running it)</span></span><br><span class="line"></span><br><span class="line">gr1.switch()<span class="comment">#1.jumps to test1,print 12 #4. back to here</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 78 is never printed , test2 is no dead</span></span><br></pre></td></tr></table></figure>
-<p>​    程序从<code>gr1.switch()</code>开始，运行<code>test1</code>，打印12，经<code>gr2.switch()</code>，切换到<code>test2</code>，打印56，经<code>gr1.switch()</code>切换到<code>test1</code>上次离开的地方，打印34，<code>test1</code>运行结束，切回到其parent，也就是<code>gr1.switch()</code>处，运行结束，而<code>test2</code>中的 78 没有执行到。</p>
-<p>​      接着看<code>示例2</code>，使用<code>dead</code>查看<code>greenlet</code>的状态。</p>
-<p>示例2:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> greenlet <span class="keyword">import</span> greenlet</span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(a)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> a</span><br><span class="line">    z = gr2.switch(<span class="string">'a to b'</span>)</span><br><span class="line">    <span class="keyword">print</span> z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(b)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> b</span><br><span class="line">    gr1.switch(<span class="string">'b to a'</span>)</span><br><span class="line">    <span class="keyword">print</span> b</span><br><span class="line"></span><br><span class="line">gr1 = greenlet(test1)</span><br><span class="line">gr2 = greenlet(test2)</span><br><span class="line"></span><br><span class="line">gr1.switch(<span class="string">'a'</span>)<span class="comment"># target.switch(value)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> (gr1.dead)</span><br><span class="line"><span class="keyword">print</span> (gr2.dead)<span class="comment">#False</span></span><br></pre></td></tr></table></figure>
-<p>打印结果</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">a</span><br><span class="line">a to b</span><br><span class="line">b to a <span class="comment">#切换到a后，a运行结束</span></span><br><span class="line">True</span><br><span class="line">False <span class="comment">#说明test2没有正常退出</span></span><br></pre></td></tr></table></figure>
-<h3 id="父parent"><a href="#父parent" class="headerlink" title="父parent"></a>父parent</h3><p>​    Let’s see where execution goes when a greenlet dies. Every greenlet has a “parent” greenlet. The parent greenlet is initially the one in which the greenlet was created (this can be changed at any time). The parent is where execution continues when a greenlet dies. This way, greenlets are organized in a tree. Top-level code that doesn’t run in a user-created greenlet runs in the implicit “main” greenlet, which is the root of the tree.</p>
-<p>​    In the above example, both gr1 and gr2 have the main greenlet as a parent. Whenever one of them dies, the execution comes back to “main”.</p>
-<p>　　Uncaught exceptions are propagated into the parent, too. For example, if the above test2() contained a typo, it would generate a NameError that would kill gr2, and the exception would go back directly into “main”. The traceback would show test2, but not test1. Remember, switches are not calls, but transfer of execution between parallel “stack containers”, and the “parent” defines which stack logically comes “below” the current one.</p>
-<p>　　现在看看一个greenlet结束时执行点去哪里。每个greenlet拥有一个父greenlet。每个greenlet最初在其父greenlet中创建(不过可以在任何时候改变)。当子greenlet结束时，执行位置从父greenlet那里继续。这样，greenlets之间就被组织成一棵树，顶级的代码并不在用户创建的 greenlet 中运行，而是运行在一个主greenlet中，也就是所有greenlet关系图的树根。</p>
-<p>​        在上面的例子中， <code>gr1</code> 和 <code>gr2</code> 都把主greenlet作为父greenlet。任何一个死掉，执行点都会回到主greenlet。</p>
-<p>　　未捕获的异常会传递给父greenlet。如果<code>示例1</code>的  <code>test2</code>包含一个打印错误(typo)，会生成一个  <code>NameError</code>而杀死 <code>gr2</code> ，然后异常被传递回主greenlet。traceback会显示  <code>test2</code>而不是 <code>test1</code> 。记住，<code>switchs are not calls</code>，而是执行点在并行的栈容器间交换，而父greenlet定义了这些栈之间的先后关系。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">return 到其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    z = gr2.switch(x+y)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'back z'</span>,z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    <span class="keyword">return</span> u</span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">'main:%s,gr1:%s,gr2:%s'</span>%(id(greenlet.getcurrent()),id(gr1),id(gr2))</span><br><span class="line"><span class="keyword">print</span> gr1.switch(<span class="string">'hello'</span>,<span class="string">' world'</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'back to main'</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main:4413943152,gr1:4413942832,gr2:4413943312</span><br><span class="line">4413942832 4413943152 <span class="comment"># gr1的parent是main greenlet</span></span><br><span class="line">4413943312 4413943152 <span class="comment"># gr2的paren是main greenlet</span></span><br><span class="line">hello world <span class="comment">#gr1把值返回给main greenlet</span></span><br><span class="line">back to main</span><br></pre></td></tr></table></figure>
-<p>​        每个<code>greenlet</code>都有一个<code>parent</code>，parent取决于greenlet的创生环境。当<code>return</code>时，将值传递到其parent，而这个parent在任何地方都可以改变。</p>
-<p>​    如下：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">return 到其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    z = gr2.switch(x+y)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'back z'</span>,z</span><br><span class="line">    <span class="keyword">return</span> z</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    gr2.parent = gr1 <span class="comment">#指定gr2的parent是gr1</span></span><br><span class="line">    <span class="keyword">print</span> id(greenlet.getcurrent()),id(greenlet.getcurrent().parent)</span><br><span class="line">    <span class="keyword">return</span> u</span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2) <span class="comment">#或者在这里指定,gr2 = greenlet.greenlet(test2,parent=gr1)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> <span class="string">'main:%s,gr1:%s,gr2:%s'</span>%(id(greenlet.getcurrent()),id(gr1),id(gr2))</span><br><span class="line"><span class="keyword">print</span> gr1.switch(<span class="string">'hello'</span>,<span class="string">' world'</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'back to main'</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main:4328455536,gr1:4328455216,gr2:4328455696</span><br><span class="line">4328455216 4328455536 <span class="comment">#gr1的parent是main greenlet（greenlet关系图的树根）</span></span><br><span class="line">4328455696 4328455216 <span class="comment">#gr2的parent是gr1 greenlet</span></span><br><span class="line">back z hello world <span class="comment">#gr2 将值返回给gr1</span></span><br><span class="line">hello world <span class="comment">#gr1将值返回给main greenlet</span></span><br><span class="line">back to main</span><br></pre></td></tr></table></figure>
-<p>​    同样，子greenlet抛出的异常也传递给parent。         </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">异常抛至其parent</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"><span class="keyword">import</span> traceback</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test1</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        z = gr2.switch(<span class="string">'x+y'</span>)</span><br><span class="line">    <span class="keyword">except</span> Exception:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'catch Exception in test1'</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test2</span><span class="params">(u)</span>:</span></span><br><span class="line">    <span class="keyword">assert</span> <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">gr1 = greenlet.greenlet(test1)</span><br><span class="line">gr2 = greenlet.greenlet(test2)</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    gr1.switch(<span class="string">"hello"</span>,<span class="string">" world"</span>)</span><br><span class="line"><span class="keyword">except</span> Exception,e:</span><br><span class="line">    traceback.print_exc(e)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'catch Exception in main'</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"4.py"</span>, line 23, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    gr1.switch(<span class="string">"hello"</span>,<span class="string">" world"</span>)</span><br><span class="line">  File <span class="string">"4.py"</span>, line 17, <span class="keyword">in</span> test2   <span class="comment">#### switch not calls</span></span><br><span class="line">    assert False</span><br><span class="line">AssertionError</span><br><span class="line">catch Exception <span class="keyword">in</span> main</span><br></pre></td></tr></table></figure>
-<p>​    greenlet 中也提供了，监控greenlet切换的接口tracing</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">trace 监控greenlet切换</span></span><br><span class="line"><span class="string">"""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> greenlet</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_greenlet_tracing</span><span class="params">()</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">callback</span><span class="params">(event, args)</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'callback'</span>, event, <span class="string">'from'</span>, id(args[<span class="number">0</span>]), <span class="string">'to'</span>, id(args[<span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dummy</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'dummpy'</span></span><br><span class="line">        g2.switch()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dummyexception</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">print</span> <span class="string">'dummpyexception'</span></span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">'execp in dummyexecption'</span>)</span><br><span class="line"></span><br><span class="line">    main = greenlet.getcurrent()</span><br><span class="line">    g1 = greenlet.greenlet(dummy)</span><br><span class="line">	g2 = greenlet.greenlet(dummyexception)</span><br><span class="line">    <span class="keyword">print</span> <span class="string">'main id %s, g1 id %s, g2 id %s'</span> %(id(main),id(g1),id(g2))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    oldtrace = greenlet.settrace(callback)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        g1.switch()</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">'Exception'</span></span><br><span class="line"></span><br><span class="line">    greenlet.settrace(oldtrace)</span><br><span class="line"></span><br><span class="line">test_greenlet_tracing()</span><br></pre></td></tr></table></figure>
-<p><code>event</code>：事件<code>throw</code> or <code>switch</code></p>
-<p><code>args</code>：二元组<code>(origin,target)</code></p>
-<p>运行结果如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">main id 4444089392, g1 id 4444089872, g2 id 4444090192</span><br><span class="line">callback switch from 4444089392 to 4444089872 <span class="comment">#main-&gt;g1</span></span><br><span class="line">dummpy</span><br><span class="line">callback switch from 4444089872 to 4444090192 <span class="comment">#g1-&gt;g2</span></span><br><span class="line">dummpyexception</span><br><span class="line">callback throw from 4444090192 to 4444089392 <span class="comment">#g2-&gt;main</span></span><br><span class="line">Exception</span><br></pre></td></tr></table></figure>
-<h3 id="实例化"><a href="#实例化" class="headerlink" title="实例化"></a>实例化</h3><p><code>greenlet.greenlet</code>是greenlet 类型，支持以下操作：</p>
-<p><code>greenlet(run=None，parent=None)</code></p>
-<p>​      创建一个新的<code>greenlet</code>对象（不执行），<code>run</code> 是这个<code>greenlet</code>要执行的回调函数，<code>parent</code>是其父  greenlet，默认是当前<code>greenlet</code>。</p>
-<p><code>greenlet.getcurrent()</code></p>
-<p>​         返回调用当前方法的<code>greenlet</code></p>
-<p> <code>greenlet.GreenletExit</code></p>
-<p>​         这个特定的异常不会波及到父greenlet，它用于干掉一个greenlet。</p>
-<p>  greenlet.greenlet可以被继承，继承的子类实现<code>run</code>方法，并且不用再创建时显示指定run参数。</p>
-<h3 id="greenlets-之间的切换"><a href="#greenlets-之间的切换" class="headerlink" title="greenlets 之间的切换"></a>greenlets 之间的切换</h3><p>​    Switches between greenlets occur when the method switch() of a greenlet is called, in which case execution jumps to the greenlet whose switch() is called, or when a greenlet dies, in which case execution jumps to the parent greenlet. During a switch, an object or an exception is “sent” to the target greenlet; this can be used as a convenient way to pass information between greenlets. </p>
-<p>​    当greenlet调用<code>switch()</code>方法，或该greenlet执行结束要回其parent greenlet时，就会发生greenlets之间的切换。在切换时，一个对象或者异常被发送到目标greenlet，这便可以作为greenlet之间的传递信息的方式。            </p>
-<p>​      <code>g.switch(*args,**kwargs)</code>：切换到g，并发送给定的参数，如果g还没有运行就让它运行。</p>
-<p>​      run方法运行结束后，子greenlt return的值或者异常传递给父greenlet（ 除了异常是<code>greenlt.GreenletExit</code>）</p>
-<h3 id="greenlet的方法和属性"><a href="#greenlet的方法和属性" class="headerlink" title="greenlet的方法和属性"></a>greenlet的方法和属性</h3><p><code>g.switch(*args,**kwargs)</code></p>
-<p><code>g.run</code></p>
-<p><code>g.parent</code></p>
-<p><code>g.gr_frame</code></p>
-<p><code>g.dead</code></p>
-<p><code>bool(g)</code> ：未执行或者执行结束为<code>False</code></p>
-<p><code>g.throw(typ,[val,[tb]])</code>：默认typ<code>greenlet.GreenletExit</code></p>
-<h3 id="greenlets和Python线程"><a href="#greenlets和Python线程" class="headerlink" title="greenlets和Python线程"></a><strong>greenlets和Python线程</strong></h3><p>​    Greenlets can be combined with Python threads; in this case, each thread contains an independent “main” greenlet with a tree of sub-greenlets. It is not possible to mix or switch between greenlets belonging to different threads.</p>
-<p>　　greenlets可以与Python线程一起使用；在这种情况下，每个线程包含一个独立的 main greenlet，并拥有自己的greenlet树。不同线程之间不可以互相切换greenlet。</p>
-<h3 id="垃圾收集活跃的greenlets"><a href="#垃圾收集活跃的greenlets" class="headerlink" title="垃圾收集活跃的greenlets"></a><strong>垃圾收集活跃的greenlets</strong></h3><p>​    If all the references to a greenlet object go away (including the references from the parent attribute of other greenlets), then there is no way to ever switch back to this greenlet. In this case, a GreenletExit exception is generated into the greenlet. This is the only case where a greenlet receives the execution asynchronously. This gives try:finally: blocks a chance to clean up resources held by the greenlet. This feature also enables a programming style in which greenlets are infinite loops waiting for data and processing it. Such loops are automatically interrupted when the last reference to the greenlet goes away.</p>
-<p>　　The greenlet is expected to either die or be resurrected by having a new reference to it stored somewhere; just catching and ignoring the GreenletExit is likely to lead to an infinite loop.</p>
-<p>　　Greenlets do not participate in garbage collection; cycles involving data that is present in a greenlet’s frames will not be detected. Storing references to other greenlets cyclically may lead to leaks.</p>
-<p>　　如果不再有对greenlet对象的引用时(包括其他greenlet的parent)，还是没有办法切换回greenlet。这种情况下会生成一个 GreenletExit 异常到greenlet。这是greenlet收到异步异常的唯一情况。应该给出一个 try .. finally 用于清理greenlet内的资源。这个功能同时允许greenlet中无限循环的编程风格。这样循环可以在最后一个引用消失时自动中断。</p>
-<p>　　如果不希望greenlet死掉或者把引用放到别处，只需要捕捉和忽略 GreenletExit 异常即可。</p>
-<p>　　greenlet不参与垃圾收集；greenlet帧的循环引用数据会被检测到。将引用传递到其他的循环greenlet会引起内存泄露。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">协程</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">greenlet</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">python</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/30/greenlet详解/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-tornado的事件循环机制" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/06/tornado的事件循环机制/">tornado的事件循环机制</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/06/tornado的事件循环机制/" class="archive-article-date">
-  	<time datetime="2019-03-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-06</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Tornado的事件循环机制，核心就是ioloop（异步机制的核心）</p>
-<ol>
-<li><p>获取ioloop实例。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">io_lo0p = ioloop.IOLoop.current(instance=<span class="keyword">True</span>)  <span class="comment"># 默认是true</span></span><br></pre></td></tr></table></figure>
-<p>获取ioloop实例时，如果当前没有实例并且instance为真，则创建一个新的ioloop实例， 如果当前已经有该实例，则返回当前实例。</p>
-</li>
-</ol>
-<p>​    <strong>ioloop实例是单例的</strong>。</p>
-<ol start="2">
-<li><p>ioloop.add_handler(fd, callback, events)</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_handler</span><span class="params">(self, fd, handler, events)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    fd : 可以是整数的文件描述符</span></span><br><span class="line"><span class="string">    events: 常量 可以是 OLoop.READ / IOLoop.WRITE / IOLoop.ERROR</span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">   	以后...会运行 handler（fd, event) </span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="comment"># 注册事件到epoll/select/kqueue中</span></span><br><span class="line">    fd, obj = self.split_fd(fd)</span><br><span class="line">    <span class="comment"># _handler字典中保存着obj文件描述符， handler：当该文件描述符准备好时需要调用的方法</span></span><br><span class="line">    self._handlers[fd] = (obj, stack_context.wrap(handler))</span><br><span class="line">    <span class="comment"># 将文件描述符注册到epoll/select/kqueue列表中</span></span><br><span class="line">    self._impl.register(fd, events | self.ERROR)  <span class="comment"># 自动加上error事件</span></span><br></pre></td></tr></table></figure>
-<p>self._impl 可能是 select.epoll() / select.kqueue() / select.select()</p>
-</li>
-<li><p>ioloop.start()</p>
-<p>ioloop的主循环，主要监测这三类事件：</p>
-<ul>
-<li><p>可立即执行的事件</p>
-<p>通过 iolooop.add_callback(callback， *args， **kwargs)  :  将callback加到self._callbacks队列中的事件</p>
-</li>
-<li><p>timer定时事件</p>
-<p>通过 ioloop.call_at(self, deadline, callback, *args, **kwargs)  ：将_Timeout对象 push到 <code>self.\_timeouts</code> 堆中的事件</p>
-</li>
-<li><p>io事件，注册到io复用机制中的事件</p>
-<p>通过 ioloop.add_handler(fd, callback, events)，update_handler，remove_handler注册的io事件</p>
-</li>
-</ul>
-</li>
-</ol>
-   <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">start</span><span class="params">(self)</span>:</span></span><br><span class="line">	...</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">            <span class="comment"># Prevent IO event starvation by delaying new callbacks</span></span><br><span class="line">            <span class="comment"># to the next iteration of the event loop.</span></span><br><span class="line">            <span class="comment"># 上次循环添加的立即执行的事件</span></span><br><span class="line">            ncallbacks = len(self._callbacks)</span><br><span class="line">         </span><br><span class="line">            <span class="comment"># Add any timeouts that have come due to the callback list.</span></span><br><span class="line">            <span class="comment"># Do not run anything until we have determined which ones</span></span><br><span class="line">            <span class="comment"># are ready, so timeouts that call add_timeout cannot</span></span><br><span class="line">            <span class="comment"># schedule anything in this iteration.</span></span><br><span class="line">            due_timeouts = []</span><br><span class="line">            <span class="keyword">if</span> self._timeouts:</span><br><span class="line">                now = self.time()</span><br><span class="line">                <span class="keyword">while</span> self._timeouts:</span><br><span class="line">                    <span class="comment"># 把取消的事件（事件取消会将callback设置为None）在堆中弹出,相应数量减一 </span></span><br><span class="line">                    <span class="keyword">if</span> self._timeouts[<span class="number">0</span>].callback <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">                        <span class="comment"># _timeouts 弹出堆顶元素</span></span><br><span class="line">                        heapq.heappop(self._timeouts)</span><br><span class="line">                        self._cancellations -= <span class="number">1</span></span><br><span class="line">                    <span class="comment"># 把到时间的_Timeout事件弹出，添加到due_timeouts中</span></span><br><span class="line">                    <span class="keyword">elif</span> self._timeouts[<span class="number">0</span>].deadline &lt;= now:</span><br><span class="line">                        due_timeouts.append(heapq.heappop(self._timeouts))</span><br><span class="line">                    <span class="keyword">else</span>:</span><br><span class="line">                        <span class="keyword">break</span></span><br><span class="line">                </span><br><span class="line">                <span class="comment"># 若超过一半的定时事件取消，则遍历并取出所有的未取消的定时事件，并建堆。</span></span><br><span class="line">                <span class="keyword">if</span> (self._cancellations &gt; <span class="number">512</span> <span class="keyword">and</span></span><br><span class="line">                        self._cancellations &gt; (len(self._timeouts) &gt;&gt; 	<span class="number">1</span>)):</span><br><span class="line">                    <span class="comment"># Clean up the timeout queue when it gets large and it's</span></span><br><span class="line">                    <span class="comment"># more than half cancellations.</span></span><br><span class="line">                    self._cancellations = <span class="number">0</span></span><br><span class="line">                    self._timeouts = [x <span class="keyword">for</span> x <span class="keyword">in</span> self._timeouts</span><br><span class="line">                                      <span class="keyword">if</span> x.callback <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>]</span><br><span class="line">                    heapq.heapify(self._timeouts)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 执行所有可以立即执行的事件</span></span><br><span class="line">            <span class="keyword">for</span> i <span class="keyword">in</span> range(ncallbacks):</span><br><span class="line">                self._run_callback(self._callbacks.popleft())</span><br><span class="line">            <span class="comment"># 执行所有已经到时间的事件</span></span><br><span class="line">            <span class="keyword">for</span> timeout <span class="keyword">in</span> due_timeouts:</span><br><span class="line">                <span class="keyword">if</span> timeout.callback <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                    self._run_callback(timeout.callback)</span><br><span class="line">            <span class="comment"># Closures may be holding on to a lot of memory, so allow</span></span><br><span class="line">            <span class="comment"># them to be freed before we go into our poll wait.</span></span><br><span class="line">            due_timeouts = timeout = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> self._callbacks:</span><br><span class="line">                <span class="comment"># If any callbacks or timeouts called add_callback,</span></span><br><span class="line">                <span class="comment"># we don't want to wait in poll() before we run them.</span></span><br><span class="line">                poll_timeout = <span class="number">0.0</span></span><br><span class="line">            <span class="keyword">elif</span> self._timeouts:</span><br><span class="line">                <span class="comment"># If there are any timeouts, schedule the first one.</span></span><br><span class="line">                <span class="comment"># Use self.time() instead of 'now' to account for time</span></span><br><span class="line">                <span class="comment"># spent running callbacks.</span></span><br><span class="line">                poll_timeout = self._timeouts[<span class="number">0</span>].deadline - self.time()</span><br><span class="line">                poll_timeout = max(<span class="number">0</span>, min(poll_timeout, _POLL_TIMEOUT))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># No timeouts and no callbacks, so use the default.</span></span><br><span class="line">                poll_timeout = _POLL_TIMEOUT</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> self._running:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> self._blocking_signal_threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                <span class="comment"># clear alarm so it doesn't fire while poll is waiting for</span></span><br><span class="line">                <span class="comment"># events.</span></span><br><span class="line">                signal.setitimer(signal.ITIMER_REAL, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="comment"># epoll等机制返回准备好的事件键值对</span></span><br><span class="line">                event_pairs = self._impl.poll(poll_timeout)</span><br><span class="line">            <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                <span class="comment"># Depending on python version and IOLoop implementation,</span></span><br><span class="line">                <span class="comment"># different exception types may be thrown and there are</span></span><br><span class="line">                <span class="comment"># two ways EINTR might be signaled:</span></span><br><span class="line">                <span class="comment"># * e.errno == errno.EINTR</span></span><br><span class="line">                <span class="comment"># * e.args is like (errno.EINTR, 'Interrupted system call')</span></span><br><span class="line">                <span class="keyword">if</span> errno_from_exception(e) == errno.EINTR:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">raise</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> self._blocking_signal_threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">                signal.setitimer(signal.ITIMER_REAL,</span><br><span class="line">                                 self._blocking_signal_threshold, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># Pop one fd at a time from the set of pending fds and run</span></span><br><span class="line">            <span class="comment"># its handler. Since that handler may perform actions on</span></span><br><span class="line">            <span class="comment"># other file descriptors, there may be reentrant calls to</span></span><br><span class="line">            <span class="comment"># this IOLoop that modify self._events</span></span><br><span class="line">            <span class="comment"># 更新准备好的事件列表</span></span><br><span class="line">            self._events.update(event_pairs)</span><br><span class="line">            <span class="keyword">while</span> self._events:</span><br><span class="line">                fd, events = self._events.popitem()</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    fd_obj, handler_func = self._handlers[fd]</span><br><span class="line">                    <span class="comment"># 执行每个准备好的事件对应的回调函数</span></span><br><span class="line">                    handler_func(fd_obj, events)</span><br><span class="line">                <span class="keyword">except</span> (OSError, IOError) <span class="keyword">as</span> e:</span><br><span class="line">                    <span class="keyword">if</span> errno_from_exception(e) == errno.EPIPE:</span><br><span class="line">                        <span class="comment"># Happens when the client closes the connection</span></span><br><span class="line">                        <span class="keyword">pass</span></span><br><span class="line">                    <span class="keyword">else</span>:</span><br><span class="line">                        self.handle_callback_exception(self._handlers.get(fd))</span><br><span class="line">                <span class="keyword">except</span> Exception:</span><br><span class="line">                    self.handle_callback_exception(self._handlers.get(fd))</span><br><span class="line">            fd_obj = handler_func = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="comment"># reset the stopped flag so another start/stop pair can be issued</span></span><br><span class="line">        self._stopped = <span class="keyword">False</span></span><br><span class="line">        <span class="keyword">if</span> self._blocking_signal_threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">            signal.setitimer(signal.ITIMER_REAL, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">if</span> old_current <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">            IOLoop.clear_current()</span><br><span class="line">        <span class="keyword">elif</span> old_current <span class="keyword">is</span> <span class="keyword">not</span> self:</span><br><span class="line">            old_current.make_current()</span><br><span class="line">        <span class="keyword">if</span> old_wakeup_fd <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">            signal.set_wakeup_fd(old_wakeup_fd)</span><br></pre></td></tr></table></figure>
-<p>   其大概主要流程如下：</p>
-<ul>
-<li>开始一个事件循环（event loop）</li>
-<li>将未取消的timer事件放入due_timeouts的列表</li>
-<li>执行<code>_callback</code>队列中的事件(可以立即执行的事件)的回调函数</li>
-<li>执行due_timeouts中的事件（符合时间限制条件的事件）回调函数</li>
-<li>执行epoll机制中准备好的事件（通过add_handler注册的事件）</li>
-<li>进入下一次循环</li>
-</ul>
-<ol start="4">
-<li><p>ioloop._run_callback(self, callback)</p>
-<p>执行回调函数，回调有返回结果的封装在Future对象中。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_run_callback</span><span class="params">(self, callback)</span>:</span></span><br><span class="line">       <span class="string">"""Runs a callback with error handling.</span></span><br><span class="line"><span class="string">      </span></span><br><span class="line"><span class="string">       For use in subclasses.</span></span><br><span class="line"><span class="string">       """</span></span><br><span class="line">       <span class="keyword">try</span>:</span><br><span class="line">           ret = callback()</span><br><span class="line">           <span class="keyword">if</span> ret <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">               <span class="keyword">from</span> tornado <span class="keyword">import</span> gen</span><br><span class="line">               <span class="comment"># Functions that return Futures typically swallow all</span></span><br><span class="line">               <span class="comment"># exceptions and store them in the Future.  If a Future</span></span><br><span class="line">               <span class="comment"># makes it out to the IOLoop, ensure its exception (if any)</span></span><br><span class="line">               <span class="comment"># gets logged too.</span></span><br><span class="line">               <span class="keyword">try</span>:</span><br><span class="line">                   ret = gen.convert_yielded(ret)</span><br><span class="line">               <span class="keyword">except</span> gen.BadYieldError:</span><br><span class="line">                   <span class="comment"># It's not unusual for add_callback to be used with</span></span><br><span class="line">                   <span class="comment"># methods returning a non-None and non-yieldable</span></span><br><span class="line">                   <span class="comment"># result, which should just be ignored.</span></span><br><span class="line">                   <span class="keyword">pass</span></span><br><span class="line">               <span class="keyword">else</span>:</span><br><span class="line">                   self.add_future(ret, self._discard_future_result)</span><br><span class="line">       <span class="keyword">except</span> Exception:</span><br><span class="line">           self.handle_callback_exception(callback)</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<ol start="5">
-<li><p>例子</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> iostream</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> errno</span><br><span class="line"><span class="keyword">import</span> functools</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">handler_connection</span><span class="params">(connection)</span>:</span></span><br><span class="line">    stream = iostream.IOStream(connection)</span><br><span class="line">    message = <span class="keyword">await</span> stream.read_until(<span class="string">b'\r\n'</span>)</span><br><span class="line">    print(<span class="string">"message from client: "</span>, message.decode().strip())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">connection_ready</span><span class="params">(sock, fd, addr)</span>:</span></span><br><span class="line">    print(fd, addr)</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            connection, addr = sock.accept()</span><br><span class="line">            print(addr)</span><br><span class="line">        <span class="keyword">except</span> socket.error <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">if</span> e.args[<span class="number">0</span>] <span class="keyword">not</span> <span class="keyword">in</span> (errno.EWOULDBLOCK, errno.EAGAIN):</span><br><span class="line">                <span class="keyword">raise</span></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        connection.setblocking(<span class="keyword">False</span>)</span><br><span class="line">        loop = ioloop.IOLoop.current()</span><br><span class="line">        loop.add_callback(handler_connection, connection)</span><br><span class="line"></span><br><span class="line">        <span class="comment">#  self._callbacks.append(functools.partial(</span></span><br><span class="line">        <span class="comment">#             stack_context.wrap(callback), *args, **kwargs))</span></span><br><span class="line">        <span class="comment"># self._run_callback(self._callbacks.popleft())</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, <span class="number">0</span>)  <span class="comment"># 创造一个TCP的socket</span></span><br><span class="line">    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)  <span class="comment"># 允许套接口和一个已在使用中的地址捆绑</span></span><br><span class="line">    <span class="comment"># 套接字由相关五元组构成，协议、本地地址、本地端口、远程地址、远程端口。SO_REUSEADDR 仅仅表示可以重用本地本地地址、本地端口</span></span><br><span class="line">    sock.setblocking(<span class="keyword">False</span>)</span><br><span class="line">    sock.bind((<span class="string">""</span>, <span class="number">8888</span>))</span><br><span class="line">    sock.listen(<span class="number">128</span>)</span><br><span class="line"></span><br><span class="line">    io_loop = ioloop.IOLoop.current()</span><br><span class="line">    callback = functools.partial(connection_ready, sock)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># io event</span></span><br><span class="line">    io_loop.add_handler(sock.fileno(), callback, io_loop.READ)</span><br><span class="line">    io_loop.start()</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">ioloop</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/06/tornado的事件循环机制/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-理解OAuth" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/20/理解OAuth/">理解OAuth2.0</a>
-    </h1>
-  
-
-        
-        <a href="/2018/12/20/理解OAuth/" class="archive-article-date">
-  	<time datetime="2018-12-20T06:37:19.268Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-12-20</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="官方的认证流程"><a href="#官方的认证流程" class="headerlink" title="官方的认证流程"></a>官方的认证流程</h2><p><img src="/2018/12/20/理解OAuth/OAuth2.0认证流程.png" alt="OAuth2.0认证流程"></p>
-<h2 id="豆瓣和微博的授权示例"><a href="#豆瓣和微博的授权示例" class="headerlink" title="豆瓣和微博的授权示例"></a>豆瓣和微博的授权示例</h2><p>用户在第一次授权时，总共需要点击三次（点击第三方微博登录（填写账号和密码），点击登录， 再点击授权允许链接）</p>
-<p>用户在第二次以后，点击一次微博登录即可。<br><img src="/2018/12/20/理解OAuth/OAuth_douban.png" alt="OAuth_douban"></p>
-<ol>
-<li><p>点击微博登录按钮。</p>
-</li>
-<li><p>豆瓣模拟用户发送get请求，并附带上微博授权登录所需要的参数，到微博验证服务器</p>
-<p>url:</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://api.weibo.com/oauth2/authorize</span><br></pre></td></tr></table></figure>
-<p>下面是跳转时所携带的参数</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">state: QSU3TTCcj4Y%21douban-web-anony-home%21https%3A//www.douban.com/ <span class="comment">#用于保持请求和回调的状态，在回调时，会在Query Parameter中回传该参数。开发者可以用这个参数验证请求有效性，也可以记录用户请求授权页前的位置。这个参数可用于防止跨站请求伪造（CSRF）攻击</span></span><br><span class="line">redirect_uri: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8= <span class="comment">#授权回调地址，站外应用需与设置的回调地址一致，站内应用需填写canvas page的地址。</span></span><br><span class="line">response_type: code </span><br><span class="line">client_id: 1994016063 <span class="comment"># 申请应用时分配的AppKey。</span></span><br><span class="line">scope:   <span class="comment">#申请scope权限所需参数，可一次申请多个scope权限，用逗号分隔。</span></span><br><span class="line">display: default <span class="comment">#默认的授权页面，适用于web浏览器。</span></span><br></pre></td></tr></table></figure>
-<p>返回的html页面中的form表单中含有action，appkey，veriftytoken等信息</p>
-</li>
-<li><p>输入账号密码，点击登录</p>
-</li>
-</ol>
-<ul>
-<li><p>登录(新浪微博的账号密码登录)</p>
-<p>URL：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://api.weibo.com/oauth2/authorize</span><br></pre></td></tr></table></figure>
-<p>Form-data:</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">action: login</span><br><span class="line">display: default</span><br><span class="line">withOfficalFlag: 0</span><br><span class="line">quick_auth: <span class="literal">false</span></span><br><span class="line">withOfficalAccount: </span><br><span class="line">scope: </span><br><span class="line">ticket: ST-NjAwMzM5NzcwNQ==-1545120807-tc-BAE68B224DF7C1D426BF3AAB8362B489-1</span><br><span class="line">isLoginSina: </span><br><span class="line">response_type: code</span><br><span class="line">regCallback: https%3A%2F%2Fapi.weibo.com%2F2%2Foauth2%2Fauthorize%3Fclient_id%3D1994016063%26response_type%3Dcode%26display%3Ddefault%26redirect_uri%3Dhttps%253A%252F%252Faccounts.douban.com%252Fconnect%252Fsina_weibo%252FcallbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8%253D%26from%3D%26with_cookie%3D</span><br><span class="line">redirect_uri: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=</span><br><span class="line">client_id: 1994016063</span><br><span class="line">appkey62: 3dgQLd</span><br><span class="line">state: QSU3TTCcj4Y%21douban-web-anony-home%21https%3A%2F%2Fwww.douban.com%2F</span><br><span class="line">verifyToken: null</span><br><span class="line">from: </span><br><span class="line">switchLogin: 0</span><br><span class="line">userId: </span><br><span class="line">passwd:</span><br></pre></td></tr></table></figure>
-<p>登录完成后，微博将一些用户信息（uid，veriftyToken）放到html页面中返回</p>
-</li>
-</ul>
-<p>4 . 点击允许豆瓣登录后的权限（分享到微博，获取评论，302重定向自己并模拟用户发送POST请求）</p>
-<ul>
-<li><p>授权（302）POST</p>
-<p>URL</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://api.weibo.com/oauth2/authorize</span><br></pre></td></tr></table></figure>
-<p>Form Data</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">display: default</span><br><span class="line">action: authorize</span><br><span class="line">scope: </span><br><span class="line">withOfficalFlag: 0</span><br><span class="line">withOfficalAccount: </span><br><span class="line">ticket: </span><br><span class="line">isLoginSina: </span><br><span class="line">response_type: code</span><br><span class="line">regCallback: https%3A%2F%2Fapi.weibo.com%2F2%2Foauth2%2Fauthorize%3Fclient_id%3D1994016063%26response_type%3Dcode%26display%3Ddefault%26redirect_uri%3Dhttps%253A%252F%252Faccounts.douban.com%252Fconnect%252Fsina_weibo%252FcallbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8%253D%26from%3D%26with_cookie%3D</span><br><span class="line">redirect_uri: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=</span><br><span class="line">client_id: 1994016063</span><br><span class="line">appkey62: 3dgQLd</span><br><span class="line">state: QSU3TTCcj4Y%21douban-web-anony-home%21https%3A%2F%2Fwww.douban.com%2F</span><br><span class="line">from: </span><br><span class="line">uid: 6003397705</span><br><span class="line">url: https://api.weibo.com/oauth2/authorize?state=QSU3TTCcj4Y%2521douban-web-anony-home%2521https%253A//www.douban.com/&amp;redirect_uri=https%3A//accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8%3D&amp;response_type=code&amp;client_id=1994016063&amp;scope=&amp;display=default</span><br><span class="line">verifyToken: e2ca692998261f462eb692413b402250</span><br><span class="line">visible: 0</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>授权验证成功后（302重定向到返回到豆瓣认证时给新浪的callback页面），并将授权所得到的code填充到请求参数中。</p>
-<p>此时URL如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=?state=QSU3TTCcj4Y!douban-web-anony-home!https://www.douban.com/&amp;code=b306670cd1908fa36dc1eb4167a5ac7c</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>手机号未注册完成注册</p>
-<p>填入手机号，获取验证码，此时授权完毕，返回首页，授权成功返回code成功后，至豆瓣首页（200）</p>
-</li>
-</ul>
-<p>url</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">https://www.douban.com/</span><br></pre></td></tr></table></figure>
-<p>此时豆瓣将code值放在了 headers中的refer字段</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Referer: https://accounts.douban.com/connect/sina_weibo/callbackaHR0cHM6Ly93d3cuZG91YmFuLmNvbS8=?state=QSU3TTCcj4Y%21douban-web-anony-home%21https%3A%2F%2Fwww.douban.com%2F&amp;code=b306670cd1908fa36dc1eb4167a5ac7c</span><br></pre></td></tr></table></figure>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">OAuth</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/12/20/理解OAuth/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -1559,6 +2039,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">mysql</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">python3</a>
               </li>
              
@@ -1576,6 +2060,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">ioloop</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">算法</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">最短路径</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">存储过程</a>
               </li>
              
               <li class="article-tag-list-item">

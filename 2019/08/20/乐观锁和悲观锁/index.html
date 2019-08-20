@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Archives: 2018/11 | yangyaq</title>
+  <title>乐观锁与悲观锁 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/archives/2018/11/index.html">
+  <meta name="description" content="悲观锁​    修改数据库数据之前对这条数据加锁，避免别人同时修改。 ​    这种利用数据库锁机制在修改数据之前先锁定，再修改的方式称为悲观并发控制，又名“悲观锁”，Pessimistic Concurrency Control，缩写“PCC”）。 ​    之所以叫做悲观锁，是因为这是一种对数据的修改抱有悲观态度的并发控制方式。我们一般认为数据被并发修改的概率比较大，所以需要在修改之前先加锁。">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="乐观锁与悲观锁">
+<meta property="og:url" content="https://yangyaq.github.io/2019/08/20/乐观锁和悲观锁/index.html">
 <meta property="og:site_name" content="yangyaq">
+<meta property="og:description" content="悲观锁​    修改数据库数据之前对这条数据加锁，避免别人同时修改。 ​    这种利用数据库锁机制在修改数据之前先锁定，再修改的方式称为悲观并发控制，又名“悲观锁”，Pessimistic Concurrency Control，缩写“PCC”）。 ​    之所以叫做悲观锁，是因为这是一种对数据的修改抱有悲观态度的并发控制方式。我们一般认为数据被并发修改的概率比较大，所以需要在修改之前先加锁。">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-20T09:53:33.569Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="yangyaq">
+<meta name="twitter:title" content="乐观锁与悲观锁">
+<meta name="twitter:description" content="悲观锁​    修改数据库数据之前对这条数据加锁，避免别人同时修改。 ​    这种利用数据库锁机制在修改数据之前先锁定，再修改的方式称为悲观并发控制，又名“悲观锁”，Pessimistic Concurrency Control，缩写“PCC”）。 ​    之所以叫做悲观锁，是因为这是一种对数据的修改抱有悲观态度的并发控制方式。我们一般认为数据被并发修改的概率比较大，所以需要在修改之前先加锁。">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -142,65 +147,263 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-乐观锁和悲观锁" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2018/11/06/tornado-motor/" class="archive-article-date">
-  	<time datetime="2018-11-06T06:23:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>18-11-06</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/11/06/tornado-motor/">tornado+motor</a>
+    <h1 class="article-title" itemprop="name">
+      乐观锁与悲观锁
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/08/20/乐观锁和悲观锁/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:53:33.569Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="悲观锁"><a href="#悲观锁" class="headerlink" title="悲观锁"></a>悲观锁</h2><p>​    修改数据库数据之前对这条数据加锁，避免别人同时修改。</p>
+<p>​    这种利用数据库锁机制在修改数据之前先锁定，再修改的方式称为悲观并发控制，又名“悲观锁”，Pessimistic Concurrency Control，缩写“PCC”）。</p>
+<p>​    <strong>之所以叫做悲观锁，是因为这是一种对数据的修改抱有悲观态度的并发控制方式。我们一般认为数据被并发修改的概率比较大，所以需要在修改之前先加锁。</strong></p>
+<p>​    悲观并发控制实际上是“先取锁再访问”的保守策略，为数据处理的安全提供了保证。</p>
+<p>​    线程1加排它锁-&gt;加锁成功后进行数据更新-&gt;更新事务提交，锁释放-&gt;线程2加锁成功-&gt;线程2更新</p>
+<p>​    <strong>效率方面，处理加锁的机制会让数据库产生额外的开销，还有增加产生死锁的机会；另外降低了并行性，一个事务锁定了某行数据，其他事务就必须等待该事务处理完才可以处理那行数据。</strong></p>
+<h2 id="乐观锁"><a href="#乐观锁" class="headerlink" title="乐观锁"></a>乐观锁</h2><p>​    乐观锁（ Optimistic Locking ） 是相对悲观锁而言的，乐观锁假设数据一般情况下不会造成冲突，所以在数据进行提交更新的时候，才会正式对数据的冲突与否进行检测，如果发现冲突了，则让返回用户错误的信息，让用户决定如何去做。</p>
+<p>​    <strong>相对于悲观锁，在对数据库进行处理的时候，乐观锁并不会使用数据库提供的锁机制。一般的实现乐观锁的方式就是记录数据版本。</strong></p>
+<p>​    ￼乐观并发控制相信事务之间的数据竞争(data race)的概率是比较小的，因此尽可能直接做下去，直到提交的时候才去锁定，所以不会产生任何锁和死锁。</p>
+<h2 id="悲观锁实现方式"><a href="#悲观锁实现方式" class="headerlink" title="悲观锁实现方式"></a>悲观锁实现方式</h2><p>悲观锁的实现，往往依靠数据库提供的锁机制。在数据库中，悲观锁的流程如下：</p>
+<ul>
+<li>在对记录进行修改前，先尝试为该记录加上排他锁（exclusive locking）。</li>
+<li>如果加锁失败，说明该记录正在被修改，那么当前查询可能要等待或者抛出异常。具体响应方式由开发者根据实际需要决定。</li>
+<li>如果成功加锁，那么就可以对记录做修改，事务完成后就会解锁了。</li>
+<li>其间如果有其他对该记录做修改或加排他锁的操作，都会等待我们解锁或直接抛出异常。</li>
+</ul>
+<p>我们拿比较常用的MySql Innodb引擎举例，来说明一下在SQL中如何使用悲观锁。</p>
+<blockquote>
+<p>要使用悲观锁，我们必须关闭mysql数据库的自动提交属性，因为MySQL默认使用autocommit模式，也就是说，当你执行一个更新操作后，MySQL会立刻将结果进行提交。set autocommit=0;</p>
+</blockquote>
+<p>我们举一个简单的例子，如淘宝下单过程中扣减库存的需求说明一下如何使用悲观锁：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//0.开始事务</span><br><span class="line">begin; </span><br><span class="line">//1.查询出商品库存信息</span><br><span class="line">select quantity from items where id=1 for update;</span><br><span class="line">//2.修改商品库存为2</span><br><span class="line">update items set quantity=2 where id = 1;</span><br><span class="line">//3.提交事务</span><br><span class="line">commit;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>以上，在对id = 1的记录修改前，先通过for update的方式进行加锁，然后再进行修改。这就是比较典型的悲观锁策略。</p>
+<p>如果以上修改库存的代码发生并发，同一时间只有一个线程可以开启事务并获得id=1的锁，其它的事务必须等本次事务提交之后才能执行。这样我们可以保证当前的数据不会被其它事务修改。</p>
+<blockquote>
+<p>上面我们提到，使用select…for update会把数据给锁住，不过我们需要注意一些锁的级别，MySQL InnoDB默认行级锁。行级锁都是基于索引的，如果一条SQL语句用不到索引是不会使用行级锁的，会使用表级锁把整张表锁住，这点需要注意。</p>
+</blockquote>
+<h2 id="乐观锁实现方式"><a href="#乐观锁实现方式" class="headerlink" title="乐观锁实现方式"></a>乐观锁实现方式</h2><p>使用乐观锁就不需要借助数据库的锁机制了。</p>
+<p>乐观锁的概念中其实已经阐述了他的具体实现细节：主要就是两个步骤：冲突检测和数据更新。其实现方式有一种比较典型的就是Compare and Swap(CAS)。</p>
+<p>CAS是项乐观锁技术，当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试。</p>
+<p>比如前面的扣减库存问题，通过乐观锁可以实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//查询出商品库存信息，quantity = 3</span><br><span class="line">select quantity from items where id=1</span><br><span class="line">//修改商品库存为2</span><br><span class="line">update items set quantity=2 where id=1 and quantity = 3;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>以上，我们在更新之前，先查询一下库存表中当前库存数（quantity），然后在做update的时候，以库存数作为一个修改条件。当我们提交更新的时候，判断数据库表对应记录的当前库存数与第一次取出来的库存数进行比对，如果数据库表当前库存数与第一次取出来的库存数相等，则予以更新，否则认为是过期数据。</p>
+<p>以上更新语句存在一个比较重要的问题，即传说中的ABA问题。</p>
+<p>比如说一个线程one从数据库中取出库存数3，这时候另一个线程two也从数据库中库存数3，并且two进行了一些操作变成了2，然后two又将库存数变成3，这时候线程one进行CAS操作发现数据库中仍然是3，然后one操作成功。尽管线程one的CAS操作成功，但是不代表这个过程就是没有问题的。</p>
+<p>￼有一个比较好的办法可以解决ABA问题，那就是通过一个单独的可以顺序递增的version字段。改为以下方式即可：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//查询出商品信息，version = 1</span><br><span class="line">select version from items where id=1</span><br><span class="line">//修改商品库存为2</span><br><span class="line">update items set quantity=2,version = 3 where id=1 and version = 2;</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>乐观锁每次在执行数据的修改操作时，都会带上一个版本号，一旦版本号和数据的版本号一致就可以执行修改操作并对版本号执行+1操作，否则就执行失败。因为每次操作的版本号都会随之增加，所以不会出现ABA问题，因为版本号只会增加不会减少。</p>
+<p>￼除了version以外，还可以使用时间戳，因为时间戳天然具有顺序递增性。</p>
+<p>以上SQL其实还是有一定的问题的，就是<strong>一旦发上高并发的时候，就只有一个线程可以修改成功，那么就会存在大量的失败。</strong></p>
+<p>对于像淘宝这样的电商网站，高并发是常有的事，总让用户感知到失败显然是不合理的。所以，还是要想办法减少乐观锁的粒度的。</p>
+<p>有一条比较好的建议，可以减小乐观锁力度，最大程度的提升吞吐率，提高并发能力！如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">//修改商品库存</span><br><span class="line">update item </span><br><span class="line">set quantity=quantity - 1 </span><br><span class="line">where id = 1 and quantity - 1 &gt; 0</span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+<p>以上SQL语句中，如果用户下单数为1，则通过<code>quantity - 1 &gt; 0</code>的方式进行乐观锁控制。</p>
+<p>以上update语句，在执行过程中，会在一次原子操作中自己查询一遍quantity的值，并将其扣减掉1。</p>
+<p><strong>高并发环境下锁粒度把控是一门重要的学问，选择一个好的锁，在保证数据安全的情况下，可以大大提升吞吐率，进而提升性能。</strong></p>
+<p>如何选择</p>
+<p>在乐观锁与悲观锁的选择上面，主要看下两者的区别以及适用场景就可以了。</p>
+<p>1、乐观锁并未真正加锁，效率高。一旦锁的粒度掌握不好，更新失败的概率就会比较高，容易发生业务失败。 </p>
+<p>2、悲观锁依赖数据库锁，效率低。更新失败的概率比较低。</p>
+<p><strong>随着互联网三高架构（高并发、高性能、高可用）的提出，悲观锁已经越来越少的被使用到生产环境中了，尤其是并发量比较大的业务场景。</strong></p>
+<p>转自[漫话编程]</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">motor</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">mysql</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/08/20/乐观锁和悲观锁/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+    <a href="/2019/08/20/单源最短路径/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          单源最短路径
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/08/20/存储过程/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">存储过程</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#悲观锁"><span class="toc-number">1.</span> <span class="toc-text">悲观锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#乐观锁"><span class="toc-number">2.</span> <span class="toc-text">乐观锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#悲观锁实现方式"><span class="toc-number">3.</span> <span class="toc-text">悲观锁实现方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#乐观锁实现方式"><span class="toc-number">4.</span> <span class="toc-text">乐观锁实现方式</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/md5.min.js.1"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: md5(location.pathname),
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -223,8 +426,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
