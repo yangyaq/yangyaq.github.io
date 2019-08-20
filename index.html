@@ -144,6 +144,90 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-WSGI初识" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/WSGI初识/">WSGI</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/WSGI初识/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:46:13.960Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>WSGI ( Web Server Gateway Interface)，用来连接python框架和web服务器。</p>
+<p>作用：为web服务器和web框架提供了一个微型接口，可以使web服务器与web框架随意搭配。</p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img src="/2019/08/20/WSGI初识/225604wpler4o4pvlezrro.jpg" alt="225604wpler4o4pvlezrro"></h2><p><img src="/2019/08/20/WSGI初识/1.jpg" alt="1"><br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">Brower--&gt;&gt;WSGIServer: HTTP请求</span><br><span class="line">WSGIServer-&gt;WSGIServer: 提供start_response,env</span><br><span class="line">WSGIServer-&gt;&gt; WSGIApplication: 调用application(environ,start_reponse),返回result</span><br><span class="line">WSGIApplication-&gt;&gt; WSGIApplication: 调用start_reponse(code,headers)</span><br><span class="line">WSGIApplication--&gt;&gt; WSGIServer: 返回result</span><br><span class="line">WSGIServer--&gt;&gt;WSGIServer:  write(header)</span><br><span class="line">WSGIServer--&gt;&gt;WSGIServer:  write(result)</span><br><span class="line">WSGIServer--&gt;&gt;Brower: reponse</span><br></pre></td></tr></table></figure></p>
+<p><img src="/2019/08/20/WSGI初识/225618aptoggjttuzrovvg.jpg" alt="225618aptoggjttuzrovvg"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">demo_app</span><span class="params">(environ, start_response)</span>:</span></span><br><span class="line">    headers = [(<span class="string">'Content-Type'</span>, <span class="string">'text/plain; charset=utf-8'</span>), (<span class="string">'Date'</span>, <span class="string">'Tue, 31 Mar 2015 12:54:48 GMT'</span>),</span><br><span class="line">            (<span class="string">'Server'</span>, <span class="string">'WSGIServer 0.2'</span>)]</span><br><span class="line">    start_response(<span class="string">"200 OK"</span>, headers[:<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"hello world"</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># # wsgi server 调用一个由应用程序提供的可调用对象 app</span></span><br><span class="line"><span class="comment"># # 可调用： 实现了__call__函数的方法或者类</span></span><br><span class="line"><span class="comment"># server = wsgiref.simple_server.make_server('127.0.0.1', 8888, demo_app)</span></span><br><span class="line"><span class="comment"># server.handle_request()</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WSGIServer</span><span class="params">(object)</span>:</span></span><br><span class="line">    address_family = socket.AF_INET</span><br><span class="line">    socket_type = socket.SOCK_STREAM</span><br><span class="line">    request_queue_size = <span class="number">1</span></span><br><span class="line">    write_buffer = <span class="string">''</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, address)</span>:</span></span><br><span class="line">        self.listen_socket = socket.socket(self.address_family, self.socket_type)</span><br><span class="line">        <span class="comment"># 允许地址复用</span></span><br><span class="line">        self.listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)</span><br><span class="line">        self.listen_socket.bind(address)</span><br><span class="line">        self.listen_socket.listen(self.request_queue_size)</span><br><span class="line">        <span class="comment"># 获取主机的名称以及端口</span></span><br><span class="line">        host, port = self.listen_socket.getsockname()</span><br><span class="line">        self.server_name = socket.getfqdn(host)</span><br><span class="line">        self.server_port = port</span><br><span class="line"></span><br><span class="line">        self.headers_set = []</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_environ</span><span class="params">(self)</span>:</span></span><br><span class="line">        env = &#123;&#125;</span><br><span class="line">        <span class="comment"># wsgi 必须的变量</span></span><br><span class="line">        env[<span class="string">'wsgi.version'</span>] = (<span class="number">1</span>, <span class="number">0</span>)</span><br><span class="line">        env[<span class="string">'wsgi.uri_schema'</span>] = <span class="string">"http"</span></span><br><span class="line">        env[<span class="string">'wsgi.input'</span>] = self.request_data</span><br><span class="line">        env[<span class="string">'errors'</span>] = sys.stderr</span><br><span class="line">        env[<span class="string">'wsgi.mutilprocess'</span>] = <span class="keyword">False</span></span><br><span class="line">        env[<span class="string">'wsgi.mutilthread'</span>] = <span class="keyword">False</span></span><br><span class="line">        env[<span class="string">'run_once'</span>] = <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># CGI 必须的变量</span></span><br><span class="line">        env[<span class="string">'REQUEST_METHOD'</span>] = self.request_method</span><br><span class="line">        env[<span class="string">'PATH_INFO'</span>] = self.path</span><br><span class="line">        env[<span class="string">'SERVER_NAME'</span>] = self.server_name</span><br><span class="line">        env[<span class="string">'SERVER_PORT'</span>] = self.server_port</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> env</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">server_forever</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment"># self.start_response('200 OK', [])</span></span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">            self.client_connection, client_address = self.listen_socket.accept()</span><br><span class="line">            self.handle_request()</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">handle_request</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.request_data = request_data = self.client_connection.recv(<span class="number">1024</span>)</span><br><span class="line">        print(<span class="string">''</span>.join(<span class="string">'&lt; &#123;line&#125;\n'</span>.format(line=line) <span class="keyword">for</span> line <span class="keyword">in</span> request_data.splitlines()))</span><br><span class="line">        self.parse_request(request_data.decode())</span><br><span class="line"></span><br><span class="line">        env = self.get_environ()</span><br><span class="line"></span><br><span class="line">        result = self.application(env, self.start_response)</span><br><span class="line"></span><br><span class="line">        self.finish_response(result)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">parse_request</span><span class="params">(self, request_data)</span>:</span></span><br><span class="line">        <span class="comment"># print(request_data)</span></span><br><span class="line">        <span class="comment"># 解析请求方法，路径，以及请求数据</span></span><br><span class="line">        request_line = request_data.splitlines()[<span class="number">0</span>]</span><br><span class="line">        request_line = request_line.rstrip(<span class="string">'\r\n'</span>)</span><br><span class="line">        (self.request_method, self.path, self.request_version) = request_line.split()</span><br><span class="line">        <span class="comment"># print('&#123;0&#125;,&#123;1&#125;,&#123;2&#125;'.format(self.request_method, self.path, self.request_version))</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start_response</span><span class="params">(self, status, headers, exc_info=None)</span>:</span></span><br><span class="line">        reponse = <span class="string">'HTTP/1.1 &#123;status&#125;\r\n'</span>.format(status=status)</span><br><span class="line">        self.write_buffer += reponse</span><br><span class="line">        <span class="keyword">if</span> status.split()[<span class="number">0</span>] == <span class="string">'200'</span>:</span><br><span class="line">            self.headers_set = headers</span><br><span class="line">        <span class="keyword">return</span> self.write</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">set_app</span><span class="params">(self, app)</span>:</span></span><br><span class="line">        print(<span class="string">'this'</span>)</span><br><span class="line">        self.application = app</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">finish_response</span><span class="params">(self, result)</span>:</span></span><br><span class="line">        <span class="comment"># print('finish')</span></span><br><span class="line">        self.write(result)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">write</span><span class="params">(self, data)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.headers_set:</span><br><span class="line">            self.write_buffer += <span class="string">''</span>.join(<span class="string">'&#123;k&#125;: &#123;v&#125;\r\n'</span>.format(k=k, v=v) <span class="keyword">for</span> k, v <span class="keyword">in</span> self.headers_set)</span><br><span class="line"></span><br><span class="line">        self.write_buffer += <span class="string">'\r\n'</span></span><br><span class="line">        self.write_buffer += data</span><br><span class="line">        print(self.write_buffer)</span><br><span class="line">        self.client_connection.send(self.write_buffer.encode())</span><br><span class="line">        <span class="comment"># self.client_connection.close()</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_server</span><span class="params">(host, port, app)</span>:</span></span><br><span class="line">    address = (host, port)</span><br><span class="line">    server = WSGIServer(address)</span><br><span class="line">    server.set_app(app)</span><br><span class="line">    <span class="keyword">return</span> server</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    make_server(<span class="string">'localhost'</span>, <span class="number">8888</span>, demo_app).server_forever()</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/08/20/WSGI初识/225622yi7gzgztyezr42z7.jpg" alt="225622yi7gzgztyezr42z7"></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">后端框架</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">WSGI</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/WSGI初识/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-celery学习笔记" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -276,90 +360,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2019/08/20/celery学习笔记/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-WSGI初识" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/20/WSGI初识/">WSGI</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/20/WSGI初识/" class="archive-article-date">
-  	<time datetime="2019-08-20T10:35:06.369Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>WSGI ( Web Server Gateway Interface)，用来连接python框架和web服务器。</p>
-<p>作用：为web服务器和web框架提供了一个微型接口，可以使web服务器与web框架随意搭配。</p>
-<p><img src="/2019/08/20/WSGI初识/225604wpler4o4pvlezrro.jpg" alt="225604wpler4o4pvlezrro"><br><img src="/2019/08/20/WSGI初识/1.jpg" alt="1"><br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">Brower--&gt;&gt;WSGIServer: HTTP请求</span><br><span class="line">WSGIServer-&gt;WSGIServer: 提供start_response,env</span><br><span class="line">WSGIServer-&gt;&gt; WSGIApplication: 调用application(environ,start_reponse),返回result</span><br><span class="line">WSGIApplication-&gt;&gt; WSGIApplication: 调用start_reponse(code,headers)</span><br><span class="line">WSGIApplication--&gt;&gt; WSGIServer: 返回result</span><br><span class="line">WSGIServer--&gt;&gt;WSGIServer:  write(header)</span><br><span class="line">WSGIServer--&gt;&gt;WSGIServer:  write(result)</span><br><span class="line">WSGIServer--&gt;&gt;Brower: reponse</span><br></pre></td></tr></table></figure></p>
-<p><img src="/2019/08/20/WSGI初识/225618aptoggjttuzrovvg.jpg" alt="225618aptoggjttuzrovvg"></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">demo_app</span><span class="params">(environ, start_response)</span>:</span></span><br><span class="line">    headers = [(<span class="string">'Content-Type'</span>, <span class="string">'text/plain; charset=utf-8'</span>), (<span class="string">'Date'</span>, <span class="string">'Tue, 31 Mar 2015 12:54:48 GMT'</span>),</span><br><span class="line">            (<span class="string">'Server'</span>, <span class="string">'WSGIServer 0.2'</span>)]</span><br><span class="line">    start_response(<span class="string">"200 OK"</span>, headers[:<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"hello world"</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># # wsgi server 调用一个由应用程序提供的可调用对象 app</span></span><br><span class="line"><span class="comment"># # 可调用： 实现了__call__函数的方法或者类</span></span><br><span class="line"><span class="comment"># server = wsgiref.simple_server.make_server('127.0.0.1', 8888, demo_app)</span></span><br><span class="line"><span class="comment"># server.handle_request()</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WSGIServer</span><span class="params">(object)</span>:</span></span><br><span class="line">    address_family = socket.AF_INET</span><br><span class="line">    socket_type = socket.SOCK_STREAM</span><br><span class="line">    request_queue_size = <span class="number">1</span></span><br><span class="line">    write_buffer = <span class="string">''</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, address)</span>:</span></span><br><span class="line">        self.listen_socket = socket.socket(self.address_family, self.socket_type)</span><br><span class="line">        <span class="comment"># 允许地址复用</span></span><br><span class="line">        self.listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)</span><br><span class="line">        self.listen_socket.bind(address)</span><br><span class="line">        self.listen_socket.listen(self.request_queue_size)</span><br><span class="line">        <span class="comment"># 获取主机的名称以及端口</span></span><br><span class="line">        host, port = self.listen_socket.getsockname()</span><br><span class="line">        self.server_name = socket.getfqdn(host)</span><br><span class="line">        self.server_port = port</span><br><span class="line"></span><br><span class="line">        self.headers_set = []</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_environ</span><span class="params">(self)</span>:</span></span><br><span class="line">        env = &#123;&#125;</span><br><span class="line">        <span class="comment"># wsgi 必须的变量</span></span><br><span class="line">        env[<span class="string">'wsgi.version'</span>] = (<span class="number">1</span>, <span class="number">0</span>)</span><br><span class="line">        env[<span class="string">'wsgi.uri_schema'</span>] = <span class="string">"http"</span></span><br><span class="line">        env[<span class="string">'wsgi.input'</span>] = self.request_data</span><br><span class="line">        env[<span class="string">'errors'</span>] = sys.stderr</span><br><span class="line">        env[<span class="string">'wsgi.mutilprocess'</span>] = <span class="keyword">False</span></span><br><span class="line">        env[<span class="string">'wsgi.mutilthread'</span>] = <span class="keyword">False</span></span><br><span class="line">        env[<span class="string">'run_once'</span>] = <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># CGI 必须的变量</span></span><br><span class="line">        env[<span class="string">'REQUEST_METHOD'</span>] = self.request_method</span><br><span class="line">        env[<span class="string">'PATH_INFO'</span>] = self.path</span><br><span class="line">        env[<span class="string">'SERVER_NAME'</span>] = self.server_name</span><br><span class="line">        env[<span class="string">'SERVER_PORT'</span>] = self.server_port</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> env</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">server_forever</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment"># self.start_response('200 OK', [])</span></span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">            self.client_connection, client_address = self.listen_socket.accept()</span><br><span class="line">            self.handle_request()</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">handle_request</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.request_data = request_data = self.client_connection.recv(<span class="number">1024</span>)</span><br><span class="line">        print(<span class="string">''</span>.join(<span class="string">'&lt; &#123;line&#125;\n'</span>.format(line=line) <span class="keyword">for</span> line <span class="keyword">in</span> request_data.splitlines()))</span><br><span class="line">        self.parse_request(request_data.decode())</span><br><span class="line"></span><br><span class="line">        env = self.get_environ()</span><br><span class="line"></span><br><span class="line">        result = self.application(env, self.start_response)</span><br><span class="line"></span><br><span class="line">        self.finish_response(result)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">parse_request</span><span class="params">(self, request_data)</span>:</span></span><br><span class="line">        <span class="comment"># print(request_data)</span></span><br><span class="line">        <span class="comment"># 解析请求方法，路径，以及请求数据</span></span><br><span class="line">        request_line = request_data.splitlines()[<span class="number">0</span>]</span><br><span class="line">        request_line = request_line.rstrip(<span class="string">'\r\n'</span>)</span><br><span class="line">        (self.request_method, self.path, self.request_version) = request_line.split()</span><br><span class="line">        <span class="comment"># print('&#123;0&#125;,&#123;1&#125;,&#123;2&#125;'.format(self.request_method, self.path, self.request_version))</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start_response</span><span class="params">(self, status, headers, exc_info=None)</span>:</span></span><br><span class="line">        reponse = <span class="string">'HTTP/1.1 &#123;status&#125;\r\n'</span>.format(status=status)</span><br><span class="line">        self.write_buffer += reponse</span><br><span class="line">        <span class="keyword">if</span> status.split()[<span class="number">0</span>] == <span class="string">'200'</span>:</span><br><span class="line">            self.headers_set = headers</span><br><span class="line">        <span class="keyword">return</span> self.write</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">set_app</span><span class="params">(self, app)</span>:</span></span><br><span class="line">        print(<span class="string">'this'</span>)</span><br><span class="line">        self.application = app</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">finish_response</span><span class="params">(self, result)</span>:</span></span><br><span class="line">        <span class="comment"># print('finish')</span></span><br><span class="line">        self.write(result)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">write</span><span class="params">(self, data)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.headers_set:</span><br><span class="line">            self.write_buffer += <span class="string">''</span>.join(<span class="string">'&#123;k&#125;: &#123;v&#125;\r\n'</span>.format(k=k, v=v) <span class="keyword">for</span> k, v <span class="keyword">in</span> self.headers_set)</span><br><span class="line"></span><br><span class="line">        self.write_buffer += <span class="string">'\r\n'</span></span><br><span class="line">        self.write_buffer += data</span><br><span class="line">        print(self.write_buffer)</span><br><span class="line">        self.client_connection.send(self.write_buffer.encode())</span><br><span class="line">        <span class="comment"># self.client_connection.close()</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_server</span><span class="params">(host, port, app)</span>:</span></span><br><span class="line">    address = (host, port)</span><br><span class="line">    server = WSGIServer(address)</span><br><span class="line">    server.set_app(app)</span><br><span class="line">    <span class="keyword">return</span> server</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    make_server(<span class="string">'localhost'</span>, <span class="number">8888</span>, demo_app).server_forever()</span><br></pre></td></tr></table></figure>
-<p><img src="/2019/08/20/WSGI初识/225622yi7gzgztyezr42z7.jpg" alt="225622yi7gzgztyezr42z7"></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">后端框架</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">WSGI</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/20/WSGI初识/">展开全文 >></a>
         </p>
       
 
