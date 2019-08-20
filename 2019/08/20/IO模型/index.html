@@ -6,15 +6,25 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Tag: 协程 | yangyaq</title>
+  <title>IO模型 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/tags/协程/index.html">
+  <meta name="description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。    多路复用IOselect可阻塞，可不阻">
+<meta name="keywords" content="IO模型">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IO模型">
+<meta property="og:url" content="https://yangyaq.github.io/2019/08/20/IO模型/index.html">
 <meta property="og:site_name" content="yangyaq">
+<meta property="og:description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。    多路复用IOselect可阻塞，可不阻">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://yangyaq.github.io/2019/08/20/IO模型/屏幕快照%202019-03-25%2011.02.23.png">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831221803468-1908924864.png">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831225603562-854824774.png">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831232911015-2140233396.png">
+<meta property="og:updated_time" content="2019-08-20T09:37:30.366Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="yangyaq">
+<meta name="twitter:title" content="IO模型">
+<meta name="twitter:description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。    多路复用IOselect可阻塞，可不阻">
+<meta name="twitter:image" content="https://yangyaq.github.io/2019/08/20/IO模型/屏幕快照%202019-03-25%2011.02.23.png">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -142,69 +152,299 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-IO模型" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/03/30/greenlet详解/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:27:18.061Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-03-30</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/30/greenlet详解/">greenlet 详解</a>
+    <h1 class="article-title" itemprop="name">
+      IO模型
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/08/20/IO模型/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:37:30.368Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="/2019/08/20/IO模型/屏幕快照 2019-03-25 11.02.23.png" alt="屏幕快照 2019-03-25 11.02.2"></p>
+<p>内核态（系统空间）- 用户态（用户空间）</p>
+<p>一次通信过程分为两步骤：</p>
+<ul>
+<li>等待接收数据。</li>
+<li>将数据从内核态拷贝至用户态（进程或者线程）。</li>
+</ul>
+<p>阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。</p>
+<p>非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。</p>
+<p>异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。</p>
+<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831221803468-1908924864.png" alt="1036857-20170831221803468-1908924864"></p>
+<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831225603562-854824774.png" alt="1036857-20170831225603562-854824774"></p>
+<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831232911015-2140233396.png" alt="1036857-20170831232911015-2140233396"></p>
+<h2 id="多路复用IO"><a href="#多路复用IO" class="headerlink" title="多路复用IO"></a>多路复用IO</h2><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>可阻塞，可不阻塞</p>
+<p>函数原型</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>参数</p>
+<p><code>nfds</code>：是fd_set集合中的最大描述符值+1。</p>
+<p><code>fdset</code>： 是一个位数组，其大小限制为<code>FD_SETSIZE(1024)</code>，位数组的每一位代表其对应的描述符是否需要检查。</p>
+<p><code>readfds</code>：是读文件描述符的数组。</p>
+<p><code>writefds</code>：是写文件描述符的数组。</p>
+<p><code>exceptfds</code>:  是错误事件的文件描述符数组。</p>
+<p><code>timeout</code>: 超时事件，该结构被内核修改，其值位超时剩余时间。</p>
+<p>返回值：</p>
+<ul>
+<li>-1，发生错误，并将所有的文件描述符清空并重新设置，可通过errno输出错误详情。</li>
+<li>0， 超时返回。</li>
+<li>正数： 发生变化的文件描述符数量。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span>&#123;</span></span><br><span class="line">  <span class="keyword">time_t</span> tv_sec; <span class="comment">/*秒*/</span></span><br><span class="line">  <span class="keyword">time_t</span> tv_usec; <span class="comment">/*微秒*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当<code>timeout</code> = NULL, 则select()阻塞至某一个文件描述符发生变化才会返回结果；</p>
+<p>当<code>timeout</code> = 0, 则select()不阻塞，执行后立即返回，无论文件描述符是否发生变化；</p>
+<p>当<code>timeout</code> &gt; 0,则select()阻塞至到这个时间值再返回结果。</p>
+<blockquote>
+<p>注意：<br>1）正常情况下返回就绪描述符个数！<br>2）同时会将未就绪的描述符置零，所以select每次返回后我们都应将需用监听的描述符重新添加到描述符集中。<br>3）为了可移植，当设置了超时时间时也应当从新赋值。<br>4）使用select函数尽量不要与非系统IO混用</p>
+</blockquote>
+<p>对应内核：select对应于内核中的sys_select调用，</p>
+<blockquote>
+<p>select的调用步骤如下：</p>
+<p>（1）使用copy_from_user从用户空间拷贝fdset到内核空间</p>
+<p>（2）注册回调函数__pollwait</p>
+<p>（3）遍历所有fd，调用其对应的poll方法（对于socket，这个poll方法是sock_poll，sock_poll根据情况会调用到tcp_poll,udp_poll或者datagram_poll）</p>
+<p>（4）以tcp_poll为例，其核心实现就是__pollwait，也就是上面注册的回调函数。</p>
+<p>（5）__pollwait的主要工作就是把current（当前进程）挂到设备的等待队列中，不同的设备有不同的等待队列，对于tcp_poll 来说，其等待队列是sk-&gt;sk_sleep（注意把进程挂到等待队列中并不代表进程已经睡眠了）。在设备收到一条消息（网络设备）或填写完文件数 据（磁盘设备）后，会唤醒设备等待队列上睡眠的进程，这时current便被唤醒了。</p>
+<p>（6）poll方法返回时会返回一个描述读写操作是否就绪的mask掩码，根据这个mask掩码给fd_set赋值。</p>
+<p>（7）如果遍历完所有的fd，还没有返回一个可读写的mask掩码，则会调用schedule_timeout是调用select的进程（也就是 current）进入睡眠。当设备驱动发生自身资源可读写后，会唤醒其等待队列上睡眠的进程。如果超过一定的超时时间（schedule_timeout 指定），还是没人唤醒，则调用select的进程会重新被唤醒获得CPU，进而重新遍历fd，判断有没有就绪的fd。</p>
+<p>（8）把fd_set从内核空间拷贝到用户空间。</p>
+</blockquote>
+<h4 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h4><p>可阻塞可不阻塞</p>
+<p>函数原型</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">int poll(struct pollfd fds[], nfds_t nfds, int timeout)；</span><br></pre></td></tr></table></figure>
+<p>参数</p>
+<p><code>fds</code>：是一个struct pollfd结构类型的数组，用于存放需要检测其状态的Socket描述符；每当调用这个函数之后，系统不会清空这个数组，操作起来比较方便；特别是对于socket连接比较多的情况下，在一定程度上可以提高处理的效率；</p>
+<p>​            这一点与select()函数不同，调用select()函数之后，select()函数会清空它所检测的socket描述符集合，导致每次调用select()之前都必须把socket描述符重新加入到待检测的集合中；因此，select()函数适合于只检测一个socket描述符的情况，而poll()函数适合于大量socket描述符的情况；</p>
+<p><code>nfds</code>：nfds_t类型的参数，用于标记数组fds的元素的总数量。</p>
+<p><code>timeout</code>：是poll函数调用阻塞的时间，单位毫秒；</p>
+<p>返回值</p>
+<p>>0：数组fds中准备好读、写或出错状态的那些socket描述符的总数量；</p>
+<p>== 0：数组fds中没有任何socket描述符准备好读、写，或出错；此时poll超时，超时时间是timeout毫秒；换句话说，如果所检测的socket描述符上没有任何事件发生的话，那么poll()函数会阻塞timeout所指定的毫秒时间长度之后返回，如果timeout == 0，那么poll() 函数立即返回而不阻塞，如果timeout==INFTIM，那么poll() 函数会一直阻塞下去，直到所检测的socket描述符上的感兴趣的事件发生是才返回，如果感兴趣的事件永远不发生，那么poll()就会永远阻塞下去；</p>
+<p>-1： poll函数调用失败，同时会自动设置全局变量errno；</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> &#123;</span></span><br><span class="line"><span class="keyword">int</span> fd; <span class="comment">/*文件描述符*/</span></span><br><span class="line"><span class="keyword">short</span> events; <span class="comment">/* 等待的需要测试事件 */</span></span><br><span class="line"><span class="keyword">short</span> revents; <span class="comment">/* 实际发生了的事件，也就是返回结果 */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><blockquote>
+<p>epoll是<a href="https://baike.baidu.com/item/Linux内核" target="_blank" rel="noopener">Linux内核</a>为处理大批量<a href="https://baike.baidu.com/item/文件描述符/9809582" target="_blank" rel="noopener">文件描述符</a>而作了改进的poll，是Linux下多路复用IO接口select/poll的增强版本。</p>
+</blockquote>
+<blockquote>
+<p>epoll有2种工作方式：LT和ET。</p>
+<p>LT（level triggered）是缺省的工作方式，并且同时支持block和no-block socket.在这种做法中，<a href="https://baike.baidu.com/item/内核" target="_blank" rel="noopener">内核</a>告诉你一个<a href="https://baike.baidu.com/item/文件描述符" target="_blank" rel="noopener">文件描述符</a>是否就绪了，然后你可以对这个就绪的fd进行IO操作。如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点。传统的select/poll都是这种模型的代表。</p>
+<p>ET （edge-triggered）是高速工作方式，只支持non-block socket。在这种模式下，当描述符从未就绪变为就绪时，内核通过epoll告诉你。然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作导致那个文件描述符不再为就绪状态了（比如，你在发送，接收或者接收请求，或者发送接收的数据少于一定量时导致了一个EWOULDBLOCK 错误）。但是请注意，如果一直不对这个fd作IO操作（从而导致它再次变成未就绪），<a href="https://baike.baidu.com/item/内核" target="_blank" rel="noopener">内核</a>不会发送更多的通知（only once），不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认。</p>
+<p>ET和LT的区别就在这里体现，LT事件不会丢弃，而是只要读buffer里面有数据可以让用户读，则不断的通知你。而ET则只在事件发生之时通知。可以简单理解为LT是水平触发，而ET则为边缘触发。LT模式只要有事件未处理就会触发，而ET则只在高低电平变换时（即状态从1到0或者0到1）触发。</p>
+</blockquote>
+<p>函数原型</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event *events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><code>timeout</code> = -1: 一直等待，直到有事件发生.</p>
+<p>​                  = 0: 马上返回.</p>
+<p>​                  = 正整数：等这么长的时间，时间到后不论是否有事件发生就返回。</p>
+<blockquote>
+<p>一般如果网络主循环是单独的线程的话，可以用-1来等，这样可以保证一些效率。</p>
+<p>如果是和主逻辑在同一个线程的话，则可以用0来保证主循环的效率。</p>
+</blockquote>
+<p>相关的系统调用</p>
+<p>epoll_create： 用来创建一个epoll文件描述符。</p>
+<p>epoll_ctl：epoll_ctl用来添加/修改/删除需要侦听的文件描述符及其事件。</p>
+<p>epoll_wait/epoll_pwait：接收发生在被侦听的描述符上的，用户感兴趣的IO事件。</p>
+<p>用完之后，记得用close()来关闭这个创建出来的epoll句柄。</p>
+<blockquote>
+<p>每次添加/修改/删除被侦听文件描述符都需要调用epoll_ctl，所以要尽量少地调用epoll_ctl，防止其所引来的开销抵消其带来的好处。有的时候，应用中可能存在大量的<a href="https://baike.baidu.com/item/短连接" target="_blank" rel="noopener">短连接</a>（比如说Web服务器），epoll_ctl将被频繁地调用，可能成为这个系统的瓶颈。</p>
+</blockquote>
+<blockquote>
+<p>对于第一个缺点，epoll的解决方案在epoll_ctl函数中。每次注册新的事件到epoll句柄中时（在epoll_ctl中指定 EPOLL_CTL_ADD），会把所有的fd拷贝进内核，而不是在epoll_wait的时候重复拷贝。epoll保证了每个fd在整个过程中只会拷贝 一次。</p>
+<p>对于第二个缺点，epoll的解决方案不像select或poll一样每次都把current轮流加入fd对应的设备等待队列中，而只在 epoll_ctl时把current挂一遍（这一遍必不可少）并为每个fd指定一个回调函数，当设备就绪，唤醒等待队列上的等待者时，就会调用这个回调 函数，而这个回调函数会把就绪的fd加入一个就绪链表）。epoll_wait的工作实际上就是在这个就绪链表中查看有没有就绪的fd（利用 schedule_timeout()实现睡一会，判断一会的效果，和select实现中的第7步是类似的）。</p>
+<p>对于第三个缺点，epoll没有这个限制，它所支持的FD上限是最大可以打开文件的数目，这个数字一般远大于2048,举个例子, 在1GB内存的机器上大约是10万左右，具体数目可以cat /proc/sys/fs/file-max察看,一般来说这个数目和系统内存关系很大。</p>
+</blockquote>
+<p>总结</p>
+<blockquote>
+<p>（1）select，poll实现需要自己不断轮询所有fd集合，直到设备就绪，期间可能要睡眠和唤醒多次交替。而epoll其实也需要调用 epoll_wait不断轮询就绪链表，期间也可能多次睡眠和唤醒交替，但是它是设备就绪时，调用回调函数，把就绪fd放入就绪链表中，并唤醒在 epoll_wait中进入睡眠的进程。虽然都要睡眠和交替，但是select和poll在“醒着”的时候要遍历整个fd集合，而epoll在“醒着”的 时候只要判断一下就绪链表是否为空就行了，这节省了大量的CPU时间，这就是回调机制带来的性能提升。</p>
+<p>（2）select，poll每次调用都要把fd集合从用户态往内核态拷贝一次，并且要把current往设备等待队列中挂一次，而epoll只要 一次拷贝，而且把current往等待队列上挂也只挂一次（在epoll_wait的开始，注意这里的等待队列并不是设备等待队列，只是一个epoll内 部定义的等待队列），这也能节省不少的开销。</p>
+</blockquote>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">协程</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">greenlet</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">python</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">IO模型</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/08/20/IO模型/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+  
+    <a href="/2019/05/21/常用设计模式/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">常用设计模式</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#多路复用IO"><span class="toc-number">1.</span> <span class="toc-text">多路复用IO</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#select"><span class="toc-number">1.0.1.</span> <span class="toc-text">select</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#poll"><span class="toc-number">1.0.2.</span> <span class="toc-text">poll</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll"><span class="toc-number">1.1.</span> <span class="toc-text">epoll</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/md5.min.js.1"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: md5(location.pathname),
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -227,9 +467,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
