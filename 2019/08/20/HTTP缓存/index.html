@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Tag: ioloop | yangyaq</title>
+  <title>HTTP缓存 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/tags/ioloop/index.html">
+  <meta name="description" content="HTTP缓存用途减少一些静态文件向服务器请求的次数，减少服务器压力。 原理客户端向服务端请求获取某f文件，服务器把f文件返回给浏览器，浏览器把请求后拿到的f文件存储到本地，下次请求时看看本地是否有缓存文件，如果有，就直接拿本地的文件。 两种缓存方式强制缓存（Expires）和协商缓存（Cache-Control），强制缓存分为 强制缓存Expires缓存它的值是一个绝对时间的GMT格式的时间字符串">
+<meta name="keywords" content="HTTP,面试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP缓存">
+<meta property="og:url" content="https://yangyaq.github.io/2019/08/20/HTTP缓存/index.html">
 <meta property="og:site_name" content="yangyaq">
+<meta property="og:description" content="HTTP缓存用途减少一些静态文件向服务器请求的次数，减少服务器压力。 原理客户端向服务端请求获取某f文件，服务器把f文件返回给浏览器，浏览器把请求后拿到的f文件存储到本地，下次请求时看看本地是否有缓存文件，如果有，就直接拿本地的文件。 两种缓存方式强制缓存（Expires）和协商缓存（Cache-Control），强制缓存分为 强制缓存Expires缓存它的值是一个绝对时间的GMT格式的时间字符串">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-20T10:08:18.194Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="yangyaq">
+<meta name="twitter:title" content="HTTP缓存">
+<meta name="twitter:description" content="HTTP缓存用途减少一些静态文件向服务器请求的次数，减少服务器压力。 原理客户端向服务端请求获取某f文件，服务器把f文件返回给浏览器，浏览器把请求后拿到的f文件存储到本地，下次请求时看看本地是否有缓存文件，如果有，就直接拿本地的文件。 两种缓存方式强制缓存（Expires）和协商缓存（Cache-Control），强制缓存分为 强制缓存Expires缓存它的值是一个绝对时间的GMT格式的时间字符串">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -142,65 +147,250 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-HTTP缓存" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/03/06/tornado的事件循环机制/" class="archive-article-date">
-  	<time datetime="2019-03-05T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-03-06</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/06/tornado的事件循环机制/">tornado的事件循环机制</a>
+    <h1 class="article-title" itemprop="name">
+      HTTP缓存
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/08/20/HTTP缓存/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:08:18.194Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="HTTP缓存"><a href="#HTTP缓存" class="headerlink" title="HTTP缓存"></a>HTTP缓存</h1><h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>减少一些静态文件向服务器请求的次数，减少服务器压力。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>客户端向服务端请求获取某f文件，服务器把f文件返回给浏览器，浏览器把请求后拿到的f文件存储到本地，下次请求时看看本地是否有缓存文件，如果有，就直接拿本地的文件。</p>
+<h2 id="两种缓存方式"><a href="#两种缓存方式" class="headerlink" title="两种缓存方式"></a>两种缓存方式</h2><p>强制缓存（Expires）和协商缓存（Cache-Control），强制缓存分为</p>
+<h3 id="强制缓存"><a href="#强制缓存" class="headerlink" title="强制缓存"></a>强制缓存</h3><h4 id="Expires缓存"><a href="#Expires缓存" class="headerlink" title="Expires缓存"></a>Expires缓存</h4><p>它的值是一个绝对时间的GMT格式的时间字符串，如Expires: Mon, 06 Feb 2017 08:26:48 GMT。这个时间代表资源的失效时间。在此之间，即命中强缓存。（缺点：当客户端与服务器时间出现较大偏差，就会出现混乱。）</p>
+<h4 id="cache-control缓存原理（时间维度）"><a href="#cache-control缓存原理（时间维度）" class="headerlink" title="cache-control缓存原理（时间维度）"></a>cache-control缓存原理（时间维度）</h4><p>解决了Expire的缺点，采用相对时间（max-age）</p>
+<p>设置一个缓存时间段，到期后，浏览器发起获取文件的请求。</p>
+<p>字段<code>cache-control</code>，可选值如下:</p>
+<ol>
+<li>public: 所有内容都将被缓存（客户端和代理服务器都可以缓存）</li>
+<li>private: 内容只缓存到私有缓存中（仅客户端可以缓存，代理服务器不可缓存）</li>
+<li>no-cache： 使用对比缓存，如果有验证令牌（Etag），no-cache会发起请求验证缓存是否有效，若有效（也就是资源未更改），可避免下载</li>
+<li>no-store: 所有内容都不会被缓存到缓存或者internet临时文件中</li>
+<li>max-age=xxx：缓存的内容将在 xxx 秒后失效, 这个选项只在HTTP 1.1可用, 并如果和Last-Modified一起使用时, 优先级较高</li>
+</ol>
+<p>第一次访问请求，客户端向服务端发起一个文件请求，服务器返回文件并在response中添加响应头<code>Cache-Contorol:max-age=60</code>，然后这个文件在浏览器缓存60s，60s之内的请求文件请求将在缓存中直接拿，60s后客户端需要重新向服务器发起请求。</p>
+<p>特殊点：</p>
+<pre><code>1. 但当`Cache-Control:max-age=0`或者`Cache-Control:no-store`时，不论服务器返回的响应中`max-age`设置多少都不会缓存。
+2. 浏览器对在地址栏直接输入的文件地址请求做了优化处理，自动加上了`Cache-contorl:max-age=0`，就是不会缓存，直接获取最新的。
+</code></pre><h3 id="协商缓存"><a href="#协商缓存" class="headerlink" title="协商缓存"></a>协商缓存</h3><ul>
+<li><p>通过看文件修改时间（有时文件修改了，又修改回去了，修改时间发生了变化，实际上文件内容没有发生变化）</p>
+<p>浏览器向服务器请求获得文件后，服务器返回该文件的最后修改时间<code>Last-Modified</code>，作为文件的一个标识 ，下次浏览器请求的时候 ，带着标识去请求（此时为<code>If-Modiftied-Since</code>）,然后服务器做校验。</p>
+<ol>
+<li>如果说时间标识<code>If-Modiftied-Since</code>等于服务器端的文件修改时间，则文件没有发生改变，返回304，浏览器从缓存中取新的文件；</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>小于服务器端的文件修改时间，那么文件发生了修改，浏览器会重新获取新的文件。</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>大于服务器端的文件修改时间，认为请求错误。</li>
+</ol>
+</li>
+<li><p>通过查看文件内容和文件修改时间是否修改 </p>
+<p>浏览器向服务器请求获得文件后，服务器返回该文件的最后修改时间<code>Last-Modified</code>，作为文件的一个标识 ，返回<code>etag</code>作为文件内容的md5值；下次浏览器请求的时候 ，带着标识去请求（此时为<code>If-Modiftied-Since</code>）,再带着<code>If-None-Match:etag值</code>然后服务器做校验。</p>
+<p>流程如下：</p>
+<ol>
+<li>如果说时间标识<code>If-Modiftied-Since</code>等于服务器端的文件修改时间，则文件没有发生改变，返回304，浏览器从缓存中取上次缓存的文件；</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>小于服务器端的文件修改时间，此时再对比<code>If-None-Match</code>，若发生了变化，那么文件发生了修改；浏览器会重新获取新的文件。</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>大于服务器端的文件修改时间，认为请求错误。</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">%% http缓存</span><br><span class="line">sequenceDiagram</span><br><span class="line">客户端-&gt;&gt;服务器:第一次请求文件f</span><br><span class="line">服务器-&gt;&gt;客户端:返回文件f内容</span><br><span class="line">客户端-&gt;&gt;客户端:存入本地缓存中</span><br><span class="line">opt Response Header</span><br><span class="line">服务器-&gt;&gt;客户端:Last-Modified（该文件的上次修改时间）</span><br><span class="line">服务器-&gt;&gt;客户端:etag（该文件内容的md5）</span><br><span class="line">end</span><br><span class="line">客户端-&gt;&gt;服务器:第二次请求文件f</span><br><span class="line">opt Request Header</span><br><span class="line">客户端-&gt;&gt;服务器:Last-Modified-Since(Last-Modified值)</span><br><span class="line">客户端-&gt;&gt;服务器:If-None-Match(Etag值)</span><br><span class="line">end</span><br><span class="line">服务器-&gt;&gt;服务器:If-None-Match==?服务器端的文件内容的md5值</span><br><span class="line">alt yes</span><br><span class="line">服务器-&gt;&gt;客户端:返回304</span><br><span class="line">客户端-&gt;&gt;客户端:从缓存中取上次缓存的文件</span><br><span class="line">else no</span><br><span class="line">服务器-&gt;&gt;服务器:Last-Modified-Since==？服务器端的文件修改时间</span><br><span class="line">alt ==</span><br><span class="line">服务器-&gt;&gt;客户端:304</span><br><span class="line">客户端-&gt;&gt;客户端:从缓存中取上次缓存的文件</span><br><span class="line">else &gt;</span><br><span class="line">服务器-&gt;&gt;客户端:返回200，并传输新的文件</span><br><span class="line">客户端-&gt;&gt;客户端:存入本地缓存中</span><br><span class="line">opt Response Header</span><br><span class="line">服务器-&gt;&gt;客户端:Last-Modified（该文件的上次修改时间）</span><br><span class="line">服务器-&gt;&gt;客户端:etag（该文件内容的md5）</span><br><span class="line">end</span><br><span class="line">else &lt;</span><br><span class="line">服务器-&gt;&gt;客户端: 出错</span><br><span class="line">end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="缓存优先级"><a href="#缓存优先级" class="headerlink" title="缓存优先级"></a>缓存优先级</h2><p>Cache-Control是关于浏览器缓存的最重要的设置，因为它覆盖其他设置，比如 Expires 和 Last-Modified。另外，由于浏览器的行为基本相同，这个属性是处理跨浏览器缓存问题的最有效的方法。</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>reponse</p>
+<p>​    第一次请求 </p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># General</span></span><br><span class="line">Request URL: http://localhost:8080/service/api/project_data/</span><br><span class="line">Request Method: GET</span><br><span class="line">Status Code: 200 OK</span><br><span class="line">Remote Address: 127.0.0.1:8080</span><br><span class="line">Referrer Policy: no-referrer-when-downgrade</span><br><span class="line"></span><br><span class="line"><span class="comment"># Reponse Headers</span></span><br><span class="line">connection: close</span><br><span class="line">content-length: 992</span><br><span class="line">content-type: application/json; charset=UTF-8</span><br><span class="line">date: Fri, 10 May 2019 02:23:39 GMT</span><br><span class="line">etag: <span class="string">"5156b9187fc240a33180e246b627768ae15450ef"</span></span><br><span class="line">server: nginx/1.15.8</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line">X-Powered-By: Express</span><br><span class="line"></span><br><span class="line"><span class="comment"># Request Headers</span></span><br><span class="line">Accept: application/json</span><br><span class="line">Accept-Encoding: gzip, deflate, br</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Content-Type: application/json</span><br><span class="line">Host: localhost:8080</span><br><span class="line">Referer: http://localhost:8080/filter</span><br><span class="line">User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36</span><br></pre></td></tr></table></figure>
+<p>​    点击生成后请求</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">待补充</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">HTTP</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">ioloop</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">面试</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/08/20/HTTP缓存/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+  
+    <a href="/2019/08/20/从输入url到浏览器渲染完成/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">从输入url到浏览器渲染完成</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#HTTP缓存"><span class="toc-number">1.</span> <span class="toc-text">HTTP缓存</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#用途"><span class="toc-number">1.1.</span> <span class="toc-text">用途</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#原理"><span class="toc-number">1.2.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#两种缓存方式"><span class="toc-number">1.3.</span> <span class="toc-text">两种缓存方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#强制缓存"><span class="toc-number">1.3.1.</span> <span class="toc-text">强制缓存</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Expires缓存"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">Expires缓存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#cache-control缓存原理（时间维度）"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">cache-control缓存原理（时间维度）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协商缓存"><span class="toc-number">1.3.2.</span> <span class="toc-text">协商缓存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#缓存优先级"><span class="toc-number">1.4.</span> <span class="toc-text">缓存优先级</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#示例"><span class="toc-number">1.4.1.</span> <span class="toc-text">示例</span></a></li></ol></li></ol></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/md5.min.js.1"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: md5(location.pathname),
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -223,9 +413,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

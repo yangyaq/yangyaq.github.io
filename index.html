@@ -144,6 +144,279 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-HTTP缓存" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/HTTP缓存/">HTTP缓存</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/HTTP缓存/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:08:18.194Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="HTTP缓存"><a href="#HTTP缓存" class="headerlink" title="HTTP缓存"></a>HTTP缓存</h1><h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>减少一些静态文件向服务器请求的次数，减少服务器压力。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>客户端向服务端请求获取某f文件，服务器把f文件返回给浏览器，浏览器把请求后拿到的f文件存储到本地，下次请求时看看本地是否有缓存文件，如果有，就直接拿本地的文件。</p>
+<h2 id="两种缓存方式"><a href="#两种缓存方式" class="headerlink" title="两种缓存方式"></a>两种缓存方式</h2><p>强制缓存（Expires）和协商缓存（Cache-Control），强制缓存分为</p>
+<h3 id="强制缓存"><a href="#强制缓存" class="headerlink" title="强制缓存"></a>强制缓存</h3><h4 id="Expires缓存"><a href="#Expires缓存" class="headerlink" title="Expires缓存"></a>Expires缓存</h4><p>它的值是一个绝对时间的GMT格式的时间字符串，如Expires: Mon, 06 Feb 2017 08:26:48 GMT。这个时间代表资源的失效时间。在此之间，即命中强缓存。（缺点：当客户端与服务器时间出现较大偏差，就会出现混乱。）</p>
+<h4 id="cache-control缓存原理（时间维度）"><a href="#cache-control缓存原理（时间维度）" class="headerlink" title="cache-control缓存原理（时间维度）"></a>cache-control缓存原理（时间维度）</h4><p>解决了Expire的缺点，采用相对时间（max-age）</p>
+<p>设置一个缓存时间段，到期后，浏览器发起获取文件的请求。</p>
+<p>字段<code>cache-control</code>，可选值如下:</p>
+<ol>
+<li>public: 所有内容都将被缓存（客户端和代理服务器都可以缓存）</li>
+<li>private: 内容只缓存到私有缓存中（仅客户端可以缓存，代理服务器不可缓存）</li>
+<li>no-cache： 使用对比缓存，如果有验证令牌（Etag），no-cache会发起请求验证缓存是否有效，若有效（也就是资源未更改），可避免下载</li>
+<li>no-store: 所有内容都不会被缓存到缓存或者internet临时文件中</li>
+<li>max-age=xxx：缓存的内容将在 xxx 秒后失效, 这个选项只在HTTP 1.1可用, 并如果和Last-Modified一起使用时, 优先级较高</li>
+</ol>
+<p>第一次访问请求，客户端向服务端发起一个文件请求，服务器返回文件并在response中添加响应头<code>Cache-Contorol:max-age=60</code>，然后这个文件在浏览器缓存60s，60s之内的请求文件请求将在缓存中直接拿，60s后客户端需要重新向服务器发起请求。</p>
+<p>特殊点：</p>
+<pre><code>1. 但当`Cache-Control:max-age=0`或者`Cache-Control:no-store`时，不论服务器返回的响应中`max-age`设置多少都不会缓存。
+2. 浏览器对在地址栏直接输入的文件地址请求做了优化处理，自动加上了`Cache-contorl:max-age=0`，就是不会缓存，直接获取最新的。
+</code></pre><h3 id="协商缓存"><a href="#协商缓存" class="headerlink" title="协商缓存"></a>协商缓存</h3><ul>
+<li><p>通过看文件修改时间（有时文件修改了，又修改回去了，修改时间发生了变化，实际上文件内容没有发生变化）</p>
+<p>浏览器向服务器请求获得文件后，服务器返回该文件的最后修改时间<code>Last-Modified</code>，作为文件的一个标识 ，下次浏览器请求的时候 ，带着标识去请求（此时为<code>If-Modiftied-Since</code>）,然后服务器做校验。</p>
+<ol>
+<li>如果说时间标识<code>If-Modiftied-Since</code>等于服务器端的文件修改时间，则文件没有发生改变，返回304，浏览器从缓存中取新的文件；</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>小于服务器端的文件修改时间，那么文件发生了修改，浏览器会重新获取新的文件。</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>大于服务器端的文件修改时间，认为请求错误。</li>
+</ol>
+</li>
+<li><p>通过查看文件内容和文件修改时间是否修改 </p>
+<p>浏览器向服务器请求获得文件后，服务器返回该文件的最后修改时间<code>Last-Modified</code>，作为文件的一个标识 ，返回<code>etag</code>作为文件内容的md5值；下次浏览器请求的时候 ，带着标识去请求（此时为<code>If-Modiftied-Since</code>）,再带着<code>If-None-Match:etag值</code>然后服务器做校验。</p>
+<p>流程如下：</p>
+<ol>
+<li>如果说时间标识<code>If-Modiftied-Since</code>等于服务器端的文件修改时间，则文件没有发生改变，返回304，浏览器从缓存中取上次缓存的文件；</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>小于服务器端的文件修改时间，此时再对比<code>If-None-Match</code>，若发生了变化，那么文件发生了修改；浏览器会重新获取新的文件。</li>
+<li>如果说时间标识<code>If-Modiftied-Since</code>大于服务器端的文件修改时间，认为请求错误。</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">%% http缓存</span><br><span class="line">sequenceDiagram</span><br><span class="line">客户端-&gt;&gt;服务器:第一次请求文件f</span><br><span class="line">服务器-&gt;&gt;客户端:返回文件f内容</span><br><span class="line">客户端-&gt;&gt;客户端:存入本地缓存中</span><br><span class="line">opt Response Header</span><br><span class="line">服务器-&gt;&gt;客户端:Last-Modified（该文件的上次修改时间）</span><br><span class="line">服务器-&gt;&gt;客户端:etag（该文件内容的md5）</span><br><span class="line">end</span><br><span class="line">客户端-&gt;&gt;服务器:第二次请求文件f</span><br><span class="line">opt Request Header</span><br><span class="line">客户端-&gt;&gt;服务器:Last-Modified-Since(Last-Modified值)</span><br><span class="line">客户端-&gt;&gt;服务器:If-None-Match(Etag值)</span><br><span class="line">end</span><br><span class="line">服务器-&gt;&gt;服务器:If-None-Match==?服务器端的文件内容的md5值</span><br><span class="line">alt yes</span><br><span class="line">服务器-&gt;&gt;客户端:返回304</span><br><span class="line">客户端-&gt;&gt;客户端:从缓存中取上次缓存的文件</span><br><span class="line">else no</span><br><span class="line">服务器-&gt;&gt;服务器:Last-Modified-Since==？服务器端的文件修改时间</span><br><span class="line">alt ==</span><br><span class="line">服务器-&gt;&gt;客户端:304</span><br><span class="line">客户端-&gt;&gt;客户端:从缓存中取上次缓存的文件</span><br><span class="line">else &gt;</span><br><span class="line">服务器-&gt;&gt;客户端:返回200，并传输新的文件</span><br><span class="line">客户端-&gt;&gt;客户端:存入本地缓存中</span><br><span class="line">opt Response Header</span><br><span class="line">服务器-&gt;&gt;客户端:Last-Modified（该文件的上次修改时间）</span><br><span class="line">服务器-&gt;&gt;客户端:etag（该文件内容的md5）</span><br><span class="line">end</span><br><span class="line">else &lt;</span><br><span class="line">服务器-&gt;&gt;客户端: 出错</span><br><span class="line">end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="缓存优先级"><a href="#缓存优先级" class="headerlink" title="缓存优先级"></a>缓存优先级</h2><p>Cache-Control是关于浏览器缓存的最重要的设置，因为它覆盖其他设置，比如 Expires 和 Last-Modified。另外，由于浏览器的行为基本相同，这个属性是处理跨浏览器缓存问题的最有效的方法。</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>reponse</p>
+<p>​    第一次请求 </p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># General</span></span><br><span class="line">Request URL: http://localhost:8080/service/api/project_data/</span><br><span class="line">Request Method: GET</span><br><span class="line">Status Code: 200 OK</span><br><span class="line">Remote Address: 127.0.0.1:8080</span><br><span class="line">Referrer Policy: no-referrer-when-downgrade</span><br><span class="line"></span><br><span class="line"><span class="comment"># Reponse Headers</span></span><br><span class="line">connection: close</span><br><span class="line">content-length: 992</span><br><span class="line">content-type: application/json; charset=UTF-8</span><br><span class="line">date: Fri, 10 May 2019 02:23:39 GMT</span><br><span class="line">etag: <span class="string">"5156b9187fc240a33180e246b627768ae15450ef"</span></span><br><span class="line">server: nginx/1.15.8</span><br><span class="line">Vary: Accept-Encoding</span><br><span class="line">X-Powered-By: Express</span><br><span class="line"></span><br><span class="line"><span class="comment"># Request Headers</span></span><br><span class="line">Accept: application/json</span><br><span class="line">Accept-Encoding: gzip, deflate, br</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Content-Type: application/json</span><br><span class="line">Host: localhost:8080</span><br><span class="line">Referer: http://localhost:8080/filter</span><br><span class="line">User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36</span><br></pre></td></tr></table></figure>
+<p>​    点击生成后请求</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">待补充</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">HTTP</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">面试</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/HTTP缓存/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-从输入url到浏览器渲染完成" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/从输入url到浏览器渲染完成/">从输入url到浏览器渲染完成</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/从输入url到浏览器渲染完成/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:07:36.578Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="从输入url到浏览器渲染完成，发生了那些过程？"><a href="#从输入url到浏览器渲染完成，发生了那些过程？" class="headerlink" title="从输入url到浏览器渲染完成，发生了那些过程？"></a>从输入url到浏览器渲染完成，发生了那些过程？</h1><ul>
+<li>DNS解析</li>
+<li>建立TCP连接</li>
+<li>发送请求报文</li>
+<li>收到响应报文， 渲染页面</li>
+</ul>
+<h2 id="DNS解析"><a href="#DNS解析" class="headerlink" title="DNS解析"></a>DNS解析</h2><h3 id="输入url"><a href="#输入url" class="headerlink" title="输入url"></a>输入url</h3><p>DNS预取技术： 利用现有的DNS机制，提前解析网页中的可能的网络连接。</p>
+<p>​    当在浏览器中输入网址时，浏览器从历史记录，书签中查找记录，然后给出智能提示，智能补全地址url地址，用户还没有按下 enter 键， 浏览器已经开始使用 DNS 预取技术解析该域名了。</p>
+<p>​    对于 chrome 的浏览器，如果有该域名相关的缓存，它会直接从缓存中把网页展示出来，就是说，你还没有按下 enter，页面就出来了。如果没有缓存，就还是会重新请求资源。</p>
+<h3 id="查询DNS对应请求的IP地址"><a href="#查询DNS对应请求的IP地址" class="headerlink" title="查询DNS对应请求的IP地址"></a>查询DNS对应请求的IP地址</h3><p>迭代查询/递归查询</p>
+<ul>
+<li>先搜索自己的DNS缓存</li>
+<li>不匹配就去本机的hosts有没有对应的域名映射</li>
+<li>没有，去路由器查找路由器的DNS缓存</li>
+<li>没有，操作系统将域名发送给至本地域名服务器—递归方式查询本地域名服务器的查找自己的DNS缓存，查找成功则返回结果，否则， 采用迭代查询方式。</li>
+<li>本地域名服务器将得到的IP地址返回给操作系统并缓存起来</li>
+<li>操作系统再给浏览器并缓存起来</li>
+<li>浏览器得到了IP地址</li>
+</ul>
+<h2 id="建立TCP连接"><a href="#建立TCP连接" class="headerlink" title="建立TCP连接"></a>建立TCP连接</h2><p>TCP是可靠的，传输层协议。</p>
+<h3 id="三次握手"><a href="#三次握手" class="headerlink" title="三次握手"></a>三次握手</h3><h5 id="TCP报文"><a href="#TCP报文" class="headerlink" title="TCP报文"></a>TCP报文</h5><p><img src="/2019/08/20/从输入url到浏览器渲染完成/WeChatcc5d78dcfcedf9448dc9b7b8a8d931d5.png" alt="WeChatcc5d78dcfcedf9448dc9b7b8a8d931d5"></p>
+<ul>
+<li>建立一个TCP连接时，需要客户端和服务器端总共发送3个包。<br>三次握手的目的是连接服务器指定端口，建立TCP连接，并同步连接双方的序列号和确认号，交换TCP窗口大小信息。在socket编程中，客户端执行connect()时将触发三次握手。</li>
+<li>第一次握手（SYN=1，seq=x）：<br>客户端发送一个TCP的SYN标志位置1的包，指明客户端打算连接的服务器的端口，以及初始序号X，保存在包头的序列号（Sequence Number）字段里。</li>
+<li>第二次握手（SYN=1，ACK=1，seq=y，ACKnum=x+1）：<br>服务器发回确认包（ACK）应答。即SYN标志位和ACK标志位均为1。服务器端选择自己的ISN序列号，放在seq域里，同时将确认序号（Acknowledgement Number）设置为客户的ISN加1，即X+1。发送完毕后，服务器端进入SYN_RCVD状态。</li>
+<li>第三次握手（ACK=1，ACKnum=y+1）：<br>客户端再次发送确认包（ACK），SYN标志位为0，ACK标志位为1，并且把服务器发来ACK的序号字段+1，放在确定字段中发送给对方，并且在数据段放写ISN的+1。<br>发送完毕后，客户端进入ESTABLISHED状态，当服务器端收到这个包时，也进入ESTABLISHED状态，TCP握手结束，TCP连接建立完成。</li>
+</ul>
+<p><img src="/2019/08/20/从输入url到浏览器渲染完成/img_4908caf15980c54edb531d8bf50fb65b.png" alt="img_4908caf15980c54edb531d8bf50fb65b"></p>
+<h3 id="四次挥手"><a href="#四次挥手" class="headerlink" title="四次挥手"></a>四次挥手</h3><p>释放一个TCP连接，需要客户端和服务器总共发送4个包。客户端和服务器端均可主动发起挥手动作。在socket编程中，任何一方执行close()操作即可产生挥手操作。</p>
+<ul>
+<li>第一次挥手（FIN=1，seq=x）：<br>假设客户端想要关闭连接，客户端发送一个FIN标志位置为1的包，表示自己已经没有数据可以发送了，但是仍然可以接收数据。<br>发送完毕之后，客户端进入FIN_WAIT_1状态。</li>
+<li>第二次挥手（ACK=1，ACKnum=x+1）：<br>服务器端确认客户端的FIN包，发送一个确认包，表明自己接收到了客户端关闭连接的请求，但还没有准备好关闭连接。<br>发送完毕后，服务器端进入CLOSE_WAIT状态，客户端接收到这个确认包之后进入FIN_WAIT_2状态，等待服务器端关闭连接。</li>
+<li>第三次挥手（FIN=1，seq=y）：<br>服务器端准备好关闭连接时，向客户端发送结束连接请求，FIN置为1。<br>发送完毕后，服务器端进入LAST_ACK状态，等待来自客户端的最后一个ACK。</li>
+<li>第四次挥手（ACK=1，ACKnum=y+1）：<br>客户端接收到来自服务器的端的关闭请求，发送一个确认包，并进入TIME_WAIT状态，等待可能出现的要重传的ACK包。<br>服务器端接收到这个确认包之后，关闭连接，进入CLOSED状态。<br>客户端等待了某个固定时间（两个最大段生命周期，2MSL，2Maximum Segment Lifetime）之后，没有收到服务器端的ACK，认为服务器端已经正常关闭连接，于是自己也关闭连接，进入CLOSED状态。</li>
+</ul>
+<p><img src="/2019/08/20/从输入url到浏览器渲染完成/img_982e17a3dba88e42a9accfab0aca1ef2.png" alt="img_982e17a3dba88e42a9accfab0aca1ef2"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">客户端-&gt;服务器: FIN=1 seq=x</span><br><span class="line">服务器--&gt;客户端: ACK=1, acknum=x+1</span><br><span class="line">服务器-&gt;客户端: FIN=1, seq=y</span><br><span class="line">客户端-&gt;服务器: ACK=1, ackNum=y+1</span><br></pre></td></tr></table></figure>
+<h2 id="发送请求报文"><a href="#发送请求报文" class="headerlink" title="发送请求报文"></a>发送请求报文</h2><h2 id="收到响应报文，渲染页面"><a href="#收到响应报文，渲染页面" class="headerlink" title="收到响应报文，渲染页面"></a>收到响应报文，渲染页面</h2><h3 id="响应报文"><a href="#响应报文" class="headerlink" title="响应报文"></a>响应报文</h3><p>​     由三个部分组成，分别是：状态行、消息报头、响应正文。</p>
+<p>​     响应正文：就是服务器返回的资源的内容。</p>
+<h3 id="渲染"><a href="#渲染" class="headerlink" title="渲染"></a>渲染</h3><p>webkit浏览器渲染过程</p>
+<ol>
+<li>解析HTML，构建 DOM 树</li>
+<li>解析 CSS ，生成 CSS 规则树</li>
+<li>合并 DOM 树和 CSS 规则，生成 render 树</li>
+<li>布局 render 树（ Layout / reflow ），负责各元素尺寸、位置的计算</li>
+<li>绘制 render 树（ paint ），绘制页面像素信息</li>
+<li>浏览器会将各层的信息发送给 GPU，GPU 会将各层合成（ composite ），显示在屏幕上</li>
+</ol>
+<h4 id="构建DOM树"><a href="#构建DOM树" class="headerlink" title="构建DOM树"></a>构建DOM树</h4><p>在 WebKit 中这一过程如下：首先是字节流，经过解码之后是字符流，然后通过词法分析器会被解释成词语（Tokens），之后经过语法分析器构建成节点，最后这些节点被组建成一棵 DOM 树。</p>
+<p>浏览器在解析html过程中，会<code>自上而下</code>加载，并在加载的过程中进行解析渲染，如果遇到请求外部资源时（图片、外链的CSS、iconfont等）请求时异步的，并不会影响html文档进行加载，且统一交由Browser进程来处理，这样使得资源在不同网页间共享变得容易。</p>
+<h4 id="解析-CSS"><a href="#解析-CSS" class="headerlink" title="解析 CSS"></a>解析 CSS</h4><p>从css字符串经过css解释器处理后变成渲染引擎内部规则的表示过程</p>
+<p>RenderObject 树建立之前，CSS 解释器解释后的结果会保存起来，然后 RenderObject 树基于该结果来进行规范匹配和布局计算。</p>
+<h4 id="渲染过程中遇到javascript"><a href="#渲染过程中遇到javascript" class="headerlink" title="渲染过程中遇到javascript"></a>渲染过程中遇到javascript</h4><p>当文档加载过程中遇到js文件，html文档会挂起正在渲染的线程，等待js文件加载、执行完毕、才可以恢复html文档的渲染过程。因为JS可能会修改DOM（document.write）这意味着，在 JS 执行完成前，后续所有资源的下载可能是没有必要的，这是 js 阻塞后续资源下载的根本原因。所以我们平时的代码中，js 是放在 html 文档末尾的。</p>
+<h4 id="渲染合成Render树"><a href="#渲染合成Render树" class="headerlink" title="渲染合成Render树"></a>渲染合成Render树</h4><p>DOM树构建完成后，Webkit 会为DOM树节点构建RenderObject树，再通过RenderObject树构建出RenderLayer树</p>
+<p>RenderObject 树是基于 DOM 树建立起来的一棵新树，是为了布局计算和渲染等机制而构建的一种新的内部表示。<strong>RenderObject 树节点和 DOM 节点不是一一对应关系</strong>，因为有可视节点（常用的 div img 标签等）与不可视节点（如 head、meta 标签），不可视节点是不会构成 RenderObject 树的。</p>
+<h4 id="布局"><a href="#布局" class="headerlink" title="布局"></a>布局</h4><p>当 WebKit 创建 RenderObject 对象之后，每个对象是不知道自己的位置、大小等信息的，WebKit 根据框模型来计算它们的位置，大小等信息的过程称为布局计算。</p>
+<p><strong>布局计算是一个递归的过程，因为一个节点的大小通常需要先计算它的子女节点的位置，大小等信息。</strong></p>
+<p>当用户 网页的动画、翻滚网页、JavaScript 代码通过 CSSDOM 等操作时还会有重新布局。</p>
+<h4 id="绘图"><a href="#绘图" class="headerlink" title="绘图"></a>绘图</h4><p>在webkit中，绘图操作就绘图上下文</p>
+<p>绘图上下文有两种类型：</p>
+<ul>
+<li>2D图形上下文，用来绘制2D图形的上下文</li>
+<li>3D绘图上下文，用来绘制3D图形的上下文</li>
+</ul>
+<p>2D绘图上下文具体的作用：提供绘图单元的绘图接口以及设置绘图的样式，绘图接口包括画点，线，图片，多边形，文字等，绘图样式包括颜色、线宽、字号、渐变等</p>
+<p>网页的渲染方式有3种</p>
+<ul>
+<li>软件渲染（由CPU完成）</li>
+<li>硬件加速渲染（由GPU来完成）</li>
+<li>混合模式</li>
+</ul>
+<p>理想情况下，每个层都有个绘制的存储区域，这个存储区域用来保存绘图的结果。最后，需要将这些层的内容合并到同一个图像之中，可以称之为合成（Compositing），使用了合成技术的渲染称之为合成化渲染。</p>
+<p>所以，在完成构建 DOM 树之后，WebKit 会调用绘图操作、软件渲染或者硬件加速渲染或者两者都有，将模型绘制出来，呈现在屏幕上。<br>至此，浏览器渲染完成。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">HTTP</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">面试</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/从输入url到浏览器渲染完成/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-单源最短路径" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -1633,307 +1906,6 @@
 
 
   
-    <article id="post-pylint_runtime_error" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/30/pylint_runtime_error/">pylint RuntimeError Inconsistent hierarchy</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/30/pylint_runtime_error/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:30:17.090Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>下面的pip分别是激活对应虚拟环境下的默认pip版本</p>
-<h2 id="在python2-安装-pylint"><a href="#在python2-安装-pylint" class="headerlink" title="在python2 安装 pylint"></a>在python2 安装 pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
-<p>安装完成后。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h <span class="comment">#运行正常</span></span><br></pre></td></tr></table></figure>
-<p>运行OK，版本如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint --version</span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line">No config file found, using default configuration</span><br><span class="line">pylint 1.9.3, </span><br><span class="line">astroid 1.6.5</span><br><span class="line">Python 2.7.10 (default, Aug 17 2018, 17:41:52) </span><br><span class="line">[GCC 4.2.1 Compatible Apple LLVM 10.0.0 (clang-1000.0.42)]</span><br></pre></td></tr></table></figure>
-<h2 id="在python3-安装pylint"><a href="#在python3-安装pylint" class="headerlink" title="在python3 安装pylint"></a>在python3 安装pylint</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint</span><br></pre></td></tr></table></figure>
-<p>显示安装成功后,运行</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment">#运行pylint</span></span><br><span class="line">pylint -h</span><br><span class="line"></span><br><span class="line"><span class="comment">#出现报错信息</span></span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 718, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = dispatch_cache[cls]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/weakref.py"</span>, line 352, <span class="keyword">in</span> __getitem__</span><br><span class="line">    <span class="built_in">return</span> self.data[ref(key)]</span><br><span class="line">KeyError: &lt;weakref at 0x103363368; to <span class="string">'EnumMeta'</span> at 0x101d59f08 (Context)&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 721, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = registry[cls]</span><br><span class="line">KeyError: &lt;enum <span class="string">'Context'</span>&gt;</span><br><span class="line"></span><br><span class="line">During handling of the above exception, another exception occurred:</span><br><span class="line"></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/bin/pylint"</span>, line 11, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    sys.exit(run_pylint())</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/__init__.py"</span>, line 19, <span class="keyword">in</span> run_pylint</span><br><span class="line">    Run(sys.argv[1:])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 1313, <span class="keyword">in</span> __init__</span><br><span class="line">    linter.load_default_plugins()</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/lint.py"</span>, line 504, <span class="keyword">in</span> load_default_plugins</span><br><span class="line">    checkers.initialize(self)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/__init__.py"</span>, line 122, <span class="keyword">in</span> initialize</span><br><span class="line">    register_plugins(linter, __path__[0])</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/utils.py"</span>, line 1181, <span class="keyword">in</span> register_plugins</span><br><span class="line">    module = modutils.load_module_from_file(join(directory, filename))</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 278, <span class="keyword">in</span> load_module_from_file</span><br><span class="line">    <span class="built_in">return</span> load_module_from_modpath(modpath, path, use_sys)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/modutils.py"</span>, line 239, <span class="keyword">in</span> load_module_from_modpath</span><br><span class="line">    module = imp.load_module(curname, mp_file, mp_filename, mp_desc)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 234, <span class="keyword">in</span> load_module</span><br><span class="line">    <span class="built_in">return</span> load_source(name, filename, file)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/imp.py"</span>, line 172, <span class="keyword">in</span> load_source</span><br><span class="line">    module = _load(spec)</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 693, <span class="keyword">in</span> _load</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 673, <span class="keyword">in</span> _load_unlocked</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap_external&gt;"</span>, line 662, <span class="keyword">in</span> exec_module</span><br><span class="line">  File <span class="string">"&lt;frozen importlib._bootstrap&gt;"</span>, line 222, <span class="keyword">in</span> _call_with_frames_removed</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 154, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    class Python3Checker(checkers.BaseChecker):</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 585, <span class="keyword">in</span> Python3Checker</span><br><span class="line">    <span class="string">'sys.version_info &lt; (3, 0)'</span>,</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/pylint/checkers/python3.py"</span>, line 580, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    [astroid.extract_node(x).repr_tree() <span class="keyword">for</span> x <span class="keyword">in</span> [</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 877, <span class="keyword">in</span> repr_tree</span><br><span class="line">    _repr_tree(self, result, <span class="built_in">set</span>())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Users/yangyaqian/codes/pywork/py35env/lib/python3.5/site-packages/astroid/node_classes.py"</span>, line 866, <span class="keyword">in</span> _repr_node</span><br><span class="line">    depth)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 743, <span class="keyword">in</span> wrapper</span><br><span class="line">    <span class="built_in">return</span> dispatch(args[0].__class__)(*args, **kw)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 723, <span class="keyword">in</span> dispatch</span><br><span class="line">    impl = _find_impl(cls, registry)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 674, <span class="keyword">in</span> _find_impl</span><br><span class="line">    mro = _compose_mro(cls, registry.keys())</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 662, <span class="keyword">in</span> _compose_mro</span><br><span class="line">    <span class="built_in">return</span> _c3_mro(cls, abcs=mro)</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 616, <span class="keyword">in</span> &lt;listcomp&gt;</span><br><span class="line">    other_c3_mros = [_c3_mro(base, abcs=abcs) <span class="keyword">for</span> base <span class="keyword">in</span> other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 620, <span class="keyword">in</span> _c3_mro</span><br><span class="line">    [explicit_bases] + [abstract_bases] + [other_bases]</span><br><span class="line">  File <span class="string">"/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/functools.py"</span>, line 571, <span class="keyword">in</span> _c3_merge</span><br><span class="line">    raise RuntimeError(<span class="string">"Inconsistent hierarchy"</span>)</span><br><span class="line">RuntimeError: Inconsistent hierarchy</span><br></pre></td></tr></table></figure>
-<p>版本信息</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip list | grep pylint</span><br><span class="line"></span><br><span class="line"><span class="comment">#结果</span></span><br><span class="line">pylint 2.1.1</span><br></pre></td></tr></table></figure>
-<p>降版本试试，去<a href="https://pypi.org/project/pylint/#history" target="_blank" rel="noopener">pylint</a> 查看历史版本，并选择一个历史版本进行安装</p>
- <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install pylint==1.6.4</span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pylint -h</span><br></pre></td></tr></table></figure>
-<p>运行正常。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">python3</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">pylint</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/30/pylint_runtime_error/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-CSRF攻击原理及防御" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/30/CSRF攻击原理及防御/">CSRF攻击原理及防御</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/30/CSRF攻击原理及防御/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:29:49.273Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="一、CSRF介绍"><a href="#一、CSRF介绍" class="headerlink" title="一、CSRF介绍"></a>一、CSRF介绍</h2><p>CSRF（cross-site request forgery，跨站域请求伪造），也被称为 one link attack/session riding，缩写（XSRF/CSRF）。</p>
-<h2 id="二、-浏览器同源策略"><a href="#二、-浏览器同源策略" class="headerlink" title="二、 浏览器同源策略"></a>二、 浏览器同源策略</h2><p>同源策略（Same origin policy）是一种约定，它是<a href="https://baike.baidu.com/item/%E6%B5%8F%E8%A7%88%E5%99%A8/213911" target="_blank" rel="noopener">浏览器</a>最核心也最基本的安全功能，如果缺少了同源策略，则浏览器的正常功能可能都会受到影响。可以说Web是构建在同源策略基础之上的，浏览器只是针对同源策略的一种实现。</p>
-<p>同源是指：协议、域名、端口 同时相同才认为是同源。在同源检测时，将使用document.domain作为检测的依据。</p>
-<table>
-<thead>
-<tr>
-<th>Compared URL</th>
-<th>Outcome</th>
-<th>Reason</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir/page2.html</td>
-<td>Success</td>
-<td>Same protocol, host and port</td>
-</tr>
-<tr>
-<td><strong><a href="http://www.example.com" target="_blank" rel="noopener">http://www.example.com</a></strong>/dir2/other.html</td>
-<td>Success</td>
-<td>Same protocol, host and port</td>
-</tr>
-<tr>
-<td><strong>http://</strong>username:password@<strong><a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir2/other.html</td>
-<td>Success</td>
-<td>Same protocol, host and port</td>
-</tr>
-</tbody>
-</table>
-<p>下表为反例。</p>
-<table>
-<thead>
-<tr>
-<th>Compared URL</th>
-<th>Outcome</th>
-<th>Reason</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="http://www.example.com:**81**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**81**/dir/other.html</a></td>
-<td>Failure</td>
-<td>Same protocol and host but different port</td>
-</tr>
-<tr>
-<td><strong>https</strong>://<a href="http://www.example.com/dir/other.html" target="_blank" rel="noopener">www.example.com/dir/other.html</a></td>
-<td>Failure</td>
-<td>Different protocol</td>
-</tr>
-<tr>
-<td>http://<strong>en.example.com</strong>/dir/other.html</td>
-<td>Failure</td>
-<td>Different host</td>
-</tr>
-<tr>
-<td>http://<strong>example.com</strong>/dir/other.html</td>
-<td>Failure</td>
-<td>Different host (exact match required)</td>
-</tr>
-<tr>
-<td>http://<strong>v2.<a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a></strong>/dir/other.html</td>
-<td>Failure</td>
-<td>Different host (exact match required)</td>
-</tr>
-</tbody>
-</table>
-<p>下表依赖于浏览器的实现</p>
-<table>
-<thead>
-<tr>
-<th>Compared URL</th>
-<th>Outcome</th>
-<th>Reason</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="http://www.example.com:**80**/dir/other.html" target="_blank" rel="noopener">http://www.example.com:**80**/dir/other.html</a></td>
-<td>Depends</td>
-<td>Port explicit. Depends on implementation in browser.</td>
-</tr>
-</tbody>
-</table>
-<p>一般浏览器默认80端口，当端口显示制定为80时，根据浏览器策略而定。</p>
-<h3 id="受限制内容"><a href="#受限制内容" class="headerlink" title="受限制内容"></a>受限制内容</h3><p>对JavaScript代码能够操作哪些Web内容的一条完整的安全<em>限制</em>，主要针对js读取某些内容或读写某些属性，例如：</p>
-<ol>
-<li>DOM无法获得：禁止对不同源页面DOM进行操作。这里主要场景是iframe跨域的情况，不同域名的iframe是限制互相访问的。</li>
-<li>ajax请求不能发送： 禁止使用XHR对象向不同源的服务器地址发起HTTP请求。</li>
-<li>Cookie、LocalStorage 和 IndexDB 无法读取。</li>
-</ol>
-<h3 id="不受限制内容"><a href="#不受限制内容" class="headerlink" title="不受限制内容"></a>不受限制内容</h3><p>允许嵌入资源，例如<code>img</code>链接、<code>&lt;script src=&quot;...&quot;&gt;</code>  <code>&lt;/script&gt;</code> <code>&lt;img&gt;</code> <code>&lt;link&gt;</code>  等。</p>
-<h2 id="三、-Cookie作用域"><a href="#三、-Cookie作用域" class="headerlink" title="三、 Cookie作用域"></a>三、 Cookie作用域</h2><p>Cookie 是服务器写入浏览器的一小段信息，只有同源的网页才能共享。</p>
-<p>Cookie有两个很重要的属性:Domain和Path，用来指示此Cookie的作用域：Domain告诉浏览器当前要添加的Cookie的域名归属；Path告诉浏览器当前要添加的Cookie的路径归属，如果没有明确指明则默认为当前路径。浏览器提交的Cookie需要满足以下两点：</p>
-<ol>
-<li><p>当前域名或者父域名下的Cookie。</p>
-</li>
-<li><p>当前路径或父路径下的Cookie，要满足这两个条件的Cookie才会被提交。</p>
-</li>
-</ol>
-<h2 id="四、-CSRF攻击原理"><a href="#四、-CSRF攻击原理" class="headerlink" title="四、 CSRF攻击原理"></a>四、 CSRF攻击原理</h2><p>攻击者（attacker）利用存储在本地的有效cookie及cookie的作用域来伪造用户的某种行为（只是利用cookie骗取服务器信任，并不能拿到cookie，也看不到cookie内容）。</p>
-<ol>
-<li>用户（victim）访问信任网站A，输入用户名和密码并登录成功，产生网站A的生成的cookie。</li>
-<li>在此cookie的有效期内，用户恰好访问恶意网站B，网站B上有某个隐藏的链接或者图片标签会自动请求网站A的URL地址,例如表单提交，传指定的参数， 此时浏览器会自动携带网站A的cookie。</li>
-<li>网站A收到这个请求后，误认为是用户（victim）的正常操作，伪造成功。</li>
-</ol>
-<h2 id="五、CSRF攻击防御"><a href="#五、CSRF攻击防御" class="headerlink" title="五、CSRF攻击防御"></a>五、CSRF攻击防御</h2><p>大多数防御方法是在请求中嵌入额外的验证数据来检测是否是真实用户的操作。</p>
-<h3 id="Synchronizer-token-pattern"><a href="#Synchronizer-token-pattern" class="headerlink" title="Synchronizer token pattern"></a>Synchronizer token pattern</h3><p>在form表单中嵌入验证信息，并在server端校验。攻击者无法使用最新的csrf值进行操作，代码如下：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"><span class="keyword">from</span> tornado.web <span class="keyword">import</span> HTTPError</span><br><span class="line"></span><br><span class="line">csrfs = <span class="string">b""</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">make_crsf</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">global</span> csrf</span><br><span class="line">        csrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>)).decode()</span><br><span class="line">        <span class="keyword">return</span> csrf</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.write(<span class="string">"""&lt;html&gt;</span></span><br><span class="line"><span class="string">    &lt;head&gt;</span></span><br><span class="line"><span class="string">        &lt;meta charset="UTF-8"&gt;</span></span><br><span class="line"><span class="string">        &lt;title&gt;&lt;/title&gt;</span></span><br><span class="line"><span class="string">    &lt;/head&gt;</span></span><br><span class="line"><span class="string">    &lt;body&gt;</span></span><br><span class="line"><span class="string">        &lt;form action="/" method="POST" enctype="multipart/form-data"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="file" name="filename"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="hidden" name="csrf" value="%s"&gt;</span></span><br><span class="line"><span class="string">            &lt;input type="submit" name="submit"&gt;</span></span><br><span class="line"><span class="string">        &lt;/form&gt;</span></span><br><span class="line"><span class="string">    &lt;/body&gt;</span></span><br><span class="line"><span class="string">&lt;/html&gt;"""</span>%(self.make_crsf()))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> csrf != self.get_argument(<span class="string">'csrf'</span>,<span class="string">""</span>):</span><br><span class="line">            <span class="keyword">raise</span> HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
-<p>弊端:</p>
-<ol>
-<li>服务端需要存储每个用户的最新的csrf值。</li>
-<li>同一个用户打开多个tab页面时，其它某些csrf值可能失效，返回403错误。</li>
-</ol>
-<h3 id="Cookie-to-header-token"><a href="#Cookie-to-header-token" class="headerlink" title="Cookie-to-header token"></a>Cookie-to-header token</h3><p>此方法是基于浏览器的同源策略，同源才能读取cookie 值。恶意网站受同源限制不能读取cookie值。</p>
-<p>用户访问表单页面时，server端设置xsrf_cookie，页面嵌入js代码，自定义header头。</p>
-<p>index.html</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"https://cdn.staticfile.org/jquery/2.0.0/jquery.min.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"http://malsup.github.com/jquery.form.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">id</span>=<span class="string">"myform"</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"file"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"submit"</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">value</span>=<span class="string">"提交"</span> <span class="attr">onclick</span>=<span class="string">"showoption()"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function getCookie(name) &#123;</span></span><br><span class="line"><span class="undefined">        var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");</span></span><br><span class="line"><span class="undefined">        return r ? r[1] : undefined;</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">    function showoption()&#123;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var formData = new FormData();</span></span><br><span class="line"><span class="undefined">        formData.append("filename",document.getElementById("file").files[0]);</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">        var option = &#123;</span></span><br><span class="line"><span class="undefined">            url : "/",</span></span><br><span class="line"><span class="undefined">            type : 'POST',</span></span><br><span class="line"><span class="undefined">            data: formData,</span></span><br><span class="line"><span class="undefined">            headers : &#123;"X-XSRFToken":getCookie("_xsrf")&#125;, //添加请求头部</span></span><br><span class="line"><span class="undefined">            contentType : false,</span></span><br><span class="line"><span class="undefined">            processData : false,</span></span><br><span class="line"><span class="undefined">            success : function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('success');</span></span><br><span class="line"><span class="undefined">                 document.write(data);</span></span><br><span class="line"><span class="undefined">            &#125;,</span></span><br><span class="line"><span class="undefined">            error: function(data) &#123;</span></span><br><span class="line"><span class="undefined">                 console.log('error');</span></span><br><span class="line"><span class="undefined">                 document.write('upload failed');</span></span><br><span class="line"><span class="undefined">            &#125;</span></span><br><span class="line"><span class="undefined">        &#125;</span></span><br><span class="line"><span class="undefined">        $.ajax(option)</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>handler</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        xsrf = binascii.b2a_hex(os.urandom(<span class="number">16</span>))</span><br><span class="line">        self.set_cookie(<span class="string">'_xsrf'</span>,xsrf)</span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">check_xsrf_cookie</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.request.headers.get(<span class="string">'X-XSRFToken'</span>) != self.get_cookie(<span class="string">"_xsrf"</span>):</span><br><span class="line">            <span class="keyword">raise</span> tornado.web.HTTPError(<span class="number">403</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler)</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
-<h3 id="Double-Submit-Cookie"><a href="#Double-Submit-Cookie" class="headerlink" title="Double Submit Cookie"></a>Double Submit Cookie</h3><p>当form表单提交时，服务端设置_xsrf值到cookie中，同时也设置到form表单中一份，server端收到请求时，从cookie中_xsrf字段取出csrf_token与form提交的_xsrf中取出的csrf_token值是否一致。</p>
-<p>下面用tornado中的xsrf_form_html来实现。</p>
-<p>index.html    </p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line">            &#123;% module xsrf_form_html() %&#125;</span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>handlers.py</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> tornado</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> web</span><br><span class="line"><span class="keyword">from</span> tornado <span class="keyword">import</span> ioloop</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.render(<span class="string">"index.html"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.check_xsrf_cookie()</span><br><span class="line">        <span class="keyword">for</span> filename,files <span class="keyword">in</span> self.request.files.items():</span><br><span class="line">            <span class="keyword">for</span> file <span class="keyword">in</span> files:</span><br><span class="line">                print(self.request.headers.get(<span class="string">'Content-Type'</span>))</span><br><span class="line">                print(file[<span class="string">"filename"</span>],<span class="string">"len %s bytes"</span>%(len(file[<span class="string">"body"</span>])))</span><br><span class="line"></span><br><span class="line">        self.write(<span class="string">b'upload ok'</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Application</span><span class="params">(tornado.web.Application)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        settings = dict(</span><br><span class="line">            debug=<span class="keyword">True</span>,</span><br><span class="line">            xsrf_cookies=<span class="keyword">True</span></span><br><span class="line">        )</span><br><span class="line">        handlers = [</span><br><span class="line">            (<span class="string">r'/'</span>,MainHandler),</span><br><span class="line">        ]</span><br><span class="line"></span><br><span class="line">        super(Application,self).__init__(handlers,settings)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_app</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> Application()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    app = make_app()</span><br><span class="line">    app.listen(<span class="number">8888</span>)</span><br><span class="line">    ioloop.IOLoop.current().start()</span><br></pre></td></tr></table></figure>
-<p>受同源策略限制，恶意网站不能根据form提交的_xsrf值设置别的源下的cookie值。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Cookie: _xsrf=2|f6cb1468|2debdc878192abd5577e27000d0daf91|1547196447</span><br></pre></td></tr></table></figure>
-<p>表单中的值为</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"/"</span> <span class="attr">method</span>=<span class="string">"POST"</span> <span class="attr">enctype</span>=<span class="string">"multipart/form-data"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"filename"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"_xsrf"</span> <span class="attr">value</span>=<span class="string">"2|221a566b|f93a9e845543e9d683af6503d9dced92|1547196447"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">name</span>=<span class="string">"submit"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>cookie失效之前，cookie值不会改变。cookie中解出token，form表单每次刷新时value值会改变，因为form表单中使用随机值生成masked_token。</p>
-<p>有疑问？</p>
-<h3 id="Client-side-safeguards"><a href="#Client-side-safeguards" class="headerlink" title="Client-side safeguards"></a>Client-side safeguards</h3><p>待补充</p>
-<h3 id="Other-techniques"><a href="#Other-techniques" class="headerlink" title="Other techniques"></a>Other techniques</h3><h4 id="检验-HTTP-Referer-字段"><a href="#检验-HTTP-Referer-字段" class="headerlink" title="检验 HTTP Referer 字段"></a>检验 HTTP Referer 字段</h4><p>攻击者不能篡改Referer值，但是某些浏览器会隐藏Referer值，并且依赖浏览器。</p>
-<p>​    </p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">CSRF</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/30/CSRF攻击原理及防御/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -2020,6 +1992,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">upload file</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">HTTP</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">面试</a>
               </li>
              
               <li class="article-tag-list-item">
