@@ -2,6 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://yangyaq.github.io/2019/08/20/WSGI%E5%88%9D%E8%AF%86/</loc>
+    
+    <lastmod>2019-08-20T10:35:06.364Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/08/20/celery%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</loc>
+    
+    <lastmod>2019-08-20T10:22:48.354Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangyaq.github.io/2019/08/20/Torando%E5%AE%98%E7%BD%91%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/</loc>
+    
+    <lastmod>2019-08-20T10:12:20.559Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://yangyaq.github.io/2019/08/20/HTTP%E7%BC%93%E5%AD%98/</loc>
     
     <lastmod>2019-08-20T10:08:18.194Z</lastmod>

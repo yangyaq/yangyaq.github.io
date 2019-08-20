@@ -144,6 +144,428 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-IO模型" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/IO模型/">IO模型</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/IO模型/" class="archive-article-date">
+  	<time datetime="2019-08-20T09:45:13.697Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="/2019/08/20/IO模型/屏幕快照 2019-03-25 11.02.23.png" alt="屏幕快照 2019-03-25 11.02.2"></p>
+<p>内核态（系统空间）- 用户态（用户空间）</p>
+<p>一次通信过程分为两步骤：</p>
+<ul>
+<li>等待接收数据。</li>
+<li>将数据从内核态拷贝至用户态（进程或者线程）。</li>
+</ul>
+<p>阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。</p>
+<p>非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。</p>
+<p>异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。</p>
+<p><img src="/2019/08/20/IO模型/IO.png" alt="IO"></p>
+<h2 id="多路复用IO"><a href="#多路复用IO" class="headerlink" title="多路复用IO"></a>多路复用IO</h2><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>可阻塞，可不阻塞</p>
+<p>函数原型</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>参数</p>
+<p><code>nfds</code>：是fd_set集合中的最大描述符值+1。</p>
+<p><code>fdset</code>： 是一个位数组，其大小限制为<code>FD_SETSIZE(1024)</code>，位数组的每一位代表其对应的描述符是否需要检查。</p>
+<p><code>readfds</code>：是读文件描述符的数组。</p>
+<p><code>writefds</code>：是写文件描述符的数组。</p>
+<p><code>exceptfds</code>:  是错误事件的文件描述符数组。</p>
+<p><code>timeout</code>: 超时事件，该结构被内核修改，其值位超时剩余时间。</p>
+<p>返回值：</p>
+<ul>
+<li>-1，发生错误，并将所有的文件描述符清空并重新设置，可通过errno输出错误详情。</li>
+<li>0， 超时返回。</li>
+<li>正数： 发生变化的文件描述符数量。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span>&#123;</span></span><br><span class="line">  <span class="keyword">time_t</span> tv_sec; <span class="comment">/*秒*/</span></span><br><span class="line">  <span class="keyword">time_t</span> tv_usec; <span class="comment">/*微秒*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当<code>timeout</code> = NULL, 则select()阻塞至某一个文件描述符发生变化才会返回结果；</p>
+<p>当<code>timeout</code> = 0, 则select()不阻塞，执行后立即返回，无论文件描述符是否发生变化；</p>
+<p>当<code>timeout</code> &gt; 0,则select()阻塞至到这个时间值再返回结果。</p>
+<blockquote>
+<p>注意：<br>1）正常情况下返回就绪描述符个数！<br>2）同时会将未就绪的描述符置零，所以select每次返回后我们都应将需用监听的描述符重新添加到描述符集中。<br>3）为了可移植，当设置了超时时间时也应当从新赋值。<br>4）使用select函数尽量不要与非系统IO混用</p>
+</blockquote>
+<p>对应内核：select对应于内核中的sys_select调用，</p>
+<blockquote>
+<p>select的调用步骤如下：</p>
+<p>（1）使用copy_from_user从用户空间拷贝fdset到内核空间</p>
+<p>（2）注册回调函数__pollwait</p>
+<p>（3）遍历所有fd，调用其对应的poll方法（对于socket，这个poll方法是sock_poll，sock_poll根据情况会调用到tcp_poll,udp_poll或者datagram_poll）</p>
+<p>（4）以tcp_poll为例，其核心实现就是__pollwait，也就是上面注册的回调函数。</p>
+<p>（5）__pollwait的主要工作就是把current（当前进程）挂到设备的等待队列中，不同的设备有不同的等待队列，对于tcp_poll 来说，其等待队列是sk-&gt;sk_sleep（注意把进程挂到等待队列中并不代表进程已经睡眠了）。在设备收到一条消息（网络设备）或填写完文件数 据（磁盘设备）后，会唤醒设备等待队列上睡眠的进程，这时current便被唤醒了。</p>
+<p>（6）poll方法返回时会返回一个描述读写操作是否就绪的mask掩码，根据这个mask掩码给fd_set赋值。</p>
+<p>（7）如果遍历完所有的fd，还没有返回一个可读写的mask掩码，则会调用schedule_timeout是调用select的进程（也就是 current）进入睡眠。当设备驱动发生自身资源可读写后，会唤醒其等待队列上睡眠的进程。如果超过一定的超时时间（schedule_timeout 指定），还是没人唤醒，则调用select的进程会重新被唤醒获得CPU，进而重新遍历fd，判断有没有就绪的fd。</p>
+<p>（8）把fd_set从内核空间拷贝到用户空间。</p>
+</blockquote>
+<h4 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h4><p>可阻塞可不阻塞</p>
+<p>函数原型</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">int poll(struct pollfd fds[], nfds_t nfds, int timeout)；</span><br></pre></td></tr></table></figure>
+<p>参数</p>
+<p><code>fds</code>：是一个struct pollfd结构类型的数组，用于存放需要检测其状态的Socket描述符；每当调用这个函数之后，系统不会清空这个数组，操作起来比较方便；特别是对于socket连接比较多的情况下，在一定程度上可以提高处理的效率；</p>
+<p>​            这一点与select()函数不同，调用select()函数之后，select()函数会清空它所检测的socket描述符集合，导致每次调用select()之前都必须把socket描述符重新加入到待检测的集合中；因此，select()函数适合于只检测一个socket描述符的情况，而poll()函数适合于大量socket描述符的情况；</p>
+<p><code>nfds</code>：nfds_t类型的参数，用于标记数组fds的元素的总数量。</p>
+<p><code>timeout</code>：是poll函数调用阻塞的时间，单位毫秒；</p>
+<p>返回值</p>
+<p>>0：数组fds中准备好读、写或出错状态的那些socket描述符的总数量；</p>
+<p>== 0：数组fds中没有任何socket描述符准备好读、写，或出错；此时poll超时，超时时间是timeout毫秒；换句话说，如果所检测的socket描述符上没有任何事件发生的话，那么poll()函数会阻塞timeout所指定的毫秒时间长度之后返回，如果timeout == 0，那么poll() 函数立即返回而不阻塞，如果timeout==INFTIM，那么poll() 函数会一直阻塞下去，直到所检测的socket描述符上的感兴趣的事件发生是才返回，如果感兴趣的事件永远不发生，那么poll()就会永远阻塞下去；</p>
+<p>-1： poll函数调用失败，同时会自动设置全局变量errno；</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> &#123;</span></span><br><span class="line"><span class="keyword">int</span> fd; <span class="comment">/*文件描述符*/</span></span><br><span class="line"><span class="keyword">short</span> events; <span class="comment">/* 等待的需要测试事件 */</span></span><br><span class="line"><span class="keyword">short</span> revents; <span class="comment">/* 实际发生了的事件，也就是返回结果 */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><blockquote>
+<p>epoll是<a href="https://baike.baidu.com/item/Linux内核" target="_blank" rel="noopener">Linux内核</a>为处理大批量<a href="https://baike.baidu.com/item/文件描述符/9809582" target="_blank" rel="noopener">文件描述符</a>而作了改进的poll，是Linux下多路复用IO接口select/poll的增强版本。</p>
+</blockquote>
+<blockquote>
+<p>epoll有2种工作方式：LT和ET。</p>
+<p>LT（level triggered）是缺省的工作方式，并且同时支持block和no-block socket.在这种做法中，<a href="https://baike.baidu.com/item/内核" target="_blank" rel="noopener">内核</a>告诉你一个<a href="https://baike.baidu.com/item/文件描述符" target="_blank" rel="noopener">文件描述符</a>是否就绪了，然后你可以对这个就绪的fd进行IO操作。如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点。传统的select/poll都是这种模型的代表。</p>
+<p>ET （edge-triggered）是高速工作方式，只支持non-block socket。在这种模式下，当描述符从未就绪变为就绪时，内核通过epoll告诉你。然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作导致那个文件描述符不再为就绪状态了（比如，你在发送，接收或者接收请求，或者发送接收的数据少于一定量时导致了一个EWOULDBLOCK 错误）。但是请注意，如果一直不对这个fd作IO操作（从而导致它再次变成未就绪），<a href="https://baike.baidu.com/item/内核" target="_blank" rel="noopener">内核</a>不会发送更多的通知（only once），不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认。</p>
+<p>ET和LT的区别就在这里体现，LT事件不会丢弃，而是只要读buffer里面有数据可以让用户读，则不断的通知你。而ET则只在事件发生之时通知。可以简单理解为LT是水平触发，而ET则为边缘触发。LT模式只要有事件未处理就会触发，而ET则只在高低电平变换时（即状态从1到0或者0到1）触发。</p>
+</blockquote>
+<p>函数原型</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event *events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><code>timeout</code> = -1: 一直等待，直到有事件发生.</p>
+<p>​                  = 0: 马上返回.</p>
+<p>​                  = 正整数：等这么长的时间，时间到后不论是否有事件发生就返回。</p>
+<blockquote>
+<p>一般如果网络主循环是单独的线程的话，可以用-1来等，这样可以保证一些效率。</p>
+<p>如果是和主逻辑在同一个线程的话，则可以用0来保证主循环的效率。</p>
+</blockquote>
+<p>相关的系统调用</p>
+<p>epoll_create： 用来创建一个epoll文件描述符。</p>
+<p>epoll_ctl：epoll_ctl用来添加/修改/删除需要侦听的文件描述符及其事件。</p>
+<p>epoll_wait/epoll_pwait：接收发生在被侦听的描述符上的，用户感兴趣的IO事件。</p>
+<p>用完之后，记得用close()来关闭这个创建出来的epoll句柄。</p>
+<blockquote>
+<p>每次添加/修改/删除被侦听文件描述符都需要调用epoll_ctl，所以要尽量少地调用epoll_ctl，防止其所引来的开销抵消其带来的好处。有的时候，应用中可能存在大量的<a href="https://baike.baidu.com/item/短连接" target="_blank" rel="noopener">短连接</a>（比如说Web服务器），epoll_ctl将被频繁地调用，可能成为这个系统的瓶颈。</p>
+</blockquote>
+<blockquote>
+<p>对于第一个缺点，epoll的解决方案在epoll_ctl函数中。每次注册新的事件到epoll句柄中时（在epoll_ctl中指定 EPOLL_CTL_ADD），会把所有的fd拷贝进内核，而不是在epoll_wait的时候重复拷贝。epoll保证了每个fd在整个过程中只会拷贝 一次。</p>
+<p>对于第二个缺点，epoll的解决方案不像select或poll一样每次都把current轮流加入fd对应的设备等待队列中，而只在 epoll_ctl时把current挂一遍（这一遍必不可少）并为每个fd指定一个回调函数，当设备就绪，唤醒等待队列上的等待者时，就会调用这个回调 函数，而这个回调函数会把就绪的fd加入一个就绪链表）。epoll_wait的工作实际上就是在这个就绪链表中查看有没有就绪的fd（利用 schedule_timeout()实现睡一会，判断一会的效果，和select实现中的第7步是类似的）。</p>
+<p>对于第三个缺点，epoll没有这个限制，它所支持的FD上限是最大可以打开文件的数目，这个数字一般远大于2048,举个例子, 在1GB内存的机器上大约是10万左右，具体数目可以cat /proc/sys/fs/file-max察看,一般来说这个数目和系统内存关系很大。</p>
+</blockquote>
+<p>总结</p>
+<blockquote>
+<p>（1）select，poll实现需要自己不断轮询所有fd集合，直到设备就绪，期间可能要睡眠和唤醒多次交替。而epoll其实也需要调用 epoll_wait不断轮询就绪链表，期间也可能多次睡眠和唤醒交替，但是它是设备就绪时，调用回调函数，把就绪fd放入就绪链表中，并唤醒在 epoll_wait中进入睡眠的进程。虽然都要睡眠和交替，但是select和poll在“醒着”的时候要遍历整个fd集合，而epoll在“醒着”的 时候只要判断一下就绪链表是否为空就行了，这节省了大量的CPU时间，这就是回调机制带来的性能提升。</p>
+<p>（2）select，poll每次调用都要把fd集合从用户态往内核态拷贝一次，并且要把current往设备等待队列中挂一次，而epoll只要 一次拷贝，而且把current往等待队列上挂也只挂一次（在epoll_wait的开始，注意这里的等待队列并不是设备等待队列，只是一个epoll内 部定义的等待队列），这也能节省不少的开销。</p>
+</blockquote>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">IO模型</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/IO模型/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-常用设计模式" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/05/21/常用设计模式/">常用设计模式</a>
+    </h1>
+  
+
+        
+        <a href="/2019/05/21/常用设计模式/" class="archive-article-date">
+  	<time datetime="2019-05-21T10:09:31.361Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-05-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>[TOC]</p>
+<h4 id="观察者模式"><a href="#观察者模式" class="headerlink" title="观察者模式"></a>观察者模式</h4><p>定义：</p>
+<p>​            定义了对象之间的一对多依赖，这样一来，当一个对象改变状态时，它的所有依赖着都会收到通知并自动更新。</p>
+<p>类图：<br><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.22.06.png" alt="屏幕快照 2019-05-21 16.22.06"></p>
+<h4 id="策略模式"><a href="#策略模式" class="headerlink" title="策略模式"></a>策略模式</h4><p>​    定义：</p>
+<p>​        定义了算法族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化独立于使用算法的客户。    </p>
+<p>​    类图：</p>
+<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.35.43.png" alt="屏幕快照 2019-05-21 16.35.43">    </p>
+<h4 id="装饰者模式"><a href="#装饰者模式" class="headerlink" title="装饰者模式"></a>装饰者模式</h4><p>​     定义：</p>
+<p>​        动态地将责任附加到对象上。想要扩展功能，装饰者提供有别于继承的另一种选择。</p>
+<p>​    类图：</p>
+<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.48.37.png" alt="屏幕快照 2019-05-21 16.48.37"></p>
+<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.49.38.png" alt="屏幕快照 2019-05-21 16.49.38"></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> design;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 装饰者模式，动态的将责任附加到对象上，若要扩展功能，装饰者提供了比继承更有弹性的替代方案</span></span><br><span class="line"><span class="comment">* */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Beverage</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> String description = <span class="string">"Unkown Beverage"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getDescription</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 浓缩咖啡</span></span><br><span class="line"><span class="comment">* */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Espresso</span> <span class="keyword">extends</span> <span class="title">Beverage</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Espresso</span><span class="params">()</span></span>&#123;</span><br><span class="line">        description = <span class="string">"Espresso"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span></span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="number">1.99</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">CondimentDecorator</span> <span class="keyword">extends</span> <span class="title">Beverage</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> String <span class="title">getDescription</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mocha</span> <span class="keyword">extends</span> <span class="title">CondimentDecorator</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Beverage beverage;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Mocha</span><span class="params">(Beverage beverage)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beverage = beverage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.cost() + .<span class="number">20</span>;</span><br><span class="line">    &#125;</span><br><span class="line">		<span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getDescription</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.getDescription() + <span class="string">",Mocha"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Whip</span> <span class="keyword">extends</span> <span class="title">CondimentDecorator</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Beverage beverage;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Whip</span><span class="params">(Beverage beverage)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beverage = beverage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getDescription</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.getDescription() + <span class="string">",Whip"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.cost() + .<span class="number">10</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StartBuzzCoffe</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span></span>&#123;</span><br><span class="line">        Beverage beverage = <span class="keyword">new</span> Espresso();</span><br><span class="line">        CondimentDecorator mocha = <span class="keyword">new</span> Mocha(beverage);</span><br><span class="line">        CondimentDecorator mocha1 = <span class="keyword">new</span> Mocha(mocha);</span><br><span class="line">        CondimentDecorator whip = <span class="keyword">new</span> Whip(mocha1);</span><br><span class="line">        System.out.println(whip.getDescription());</span><br><span class="line">        System.out.println(whip.cost());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Espresso,Mocha,Mocha,Whip</span><br><span class="line">2.49</span><br></pre></td></tr></table></figure>
+<h4 id="工厂方法模式"><a href="#工厂方法模式" class="headerlink" title="工厂方法模式"></a>工厂方法模式</h4><p>定义：</p>
+<p>​        定义了一个创建对象的接口， 但由子类决定要实例化哪个。工厂方法让类把实例化推迟到子类。</p>
+<p>类图：</p>
+<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 17.17.38.png" alt="屏幕快照 2019-05-21 17.22.38 "></p>
+<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 17.22.06.png" alt="屏幕快照 2019-05-21 17.22.06"></p>
+<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 17.22.39.png" alt="屏幕快照 2019-05-21 17.22.39"></p>
+<h4 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h4><p>定义：</p>
+<p>​    确保一个类只有一个实例，并提供全局访问点。</p>
+<p>代码示例:</p>
+<ul>
+<li>使用<code>__new__</code></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 单例对象</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> getattr(cls, <span class="string">'instance'</span>)</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__new__(cls, *args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">b = A()</span><br><span class="line">print(id(a) == id(b)) <span class="comment"># true</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用元类</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(type)</span>:</span></span><br><span class="line">    <span class="comment"># 类名，父类的元组，包含属性的字典</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, *args, **kwargs)</span>:</span></span><br><span class="line">        super(__class__, self).__init__(*args, **kwargs)</span><br><span class="line">        self.instance = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.instance:</span><br><span class="line">            <span class="keyword">return</span> self.instance</span><br><span class="line"></span><br><span class="line">        self.instance = super(__class__, self).__call__(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> self.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Myclass</span><span class="params">(object, metaclass=B)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Myclass()</span><br><span class="line">b = Myclass()</span><br><span class="line">print(id(a) == id(b)) <span class="comment"># true</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用装饰器</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">singleton</span><span class="params">(cls)</span>:</span></span><br><span class="line">    instance = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">if</span> cls <span class="keyword">in</span> instance:</span><br><span class="line">            <span class="keyword">return</span> instance[cls]</span><br><span class="line">        instance[cls] = cls()</span><br><span class="line">        <span class="keyword">return</span> instance[cls]</span><br><span class="line">    <span class="keyword">return</span> _</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@singleton</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span><span class="params">(object)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Singleton()</span><br><span class="line">b = Singleton()</span><br><span class="line">print(id(a) == id(b)) <span class="comment"># true</span></span><br></pre></td></tr></table></figure>
+<h4 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h4><h5 id="oo基础"><a href="#oo基础" class="headerlink" title="oo基础"></a>oo基础</h5><p>​    抽象、封装、继承、多态</p>
+<h5 id="oo原则"><a href="#oo原则" class="headerlink" title="oo原则"></a>oo原则</h5><ul>
+<li>封装变化 【策略】</li>
+<li>多用组合、少用继承 【策略】</li>
+<li>针对接口编程，而不针对实现编程 【策略】</li>
+<li>为交互对象之间的松耦合而努力【观察者，工厂方法】</li>
+<li>对扩展开放，对修改关闭【装饰者】</li>
+<li>依赖抽象，不要依赖具体类【工厂方法】</li>
+</ul>
+<h5 id="oo模式"><a href="#oo模式" class="headerlink" title="oo模式"></a>oo模式</h5><ul>
+<li>【策略】— 定义算法族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化独立于使用算法的客户。</li>
+<li>【观察者】— 在对象之间定义一对多的依赖，这样一来，当一个对改变状态，依赖它的对象都会收到通知，并自动更新。（MVC代表）</li>
+<li>【装饰者】— 动态地将责任附加到对象上。想要扩展功能，装饰者提供于有别于继承的另外一种选择。</li>
+<li>【工厂方法】— 定义了一个创建对象的接口， 但由子类决定要实例化哪个。工厂方法让类把实例化推迟到子类。</li>
+<li>【单例模式】— 确保一个类只有一个实例，并提供全局访问点</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">设计模式</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/05/21/常用设计模式/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-进程间的IPC通信机制" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/30/进程间的IPC通信机制/">进程间通信机制</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/30/进程间的IPC通信机制/" class="archive-article-date">
+  	<time datetime="2019-03-30T13:30:37.825Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。</p>
+<h2 id="进程间通信方式"><a href="#进程间通信方式" class="headerlink" title="进程间通信方式"></a>进程间通信方式</h2><p>Linux进程间的基本通信方式主要有：管道（PIPE）（包括匿名管道和命名管道），信号（signal），消息队列（message queue），信号量，共享内存，内存映射，套接字。</p>
+<h4 id="1-管道"><a href="#1-管道" class="headerlink" title="1.管道"></a>1.管道</h4><p>管道实际上是由<strong>内核管理的缓冲区</strong>，位于管道两端的进程利用管道来传递消息。</p>
+<p>管道的一端连接一个输出进程，由输出进程向管道中存放数据，而另外一端连接一个输入进程（<strong>单向传输</strong>），用来取管道中的数据，当管道中数据小于512字节（<strong>基于字节流</strong>）时，保证写入的原子性；当管道中数据大于512字节时，不保证写入的原子性；当两个进程都终结的时候，管道也随之消失（<strong>生命周期随进程终结</strong>）。</p>
+<p>如下给出了两种描绘<strong>半双工管道</strong>的方法，左图中管道的两端在一个进程中相互连接，右图中则强调数据需要通过内核在管道中流动：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道1.png" alt="管道"></p>
+<p>管道通常在单个进程中没有太大用处，下图显示了父子进程之间的管道：<strong>进程先调用</strong>pipe，接着调用fork，从而创建从父进程到子进程的IPC管道：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道2.png" alt="管道"></p>
+<p>fork之后具体要做什么取决于我们想要的数据流的方向。对于从父进程到子进程的管道，父进程关闭管道的读端（fd[0]），子进程关闭管道的写端（fd[1]）：</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/管道3.png" alt="管道"><br>管道根据是否有名字，分为匿名管道和有名管道，这两种管道有一些区别：</p>
+<pre><code>1. 管道是半双工的，数据只能在一个方向流动，如上图，输出进程只能给输入进程传递，不能反向传递。
+2. 匿名管道只能用于具有亲缘关系的进程之间通信，有名管道可允许没有亲缘关系的进程通信。
+3. 匿名管道的管道对文件系统不可见，有名管道对文件系统可见。
+4. 命名管道创建完成后就可以使用，使用方法与匿名管道一样，区别在于：命名管道使用之前需要open（）打开。这是因为：命名管道是设备文件，是存储在硬盘上，而匿名管道是存在内存中的特殊文件。命名管道调用open时有可能会阻塞，但是如果以读写方式（O_RDWR）打开则一定不会阻塞；以只读方式（O_RONLY）打开时，调用open（）的函数会被阻塞直到有数据可读；如果以只写的方式（O_WONLY）打开同样也会被阻塞，直到有以只读方式打开该管道。
+</code></pre><h5 id="管道的特殊情况（自带同步互斥效果）"><a href="#管道的特殊情况（自带同步互斥效果）" class="headerlink" title="管道的特殊情况（自带同步互斥效果）"></a>管道的特殊情况（自带同步互斥效果）</h5><pre><code>1. 管道的写端进程关闭（指向管道写端的文件描述符），但是读端仍然进程在管道的读端读数据，此时，当文件内的数据被读完后，再次read就会返回0，就像读到文件的结尾。
+2. 管道的写端进程并未关闭（管道写端的引用计数大于1），只是停止向管道中写数据，此时，若有读端的进程在读数据，等管道内剩余数据读完以后，就会阻塞等待，直到有数据可读返回。
+3. 管道的所有读端进程都关闭（指向管道读端的文件描述符），此时，若是有管道写端的的进程向管道内写数据时，该进程就会收到SIGPIPE信号，并异常终止。
+4. 管道的读端进程未关闭，而管道读端的进程并未读区数据，假如此时写端有进程向管道中写数据，等管道写满后就会被阻塞，直到管道有空位置后再写入数据并返回。
+</code></pre><h4 id="2-信号"><a href="#2-信号" class="headerlink" title="2. 信号"></a>2. 信号</h4><p>用于一个或几个进程之间传递异步信号。</p>
+<h4 id="3-消息队列"><a href="#3-消息队列" class="headerlink" title="3.消息队列"></a>3.消息队列</h4><p>消息队列实际上是内核地址空间的内部链表。</p>
+<pre><code>1. 每个消息队列由IPC 标识符唯一地址进行识别。
+2. 不同的消息队列之间相互独立。
+3. 每个消息队列中的消息，又构成一个独立的链表。
+4. 克服了信号承载量少和管道只能承载无格式字符流的缺点。
+</code></pre><p>优点：</p>
+<ol>
+<li>可独立于发送和接收进程存在。</li>
+<li>不需要进程自己提供同步方法，可避免命名管道的同步与阻塞问题。</li>
+<li>可以有选择性的接收数据。</li>
+</ol>
+<p>消息主要由消息类型和消息数据组成，通过msgsnd发送消息，通过msgrcv接收消息。接收消息时，不一定按照先进先出原则，因为可以选择类型接收消息。</p>
+<h4 id="4-信号量"><a href="#4-信号量" class="headerlink" title="4.信号量"></a>4.信号量</h4><p>信号量实际上是一个计数器，控制多个进程对同一资源的访问。</p>
+<h5 id="信号量的工作原理"><a href="#信号量的工作原理" class="headerlink" title="信号量的工作原理"></a>信号量的工作原理</h5><p>由于信号量只能进行两种操作，等待和发送信号，即PV操作。P-&gt; 申请资源，V-&gt; 释放资源。(pv操作都是原子操作，因为需要保护临界资源)</p>
+<p>P(sv):   当 sv&gt;0 时， sv = sv - 1；</p>
+<p>​        当 sv=0 时， 挂起改进程的执行。</p>
+<p>V(sv):  如果有进程挂起，则恢复其运行。如果没有进程挂起（等待），sv = sv +1。</p>
+<p>注：原子操作：单指令的操作称为原子的，单条指令的执行是不会被打断的。</p>
+<h4 id="5-共享内存"><a href="#5-共享内存" class="headerlink" title="5.共享内存"></a>5.共享内存</h4><p>共享内存是在多个进程之间共享内存区域的一种进程间的通信方式 (最快捷的方式) ，有IPC为进程创建的一个特殊地址范围，它将出现在该进程的地址空间中，其他进程可以将同一共享内存连接到自己的地址空间中，所有进程都可以访问共享的内存地址，就好像是malloc分配到的一样。当一个进程改变了这块地址中的内容的时候，其他进程都会察觉到这个更改。未提供同步机制，通常需要用其他的机制来同步对共享内存的访问，例如信号量。 </p>
+<p>在Linux中，每个进程都有属于自己的进程控制块（PCB）和地址空间（Addr Space），并且都有一个与之对应的页表，负责将进程的虚拟地址与物理地址进行映射，通过内存管理单元（MMU）进行管理。两个不同的虚拟地址通过页表映射到物理空间的同一区域，它们所指向的这块区域即共享内存。</p>
+<p><img src="/2019/03/30/进程间的IPC通信机制/共享内存.png" alt="共享内存"></p>
+<p>因为共享内存方式的通信没有中间过程，而管道、消息队列等方式则是需要将数据通过中间机制进行转换。共享内存方式直接将某段内存段进行映射，多个进程间的共享内存是同一块的物理空间，仅仅映射到各进程的地址不同而已，因此不需要进行复制，可以直接使用此段空间。</p>
+<h4 id="6-内存映射"><a href="#6-内存映射" class="headerlink" title="6.内存映射"></a>6.内存映射</h4><p>内存映射文件，是由一个文件到一块内存的映射。内存映射文件与虚拟内存有些类似，通过内存映射文件可以保留一个地址的区域，内存文件映射的物理存储器来自一个已经存在于磁盘上的文件，而且在对该文件进行操作之前必须首先对文件进行映射。使用内存映射文件处理存储于磁盘上的文件时，将不必再对文件执行I/O操作。每一个使用该机制的进程通过把同一个共享的文件映射到自己的进程地址空间来实现多个进程间的通信（这里类似于共享内存，只要有一个进程对这块映射文件的内存进行操作，其他进程也能够马上看到）。</p>
+<h5 id="共享内存和内存映射文件的区别："><a href="#共享内存和内存映射文件的区别：" class="headerlink" title="共享内存和内存映射文件的区别："></a>共享内存和内存映射文件的区别：</h5><p>​    内存映射文件是利用虚拟内存把文件映射到进程的地址空间中去，在此之后进程操作文件，就像操作进程空间里的地址一样了，比如使用c语言的memcpy等内存操作的函数。这种方法能够很好的应用在需要频繁处理一个文件或者是一个大文件的场合，这种方式处理IO效率比普通IO效率要高<br>　　共享内存是内存映射文件的一种特殊情况，内存映射的是一块内存，而非磁盘上的文件。共享内存的主语是进程（Process），操作系统默认会给每一个进程分配一个内存空间，每一个进程只允许访问操作系统分配给它的哪一段内存，而不能访问其他进程的。而有时候需要在不同进程之间访问同一段内存，怎么办呢？操作系统给出了 创建访问共享内存的API，需要共享内存的进程可以通过这一组定义好的API来访问多个进程之间共有的内存，各个进程访问这一段内存就像访问一个硬盘上的文件一样。</p>
+<h5 id="内存映射文件与虚拟内存的区别和联系："><a href="#内存映射文件与虚拟内存的区别和联系：" class="headerlink" title="内存映射文件与虚拟内存的区别和联系："></a>内存映射文件与虚拟内存的区别和联系：</h5><p>内存映射文件和虚拟内存都是操作系统内存管理的重要部分，两者有相似点也有不同点。<br>​    联系：虚拟内存和内存映射都是将一部分内容加载到内存，另一部放在磁盘上的一种机制。对于用户而言都是透明的。<br>​    区别：虚拟内存是硬盘的一部分，是内存和硬盘的数据交换区，许多程序运行过程中把暂时不用的程序数据放入这块虚拟内存，节约内存资源。内存映射是一个文件到一块内存的映射，这样程序通过内存指针就可以对文件进行访问。</p>
+<p>虚拟内存的硬件基础是分页机制。另外一个基础就是局部性原理（时间局部性和空间局部性），这样就可以将程序的一部分装入内存，其余部分留在外存，当访问信息不存在，再将所需数据调入内存。而内存映射文件并不是局部性，而是使虚拟地址空间的某个区域银蛇磁盘的全部或部分内容，通过该区域对被映射的磁盘文件进行访问，不必进行文件I/O也不需要对文件内容进行缓冲处理。</p>
+<h4 id="7-套接字"><a href="#7-套接字" class="headerlink" title="7.套接字"></a>7.套接字</h4><p>套接字机制不但可以单机的不同进程通信，而且使得跨网机器间进程可以通信。<br>套接字的创建和使用与管道是有区别的，套接字明确地将客户端与服务器区分开来，可以实现多个客户端连到同一服务器。 </p>
+<p><img src="https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=f9825ddda364034f1bc0ca54ceaa1254/3b87e950352ac65ca241f573f3f2b21193138a6e.jpg" alt="img"></p>
+<p><img src="https://gss0.bdstatic.com/-4o3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=2225b8644fed2e73e8e48e7ee668caee/a2cc7cd98d1001e92d5e43efbd0e7bec55e797eb.jpg" alt="img"></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/30/进程间的IPC通信机制/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-pylint_runtime_error" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -1140,6 +1562,22 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">IO模型</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Tornado</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">后端框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">WSGI</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">celery</a>
               </li>
              
               <li class="article-tag-list-item">

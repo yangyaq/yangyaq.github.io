@@ -144,6 +144,399 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-celery学习笔记" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/celery学习笔记/">celery学习笔记(入门)</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/celery学习笔记/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:36:00.907Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="celery介绍"><a href="#celery介绍" class="headerlink" title="celery介绍"></a>celery介绍</h1><h2 id="celery是什么，用来干什么"><a href="#celery是什么，用来干什么" class="headerlink" title="celery是什么，用来干什么"></a>celery是什么，用来干什么</h2><p>是任务队列，用于跨机器跨线程分配任务。</p>
+<h2 id="谁来生产任务，谁来消费任务"><a href="#谁来生产任务，谁来消费任务" class="headerlink" title="谁来生产任务，谁来消费任务"></a>谁来生产任务，谁来消费任务</h2><p>生产任务： </p>
+<pre><code>1. 应用主动生产
+2. celery beat 定时生产
+</code></pre><p>消费任务：</p>
+<p>​    Celery workers 消费任务</p>
+<p><img src="/2019/08/20/celery学习笔记/img001.png" alt="img001"></p>
+<h2 id="生产消费任务需要什么工具"><a href="#生产消费任务需要什么工具" class="headerlink" title="生产消费任务需要什么工具"></a>生产消费任务需要什么工具</h2><p>需要<strong>消息传输</strong>来发送和接收消息；而<code>RabbitMQ</code>或<code>Redis</code>都可作为代理传输的工具。</p>
+<h2 id="怎么配置消息的传输方式"><a href="#怎么配置消息的传输方式" class="headerlink" title="怎么配置消息的传输方式"></a>怎么配置消息的传输方式</h2><h2 id="如何使用"><a href="#如何使用" class="headerlink" title="如何使用"></a>如何使用</h2><p><code>python 3.5</code></p>
+<p><code>celery(4.2.1)</code></p>
+<p><code>redis(2.10.6)</code></p>
+<h4 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h4><p>celery需要一个broker(rabbitmq,  redis都可以)，这里安装redis，选择redis作为broker，和backend</p>
+<h4 id="安装celery"><a href="#安装celery" class="headerlink" title="安装celery"></a>安装celery</h4><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">pip install celery</span><br></pre></td></tr></table></figure>
+<p>如果broker用的是redis，安装</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">pip install redis</span><br></pre></td></tr></table></figure>
+<p>新建文件task.py</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery</span><br><span class="line"></span><br><span class="line">BROKER = <span class="string">'redis://127.0.0.1:6379/1'</span></span><br><span class="line">BACKEND = <span class="string">'redis://127.0.0.1:5379/2'</span></span><br><span class="line"></span><br><span class="line">app = Celery(<span class="string">'task'</span>, broker=BROKER, backend=BACKEND)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(x, y)</span>:</span></span><br><span class="line">  <span class="keyword">return</span> x+y</span><br></pre></td></tr></table></figure>
+<h4 id="启动celery-服务"><a href="#启动celery-服务" class="headerlink" title="启动celery 服务"></a>启动celery 服务</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">celery -A task worker --loglevel=info</span><br></pre></td></tr></table></figure>
+<p>注意如果报错，如下，celery不支持python3.7目前，换成3.5没有问题</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">    <span class="keyword">from</span> . <span class="keyword">import</span> <span class="keyword">async</span>, base</span><br><span class="line">                      ^</span><br><span class="line">SyntaxError: invalid syntax</span><br></pre></td></tr></table></figure>
+<p>启动成功，显示</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">celery -A task worker --loglevel=info</span><br><span class="line"> </span><br><span class="line"> -------------- celery@yangyaqiandeMacBook-Pro.local v4.2.1 (windowlicker)</span><br><span class="line">---- **** ----- </span><br><span class="line">--- * ***  * -- Darwin-18.2.0-x86_64-i386-64bit 2019-03-21 16:11:19</span><br><span class="line">-- * - **** --- </span><br><span class="line">- ** ---------- [config]</span><br><span class="line">- ** ---------- .&gt; app:         task:0x10532dbe0</span><br><span class="line">- ** ---------- .&gt; transport:   redis://127.0.0.1:6379/1</span><br><span class="line">- ** ---------- .&gt; results:     redis://127.0.0.1:6379/2</span><br><span class="line">- *** --- * --- .&gt; concurrency: 8 (prefork)</span><br><span class="line">-- ******* ---- .&gt; task events: OFF (<span class="built_in">enable</span> -E to monitor tasks <span class="keyword">in</span> this worker)</span><br><span class="line">--- ***** ----- </span><br><span class="line"> -------------- [queues]</span><br><span class="line">                .&gt; celery           exchange=celery(direct) key=celery</span><br><span class="line">                </span><br><span class="line"></span><br><span class="line">[tasks]</span><br><span class="line">  . task.add</span><br><span class="line"></span><br><span class="line">[2019-03-21 16:11:19,292: INFO/MainProcess] Connected to redis://127.0.0.1:6379/1</span><br><span class="line">[2019-03-21 16:11:19,299: INFO/MainProcess] mingle: searching <span class="keyword">for</span> neighbors</span><br><span class="line">[2019-03-21 16:11:20,318: INFO/MainProcess] mingle: all alone</span><br><span class="line">[2019-03-21 16:11:20,332: INFO/MainProcess] celery@yangyaqiandeMacBook-Pro.local ready.</span><br></pre></td></tr></table></figure>
+<p>且redis broker 中设置了一些中间值，backend此时为空，如下</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">127.0.0.1:6379[1]&gt; keys *</span><br><span class="line">1) <span class="string">"_kombu.binding.celery"</span> <span class="comment"># set "celery\x06\x16\x06\x16celery"</span></span><br><span class="line">2) <span class="string">"unacked_mutex"</span> <span class="comment"># string  "54321f84-d913-46c1-8736-fcf44b3c9d70"</span></span><br><span class="line">3) <span class="string">"_kombu.binding.celeryev"</span> <span class="comment"># set "worker.#\x06\x16\x06\x16celeryev.c40268da-742d-401e-9c53-05e97c347072"</span></span><br><span class="line">4) <span class="string">"_kombu.binding.celery.pidbox"</span> <span class="comment"># set \x06\x16\x06\x16celery@yangyaqiandeMacBook-Pro.local.celery.pidbox"</span></span><br></pre></td></tr></table></figure>
+<p>若woker意外退出，3），4）字段将消失，随后2）将消失。</p>
+<h4 id="客户端程序调用任务"><a href="#客户端程序调用任务" class="headerlink" title="客户端程序调用任务"></a>客户端程序调用任务</h4><p> <code>56337cc7-0a31-447c-961b-823bbc70a18b</code>为任务id</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> task <span class="keyword">import</span> add</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>add.delay(<span class="number">2</span>,<span class="number">2</span>)</span><br><span class="line">&lt;AsyncResult: <span class="number">56337</span>cc7<span class="number">-0</span>a31<span class="number">-447</span>c<span class="number">-961</span>b<span class="number">-823</span>bbc70a18b&gt;</span><br></pre></td></tr></table></figure>
+<p>此时backend中,保存了该任务对应的信息和结果</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">127.0.0.1:6379[2]&gt; keys *</span><br><span class="line">1) <span class="string">"celery-task-meta-56337cc7-0a31-447c-961b-823bbc70a18b"</span></span><br><span class="line">127.0.0.1:6379[2]&gt; <span class="built_in">type</span> <span class="string">"celery-task-meta-56337cc7-0a31-447c-961b-823bbc70a18b"</span></span><br><span class="line">string</span><br><span class="line">127.0.0.1:6379[2]&gt; get <span class="string">"celery-task-meta-56337cc7-0a31-447c-961b-823bbc70a18b"</span></span><br><span class="line"><span class="string">"&#123;\"task_id\": \"56337cc7-0a31-447c-961b-823bbc70a18b\", \"result\": 4, \"children\": [], \"status\": \"SUCCESS\", \"traceback\": null&#125;"</span></span><br></pre></td></tr></table></figure>
+<p>客户端调用一次任务，worker会收到一个任务，下面为调用了2次，模拟阻塞10s的任务</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义broker</span></span><br><span class="line">BROKER = <span class="string">'redis://127.0.0.1:6379/1'</span></span><br><span class="line"><span class="comment"># 定义backend</span></span><br><span class="line">BACKEND = <span class="string">'redis://127.0.0.1:6379/2'</span></span><br><span class="line"></span><br><span class="line">app = Celery(<span class="string">'task'</span>, broker=BROKER, backend=BACKEND)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add</span><span class="params">(x, y)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> x+y</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sleep_add</span><span class="params">()</span>:</span></span><br><span class="line">    time.sleep(<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'sleep 10s'</span></span><br></pre></td></tr></table></figure>
+<p>客户端调用, 直接调用<code>sleep_add()</code>时 ，等待完成后才返回。使用<code>sleep_add.delay()</code>立即返回一个<code>AsyncResult</code>.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>sleep_add.delay()</span><br><span class="line">&lt;AsyncResult: a401c123<span class="number">-5323</span><span class="number">-472e-90</span>b4-dfacc1a57932&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>sleep_add.delay()</span><br><span class="line">&lt;AsyncResult: <span class="number">1</span>b25725f<span class="number">-3</span>bdc<span class="number">-485</span>f<span class="number">-9</span>f9e-cf1d932c9605&gt;</span><br></pre></td></tr></table></figure>
+<p>woker打印的信息，两次任务的处理不会超过10s的阻塞时间。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[2019-03-21 17:04:44,424: INFO/ForkPoolWorker-8] Task task.sleep_add[a401c123-5323-472e-90b4-dfacc1a57932] succeeded <span class="keyword">in</span> 10.013145764998626s: <span class="string">'sleep 10s'</span></span><br><span class="line">[2019-03-21 17:04:45,052: INFO/ForkPoolWorker-6] Task task.sleep_add[1b25725f-3bdc-485f-9f9e-cf1d932c9605] succeeded <span class="keyword">in</span> 10.012423584994394s: <span class="string">'sleep 10s'</span></span><br></pre></td></tr></table></figure>
+<p>backend存储的信息。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">127.0.0.1:6379[2]&gt; get <span class="string">"celery-task-meta-a401c123-5323-472e-90b4-dfacc1a57932"</span></span><br><span class="line"><span class="string">"&#123;\"status\": \"SUCCESS\", \"traceback\": null, \"children\": [], \"task_id\": \"a401c123-5323-472e-90b4-dfacc1a57932\", \"result\": \"sleep 10s\"&#125;"</span></span><br><span class="line">127.0.0.1:6379[2]&gt; get <span class="string">"celery-task-meta-1b25725f-3bdc-485f-9f9e-cf1d932c9605"</span></span><br><span class="line"><span class="string">"&#123;\"status\": \"SUCCESS\", \"traceback\": null, \"children\": [], \"task_id\": \"1b25725f-3bdc-485f-9f9e-cf1d932c9605\", \"result\": \"sleep 10s\"&#125;"</span></span><br></pre></td></tr></table></figure>
+<p>由此可见，可达到异步执行的效果。</p>
+<h4 id="broker"><a href="#broker" class="headerlink" title="broker"></a>broker</h4><p>启动worker后<code>celery</code>队列的消息被worker取走，并将任务信息包括结果存到backend。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">127.0.0.1:6379[1]&gt; keys *</span><br><span class="line">1) <span class="string">"_kombu.binding.celery"</span></span><br><span class="line">2) <span class="string">"celery"</span></span><br><span class="line">127.0.0.1:6379[1]&gt; lrange <span class="string">"celery"</span> 0 3</span><br><span class="line">1) <span class="string">"&#123;\"content-encoding\": \"utf-8\", \"properties\": &#123;\"reply_to\": \"27be49ed-97dc-3548-98d0-a7a5848c805e\", \"correlation_id\": \"737cbe59-6d2c-463c-88c9-ebcf065b7b0a\", \"delivery_info\": &#123;\"exchange\": \"\", \"routing_key\": \"celery\"&#125;, \"body_encoding\": \"base64\", \"delivery_mode\": 2, \"priority\": 0, \"delivery_tag\": \"779b8896-1fcd-435e-8658-9ffae857f53d\"&#125;, \"body\": \"W1tdLCB7fSwgeyJjaGFpbiI6IG51bGwsICJlcnJiYWNrcyI6IG51bGwsICJjYWxsYmFja3MiOiBudWxsLCAiY2hvcmQiOiBudWxsfV0=\", \"content-type\": \"application/json\", \"headers\": &#123;\"lang\": \"py\", \"expires\": null, \"root_id\": \"737cbe59-6d2c-463c-88c9-ebcf065b7b0a\", \"group\": null, \"retries\": 0, \"timelimit\": [null, null], \"id\": \"737cbe59-6d2c-463c-88c9-ebcf065b7b0a\", \"eta\": null, \"argsrepr\": \"()\", \"parent_id\": null, \"origin\": \"gen58645@yangyaqiandeMacBook-Pro.local\", \"task\": \"task.sleep_add\", \"shadow\": null, \"kwargsrepr\": \"&#123;&#125;\"&#125;&#125;"</span></span><br></pre></td></tr></table></figure>
+<p>客户端发起一个300s后再执行的任务</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>sleep_add.apply_async((),countdown=<span class="number">300</span>)</span><br><span class="line">&lt;AsyncResult: c6165ddb<span class="number">-7</span>ba8<span class="number">-47</span>fd-a013<span class="number">-3e3030</span>e3fab3&gt;</span><br></pre></td></tr></table></figure>
+<p>broker中新增<code>unacked</code>和<code>unacked_index</code>两个key。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">127.0.0.1:6379[1]&gt; hgetall <span class="string">"unacked"</span></span><br><span class="line">1) <span class="string">"51c56d80-7fb5-4389-b10e-c7405b26c61e"</span></span><br><span class="line">2) <span class="string">"[&#123;\"properties\": &#123;\"delivery_info\": &#123;\"exchange\": \"\", \"routing_key\": \"celery\"&#125;, \"delivery_tag\": \"51c56d80-7fb5-4389-b10e-c7405b26c61e\", \"body_encoding\": \"base64\", \"correlation_id\": \"c6165ddb-7ba8-47fd-a013-3e3030e3fab3\", \"delivery_mode\": 2, \"reply_to\": \"d013906c-0fb8-3794-ac8d-eed0735a4027\", \"priority\": 0&#125;, \"body\": \"W1tdLCB7fSwgeyJlcnJiYWNrcyI6IG51bGwsICJjYWxsYmFja3MiOiBudWxsLCAiY2hhaW4iOiBudWxsLCAiY2hvcmQiOiBudWxsfV0=\", \"content-encoding\": \"utf-8\", \"content-type\": \"application/json\", \"headers\": &#123;\"group\": null, \"expires\": null, \"kwargsrepr\": \"&#123;&#125;\", \"root_id\": \"c6165ddb-7ba8-47fd-a013-3e3030e3fab3\", \"eta\": \"2019-03-21T10:05:31.510170+00:00\", \"parent_id\": null, \"origin\": \"gen58706@yangyaqiandeMacBook-Pro.local\", \"task\": \"task.sleep_add\", \"timelimit\": [null, null], \"argsrepr\": \"()\", \"retries\": 0, \"lang\": \"py\", \"shadow\": null, \"id\": \"c6165ddb-7ba8-47fd-a013-3e3030e3fab3\"&#125;&#125;, \"\", \"celery\"]"</span></span><br><span class="line">127.0.0.1:6379[1]&gt; ZRANGE <span class="string">"unacked_index"</span> 0 3</span><br><span class="line">1) <span class="string">"51c56d80-7fb5-4389-b10e-c7405b26c61e"</span></span><br></pre></td></tr></table></figure>
+<p>当这个延时任务还处于待确认状态时，worker<code>ctrl+c</code>中断后，该任务回到<code>celery</code>队列中，同时从<code>unacked</code>和<code>unacked_index</code>两个key中删除对应的value；若worker重新执行，会将改任务再次发送给woker，同时新增<code>unacked</code>和<code>unacked_index</code>两个字段，待worker<code>确认开始执行</code>后删除。</p>
+<p>但是当kill -9 中断worker后，任务无法正常回到celery任务队列。</p>
+<h4 id="celery工作方式"><a href="#celery工作方式" class="headerlink" title="celery工作方式"></a>celery工作方式</h4><ol>
+<li>客户端发起一个task，并将该task存入broker中的<code>celery</code>key 队列中。</li>
+<li>此时有空闲的worker就会去处理这个task，被取出的task将放入unacked，task_id 放到 unacked_index中。</li>
+<li>当woker开始运行这个task后，发出确认执行消息，此时unacked和unasked_index中就会移除对应的任务信息</li>
+<li>此时将任务的运行状态存储到backend中。</li>
+</ol>
+<h2 id="何为消息通信"><a href="#何为消息通信" class="headerlink" title="何为消息通信"></a>何为消息通信</h2><h2 id="消息的传输方式"><a href="#消息的传输方式" class="headerlink" title="消息的传输方式"></a>消息的传输方式</h2><h2 id="如何添加任务、存储任务执行结果"><a href="#如何添加任务、存储任务执行结果" class="headerlink" title="如何添加任务、存储任务执行结果"></a>如何添加任务、存储任务执行结果</h2><p><img src="/2019/08/20/celery学习笔记/celery.jpg" alt="celery"></p>
+<h4 id="客户端添加task"><a href="#客户端添加task" class="headerlink" title="客户端添加task"></a>客户端添加task</h4><h4 id="定时任务添加task"><a href="#定时任务添加task" class="headerlink" title="定时任务添加task"></a>定时任务添加task</h4><p>定时任务通过<code>celery beat</code> 添加任务</p>
+<h3 id="任务的状态"><a href="#任务的状态" class="headerlink" title="任务的状态"></a>任务的状态</h3><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PENDING</td>
+<td>任务等待中</td>
+</tr>
+<tr>
+<td>STARTED</td>
+<td>任务开始执行</td>
+</tr>
+<tr>
+<td>SUCCESS</td>
+<td>任务执行成功</td>
+</tr>
+<tr>
+<td>FAILTRUE</td>
+<td>任务执行失败</td>
+</tr>
+<tr>
+<td>RETRY</td>
+<td>任务将被重试</td>
+</tr>
+<tr>
+<td>REVOKED</td>
+<td>任务取消</td>
+</tr>
+</tbody>
+</table>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">celery</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/celery学习笔记/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-WSGI初识" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/WSGI初识/">WSGI</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/WSGI初识/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:35:06.369Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>WSGI ( Web Server Gateway Interface)，用来连接python框架和web服务器。</p>
+<p>作用：为web服务器和web框架提供了一个微型接口，可以使web服务器与web框架随意搭配。</p>
+<p><img src="/2019/08/20/WSGI初识/225604wpler4o4pvlezrro.jpg" alt="225604wpler4o4pvlezrro"><br><img src="/2019/08/20/WSGI初识/1.jpg" alt="1"><br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">Brower--&gt;&gt;WSGIServer: HTTP请求</span><br><span class="line">WSGIServer-&gt;WSGIServer: 提供start_response,env</span><br><span class="line">WSGIServer-&gt;&gt; WSGIApplication: 调用application(environ,start_reponse),返回result</span><br><span class="line">WSGIApplication-&gt;&gt; WSGIApplication: 调用start_reponse(code,headers)</span><br><span class="line">WSGIApplication--&gt;&gt; WSGIServer: 返回result</span><br><span class="line">WSGIServer--&gt;&gt;WSGIServer:  write(header)</span><br><span class="line">WSGIServer--&gt;&gt;WSGIServer:  write(result)</span><br><span class="line">WSGIServer--&gt;&gt;Brower: reponse</span><br></pre></td></tr></table></figure></p>
+<p><img src="/2019/08/20/WSGI初识/225618aptoggjttuzrovvg.jpg" alt="225618aptoggjttuzrovvg"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">demo_app</span><span class="params">(environ, start_response)</span>:</span></span><br><span class="line">    headers = [(<span class="string">'Content-Type'</span>, <span class="string">'text/plain; charset=utf-8'</span>), (<span class="string">'Date'</span>, <span class="string">'Tue, 31 Mar 2015 12:54:48 GMT'</span>),</span><br><span class="line">            (<span class="string">'Server'</span>, <span class="string">'WSGIServer 0.2'</span>)]</span><br><span class="line">    start_response(<span class="string">"200 OK"</span>, headers[:<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"hello world"</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># # wsgi server 调用一个由应用程序提供的可调用对象 app</span></span><br><span class="line"><span class="comment"># # 可调用： 实现了__call__函数的方法或者类</span></span><br><span class="line"><span class="comment"># server = wsgiref.simple_server.make_server('127.0.0.1', 8888, demo_app)</span></span><br><span class="line"><span class="comment"># server.handle_request()</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WSGIServer</span><span class="params">(object)</span>:</span></span><br><span class="line">    address_family = socket.AF_INET</span><br><span class="line">    socket_type = socket.SOCK_STREAM</span><br><span class="line">    request_queue_size = <span class="number">1</span></span><br><span class="line">    write_buffer = <span class="string">''</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, address)</span>:</span></span><br><span class="line">        self.listen_socket = socket.socket(self.address_family, self.socket_type)</span><br><span class="line">        <span class="comment"># 允许地址复用</span></span><br><span class="line">        self.listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)</span><br><span class="line">        self.listen_socket.bind(address)</span><br><span class="line">        self.listen_socket.listen(self.request_queue_size)</span><br><span class="line">        <span class="comment"># 获取主机的名称以及端口</span></span><br><span class="line">        host, port = self.listen_socket.getsockname()</span><br><span class="line">        self.server_name = socket.getfqdn(host)</span><br><span class="line">        self.server_port = port</span><br><span class="line"></span><br><span class="line">        self.headers_set = []</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_environ</span><span class="params">(self)</span>:</span></span><br><span class="line">        env = &#123;&#125;</span><br><span class="line">        <span class="comment"># wsgi 必须的变量</span></span><br><span class="line">        env[<span class="string">'wsgi.version'</span>] = (<span class="number">1</span>, <span class="number">0</span>)</span><br><span class="line">        env[<span class="string">'wsgi.uri_schema'</span>] = <span class="string">"http"</span></span><br><span class="line">        env[<span class="string">'wsgi.input'</span>] = self.request_data</span><br><span class="line">        env[<span class="string">'errors'</span>] = sys.stderr</span><br><span class="line">        env[<span class="string">'wsgi.mutilprocess'</span>] = <span class="keyword">False</span></span><br><span class="line">        env[<span class="string">'wsgi.mutilthread'</span>] = <span class="keyword">False</span></span><br><span class="line">        env[<span class="string">'run_once'</span>] = <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># CGI 必须的变量</span></span><br><span class="line">        env[<span class="string">'REQUEST_METHOD'</span>] = self.request_method</span><br><span class="line">        env[<span class="string">'PATH_INFO'</span>] = self.path</span><br><span class="line">        env[<span class="string">'SERVER_NAME'</span>] = self.server_name</span><br><span class="line">        env[<span class="string">'SERVER_PORT'</span>] = self.server_port</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> env</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">server_forever</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment"># self.start_response('200 OK', [])</span></span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">            self.client_connection, client_address = self.listen_socket.accept()</span><br><span class="line">            self.handle_request()</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">handle_request</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.request_data = request_data = self.client_connection.recv(<span class="number">1024</span>)</span><br><span class="line">        print(<span class="string">''</span>.join(<span class="string">'&lt; &#123;line&#125;\n'</span>.format(line=line) <span class="keyword">for</span> line <span class="keyword">in</span> request_data.splitlines()))</span><br><span class="line">        self.parse_request(request_data.decode())</span><br><span class="line"></span><br><span class="line">        env = self.get_environ()</span><br><span class="line"></span><br><span class="line">        result = self.application(env, self.start_response)</span><br><span class="line"></span><br><span class="line">        self.finish_response(result)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">parse_request</span><span class="params">(self, request_data)</span>:</span></span><br><span class="line">        <span class="comment"># print(request_data)</span></span><br><span class="line">        <span class="comment"># 解析请求方法，路径，以及请求数据</span></span><br><span class="line">        request_line = request_data.splitlines()[<span class="number">0</span>]</span><br><span class="line">        request_line = request_line.rstrip(<span class="string">'\r\n'</span>)</span><br><span class="line">        (self.request_method, self.path, self.request_version) = request_line.split()</span><br><span class="line">        <span class="comment"># print('&#123;0&#125;,&#123;1&#125;,&#123;2&#125;'.format(self.request_method, self.path, self.request_version))</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start_response</span><span class="params">(self, status, headers, exc_info=None)</span>:</span></span><br><span class="line">        reponse = <span class="string">'HTTP/1.1 &#123;status&#125;\r\n'</span>.format(status=status)</span><br><span class="line">        self.write_buffer += reponse</span><br><span class="line">        <span class="keyword">if</span> status.split()[<span class="number">0</span>] == <span class="string">'200'</span>:</span><br><span class="line">            self.headers_set = headers</span><br><span class="line">        <span class="keyword">return</span> self.write</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">set_app</span><span class="params">(self, app)</span>:</span></span><br><span class="line">        print(<span class="string">'this'</span>)</span><br><span class="line">        self.application = app</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">finish_response</span><span class="params">(self, result)</span>:</span></span><br><span class="line">        <span class="comment"># print('finish')</span></span><br><span class="line">        self.write(result)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">write</span><span class="params">(self, data)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.headers_set:</span><br><span class="line">            self.write_buffer += <span class="string">''</span>.join(<span class="string">'&#123;k&#125;: &#123;v&#125;\r\n'</span>.format(k=k, v=v) <span class="keyword">for</span> k, v <span class="keyword">in</span> self.headers_set)</span><br><span class="line"></span><br><span class="line">        self.write_buffer += <span class="string">'\r\n'</span></span><br><span class="line">        self.write_buffer += data</span><br><span class="line">        print(self.write_buffer)</span><br><span class="line">        self.client_connection.send(self.write_buffer.encode())</span><br><span class="line">        <span class="comment"># self.client_connection.close()</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">make_server</span><span class="params">(host, port, app)</span>:</span></span><br><span class="line">    address = (host, port)</span><br><span class="line">    server = WSGIServer(address)</span><br><span class="line">    server.set_app(app)</span><br><span class="line">    <span class="keyword">return</span> server</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    make_server(<span class="string">'localhost'</span>, <span class="number">8888</span>, demo_app).server_forever()</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/08/20/WSGI初识/225622yi7gzgztyezr42z7.jpg" alt="225622yi7gzgztyezr42z7"></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">后端框架</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">WSGI</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/WSGI初识/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-Torando官网阅读笔记" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/20/Torando官网阅读笔记/">tornado官网阅读笔记</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/20/Torando官网阅读笔记/" class="archive-article-date">
+  	<time datetime="2019-08-20T10:12:20.559Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><h3 id="线程和WSGI"><a href="#线程和WSGI" class="headerlink" title="线程和WSGI"></a>线程和WSGI</h3><ol>
+<li><code>Tornado</code>框架不同于其它框架： 它不基于<code>WSGI</code>，并且它是典型的每个进程中<code>单线程</code>的运行方式。</li>
+<li><code>Tornado</code> 代码不是线程安全的，一个线程安全地调用另外一个线程的 方法可通过<code>IOLoop.add_callback</code>，也可以用<code>IOLoop.run_in_executor</code>，但是Tornado 代码不是线程安全的，使用此方法时应避免引用<code>Tornado</code>中的任何对象。</li>
+</ol>
+<h3 id="整合asyncio"><a href="#整合asyncio" class="headerlink" title="整合asyncio"></a>整合<code>asyncio</code></h3><ol>
+<li><p><code>Tornado</code>整合了标准库模块<code>asyncio</code> 并 使用了相同的事件循环（&gt;=5.0版本） </p>
+</li>
+<li><p><code>Tornado</code> 应该运行在所有的类UNIX操作系统，生产环境推荐Linux（使用epoll）和 BSD（kqueue）, 在<code>Linux</code>中有最好的性能和可扩展性; Mac OS X  支持 kqueue ，但网络性能仅适用于开发模式 ; Tornado也可以运行在Windows（也是推荐开发时使用）</p>
+</li>
+</ol>
+<h2 id="异步和非阻塞IO"><a href="#异步和非阻塞IO" class="headerlink" title="异步和非阻塞IO"></a>异步和非阻塞IO</h2><p>即时网络需要为每个用户建立一个连接，而这个连接大多数时间是空闲的，传统<code>web服务器</code>通过为每个用户提供一个线程来实现，这样看来，耗费的资源无疑是巨大的。</p>
+<p>为了降低并发连接所耗费的资源，<code>Tornado</code>使用了<code>单线程的事件循环机制</code>, 也代表着代码要写成异步非阻塞的，因为单线程一次只能激活一个操作。</p>
+<p>注意，异步和非阻塞有着紧密的联系，但并不相同。</p>
+<h3 id="阻塞"><a href="#阻塞" class="headerlink" title="阻塞"></a>阻塞</h3><p>同步函数等待阻塞完成之后才返回，造成阻塞的原因也比较多，但通常都是在函数运行时和占用CPU时会发生阻塞，也有网络IO阻塞，磁盘IO阻塞，互斥等等。</p>
+<p>同一个函数可能会发生网络阻塞，而不会发生磁盘IO阻塞，也就是说，一个函数在某些方面阻塞，在某些方面不阻塞。虽然所有的阻塞都应最小化，但在Tornado中主要讨论的是网络IO阻塞。</p>
+<h3 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h3><p>异步函数在完成之前返回， 并触发一些动作, 这也是协程异步的原因，在这里有很多风格的异步接口。</p>
+<ol>
+<li>Callback 参数</li>
+<li>返回占位符（Future, Promise, Deferred）</li>
+<li>传递到queue</li>
+<li>注册回调 （例如 POSIX signal）</li>
+</ol>
+<p>像<code>gevent</code>这样的使用系统轻量级线程来提供与异步系统相当的性能，但实际上并没有异步化。<code>gevent</code> 可以不用修改代码直接打补丁来改变行为，但Tornado需要改变编写代码的方式，才能异步化。</p>
+<p>Tornado中的异步操作返回占位符对象（<code>Future</code>），除了一些底层组件（例如<code>IOLoop</code>）, <code>Future</code> 使用 关键字<code>await</code>和<code>yield</code> 来转换结果。</p>
+<p>例如：</p>
+<p>使用<code>yield</code>关键字，兼容老版本python</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@gen.coroutine</span><br><span class="line">def coroutine_fetch(url):</span><br><span class="line">    http_client = AsyncHttpClient()</span><br><span class="line">    response = yield http_client.fetch(url)</span><br><span class="line">    raise gen.Return(response.body)</span><br></pre></td></tr></table></figure>
+<p>使用<code>await</code>关键字，</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">from tornado.httpclinet import AsyncHttpClient</span><br><span class="line">async def async_fetch(url):</span><br><span class="line">    http_client = AsyncHttpClient()</span><br><span class="line">    response = await http_client.fetch(url)</span><br><span class="line">    return response.body</span><br></pre></td></tr></table></figure>
+<p>实际上行为与下面代码相似</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">form tornado.concurrent <span class="keyword">import</span> Future</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">async_fetch_manual</span><span class="params">(url)</span>:</span></span><br><span class="line">    http_client = AsyncHttpClient()</span><br><span class="line">    my_future = Future()</span><br><span class="line">    fetch_future = http_client.fetch(url)</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">on_fetch</span><span class="params">(f)</span>:</span></span><br><span class="line">        my_future.set_result(f.result().body)</span><br><span class="line">    fetch_future.add_done_callback(on_fetch)</span><br><span class="line">    <span class="keyword">return</span> my_future</span><br></pre></td></tr></table></figure>
+<p>可以使用协程的方式来编写，也可以使用回调的方式，只是使用协程可以更好的组织代码（例如，从同步重构为异步）</p>
+<h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><p>推荐使用<code>yield</code>和<code>await</code> 代替 回调链， 通过这两个关键字来暂停和恢复执行。</p>
+<p>在<code>gevent</code>等框架看到的协作轻量级线程有时也被称为协程；在<code>Tornado</code>中的协程都使用显示上下文切换，并被称为异步函数，它使得并发更容易一些，也与减少了可能发生上下文切换的位置有关。</p>
+<p>为了兼容老版本python，就有了原生协程和装饰器协程这两种说法。这两种协程写法如下。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 装饰器协程                                                   # Native协程</span></span><br><span class="line"><span class="meta">@gen.coroutine                                               # async def 关键字</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">a</span><span class="params">()</span>:</span>                                                     <span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">a</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="comment"># yield 所有的异步方法                                         # await 所有的异步方法</span></span><br><span class="line">    b = <span class="keyword">yield</span> c()                                                b = <span class="keyword">await</span> c()</span><br><span class="line">    <span class="comment"># return 和 yield 在python2 中不能混合使用</span></span><br><span class="line">    <span class="comment"># 所以 引发一个异常                                             # 正常返回</span></span><br><span class="line">    <span class="keyword">raise</span> gen.Return(b)                                          <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+<p>这两种协程不同之处如下：</p>
+<ol>
+<li><p>Native corotines：</p>
+<ul>
+<li>更快</li>
+<li>可以用<code>async for</code> 和 <code>async with</code> 语句（简洁）</li>
+<li>原生协程在显示使用<code>await</code>和yield时才会开始运行</li>
+</ul>
+</li>
+<li><p>Decorated corotines：</p>
+<ul>
+<li><p>额外整合了<code>concurrent.futures</code>包</p>
+</li>
+<li><p>可以yield一个列表或者字典；而原生协程需要借助<code>tornado.gen.multi</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 原生</span></span><br><span class="line"><span class="keyword">from</span> tornado.gen <span class="keyword">import</span> multi</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">parallel_fetch</span><span class="params">(url1, url2)</span>:</span></span><br><span class="line">    resp1, resp2 = <span class="keyword">await</span> multi([http_client.fetch(url1),</span><br><span class="line">                                http_client.fetch(url2)])</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">parallel_fetch_many</span><span class="params">(urls)</span>:</span></span><br><span class="line">    responses = <span class="keyword">await</span> multi ([http_client.fetch(url) <span class="keyword">for</span> url <span class="keyword">in</span> urls])</span><br><span class="line">    <span class="comment"># responses is a list of HTTPResponses in the same order</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">parallel_fetch_dict</span><span class="params">(urls)</span>:</span></span><br><span class="line">    responses = <span class="keyword">await</span> multi(&#123;url: http_client.fetch(url)</span><br><span class="line">                             <span class="keyword">for</span> url <span class="keyword">in</span> urls&#125;)</span><br><span class="line">    <span class="comment"># responses is a dict &#123;url: HTTPResponse&#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 装饰器</span></span><br><span class="line"><span class="meta">@gen.coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">parallel_fetch_decorated</span><span class="params">(url1, url2)</span>:</span></span><br><span class="line">    resp1, resp2 = <span class="keyword">yield</span> [http_client.fetch(url1),</span><br><span class="line">                          http_client.fetch(url2)]</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li><p>可通过转换函数注册与Twisted这样的包交互；而原生协程需要借助<code>tornado.gen.convert_yielded</code></p>
+</li>
+<li><p>返回<code>Future</code>对象；原生协程返回一个<code>awaitable</code> 对象。 两个对象通常可以互换。</p>
+</li>
+</ul>
+<h3 id="工作方式"><a href="#工作方式" class="headerlink" title="工作方式"></a>工作方式</h3><p>原生协程与装饰器的工作方式类似。原生协程由于与python运行时有额外的交互而变得稍微复杂些。</p>
+<p>一个包含yield关键字的函数是一个生成器，所有的生成器是异步的；调用时不等运行完成就返回生成器对象，<code>gen.coroutine</code>装饰器通过<code>yield表达式</code>与生成器交互，并给调用者返回<code>Future</code></p>
+<p>这是coroutine装饰器内循环的简化版本：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></span><br><span class="line">    future = self.gen.send(self.next)</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">callback</span><span class="params">(f)</span>:</span></span><br><span class="line">        <span class="comment"># 将结果作为yield表达式的结果发送回生成器</span></span><br><span class="line">        self.next = f.result()</span><br><span class="line">        self.run()</span><br><span class="line">    future.add_done_callback(callback)</span><br></pre></td></tr></table></figure>
+<h3 id="如何调用协程"><a href="#如何调用协程" class="headerlink" title="如何调用协程"></a>如何调用协程</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">divide</span><span class="params">(x,y)</span>:</span></span><br><span class="line">	<span class="keyword">return</span> x/y</span><br><span class="line">    </span><br><span class="line"><span class="comment"># run_sync 不能传递参数，所以需要用lamda封装</span></span><br><span class="line">IOLoop.cuurent().run_sync(<span class="keyword">lambda</span>: divide(<span class="number">1</span>, <span class="number">0</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 不等待返回结果，会报异常，用下面的方式运行</span></span><br><span class="line">IOLoop.current().spawn_callback(divide, <span class="number">1</span>, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<p>### </p>
+<p>### </p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Tornado</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">后端框架</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/Torando官网阅读笔记/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
     <article id="post-HTTP缓存" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
   <div class="article-inner">
     
@@ -1484,428 +1877,6 @@
 
 
   
-    <article id="post-IO模型" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/20/IO模型/">IO模型</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/20/IO模型/" class="archive-article-date">
-  	<time datetime="2019-08-20T09:45:13.697Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="/2019/08/20/IO模型/屏幕快照 2019-03-25 11.02.23.png" alt="屏幕快照 2019-03-25 11.02.2"></p>
-<p>内核态（系统空间）- 用户态（用户空间）</p>
-<p>一次通信过程分为两步骤：</p>
-<ul>
-<li>等待接收数据。</li>
-<li>将数据从内核态拷贝至用户态（进程或者线程）。</li>
-</ul>
-<p>阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。</p>
-<p>非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。</p>
-<p>异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。</p>
-<p><img src="/2019/08/20/IO模型/IO.png" alt="IO"></p>
-<h2 id="多路复用IO"><a href="#多路复用IO" class="headerlink" title="多路复用IO"></a>多路复用IO</h2><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>可阻塞，可不阻塞</p>
-<p>函数原型</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>参数</p>
-<p><code>nfds</code>：是fd_set集合中的最大描述符值+1。</p>
-<p><code>fdset</code>： 是一个位数组，其大小限制为<code>FD_SETSIZE(1024)</code>，位数组的每一位代表其对应的描述符是否需要检查。</p>
-<p><code>readfds</code>：是读文件描述符的数组。</p>
-<p><code>writefds</code>：是写文件描述符的数组。</p>
-<p><code>exceptfds</code>:  是错误事件的文件描述符数组。</p>
-<p><code>timeout</code>: 超时事件，该结构被内核修改，其值位超时剩余时间。</p>
-<p>返回值：</p>
-<ul>
-<li>-1，发生错误，并将所有的文件描述符清空并重新设置，可通过errno输出错误详情。</li>
-<li>0， 超时返回。</li>
-<li>正数： 发生变化的文件描述符数量。</li>
-</ul>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timeval</span>&#123;</span></span><br><span class="line">  <span class="keyword">time_t</span> tv_sec; <span class="comment">/*秒*/</span></span><br><span class="line">  <span class="keyword">time_t</span> tv_usec; <span class="comment">/*微秒*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>当<code>timeout</code> = NULL, 则select()阻塞至某一个文件描述符发生变化才会返回结果；</p>
-<p>当<code>timeout</code> = 0, 则select()不阻塞，执行后立即返回，无论文件描述符是否发生变化；</p>
-<p>当<code>timeout</code> &gt; 0,则select()阻塞至到这个时间值再返回结果。</p>
-<blockquote>
-<p>注意：<br>1）正常情况下返回就绪描述符个数！<br>2）同时会将未就绪的描述符置零，所以select每次返回后我们都应将需用监听的描述符重新添加到描述符集中。<br>3）为了可移植，当设置了超时时间时也应当从新赋值。<br>4）使用select函数尽量不要与非系统IO混用</p>
-</blockquote>
-<p>对应内核：select对应于内核中的sys_select调用，</p>
-<blockquote>
-<p>select的调用步骤如下：</p>
-<p>（1）使用copy_from_user从用户空间拷贝fdset到内核空间</p>
-<p>（2）注册回调函数__pollwait</p>
-<p>（3）遍历所有fd，调用其对应的poll方法（对于socket，这个poll方法是sock_poll，sock_poll根据情况会调用到tcp_poll,udp_poll或者datagram_poll）</p>
-<p>（4）以tcp_poll为例，其核心实现就是__pollwait，也就是上面注册的回调函数。</p>
-<p>（5）__pollwait的主要工作就是把current（当前进程）挂到设备的等待队列中，不同的设备有不同的等待队列，对于tcp_poll 来说，其等待队列是sk-&gt;sk_sleep（注意把进程挂到等待队列中并不代表进程已经睡眠了）。在设备收到一条消息（网络设备）或填写完文件数 据（磁盘设备）后，会唤醒设备等待队列上睡眠的进程，这时current便被唤醒了。</p>
-<p>（6）poll方法返回时会返回一个描述读写操作是否就绪的mask掩码，根据这个mask掩码给fd_set赋值。</p>
-<p>（7）如果遍历完所有的fd，还没有返回一个可读写的mask掩码，则会调用schedule_timeout是调用select的进程（也就是 current）进入睡眠。当设备驱动发生自身资源可读写后，会唤醒其等待队列上睡眠的进程。如果超过一定的超时时间（schedule_timeout 指定），还是没人唤醒，则调用select的进程会重新被唤醒获得CPU，进而重新遍历fd，判断有没有就绪的fd。</p>
-<p>（8）把fd_set从内核空间拷贝到用户空间。</p>
-</blockquote>
-<h4 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h4><p>可阻塞可不阻塞</p>
-<p>函数原型</p>
-<figure class="highlight"><table><tr><td class="code"><pre><span class="line">int poll(struct pollfd fds[], nfds_t nfds, int timeout)；</span><br></pre></td></tr></table></figure>
-<p>参数</p>
-<p><code>fds</code>：是一个struct pollfd结构类型的数组，用于存放需要检测其状态的Socket描述符；每当调用这个函数之后，系统不会清空这个数组，操作起来比较方便；特别是对于socket连接比较多的情况下，在一定程度上可以提高处理的效率；</p>
-<p>​            这一点与select()函数不同，调用select()函数之后，select()函数会清空它所检测的socket描述符集合，导致每次调用select()之前都必须把socket描述符重新加入到待检测的集合中；因此，select()函数适合于只检测一个socket描述符的情况，而poll()函数适合于大量socket描述符的情况；</p>
-<p><code>nfds</code>：nfds_t类型的参数，用于标记数组fds的元素的总数量。</p>
-<p><code>timeout</code>：是poll函数调用阻塞的时间，单位毫秒；</p>
-<p>返回值</p>
-<p>>0：数组fds中准备好读、写或出错状态的那些socket描述符的总数量；</p>
-<p>== 0：数组fds中没有任何socket描述符准备好读、写，或出错；此时poll超时，超时时间是timeout毫秒；换句话说，如果所检测的socket描述符上没有任何事件发生的话，那么poll()函数会阻塞timeout所指定的毫秒时间长度之后返回，如果timeout == 0，那么poll() 函数立即返回而不阻塞，如果timeout==INFTIM，那么poll() 函数会一直阻塞下去，直到所检测的socket描述符上的感兴趣的事件发生是才返回，如果感兴趣的事件永远不发生，那么poll()就会永远阻塞下去；</p>
-<p>-1： poll函数调用失败，同时会自动设置全局变量errno；</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> &#123;</span></span><br><span class="line"><span class="keyword">int</span> fd; <span class="comment">/*文件描述符*/</span></span><br><span class="line"><span class="keyword">short</span> events; <span class="comment">/* 等待的需要测试事件 */</span></span><br><span class="line"><span class="keyword">short</span> revents; <span class="comment">/* 实际发生了的事件，也就是返回结果 */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><blockquote>
-<p>epoll是<a href="https://baike.baidu.com/item/Linux内核" target="_blank" rel="noopener">Linux内核</a>为处理大批量<a href="https://baike.baidu.com/item/文件描述符/9809582" target="_blank" rel="noopener">文件描述符</a>而作了改进的poll，是Linux下多路复用IO接口select/poll的增强版本。</p>
-</blockquote>
-<blockquote>
-<p>epoll有2种工作方式：LT和ET。</p>
-<p>LT（level triggered）是缺省的工作方式，并且同时支持block和no-block socket.在这种做法中，<a href="https://baike.baidu.com/item/内核" target="_blank" rel="noopener">内核</a>告诉你一个<a href="https://baike.baidu.com/item/文件描述符" target="_blank" rel="noopener">文件描述符</a>是否就绪了，然后你可以对这个就绪的fd进行IO操作。如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点。传统的select/poll都是这种模型的代表。</p>
-<p>ET （edge-triggered）是高速工作方式，只支持non-block socket。在这种模式下，当描述符从未就绪变为就绪时，内核通过epoll告诉你。然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作导致那个文件描述符不再为就绪状态了（比如，你在发送，接收或者接收请求，或者发送接收的数据少于一定量时导致了一个EWOULDBLOCK 错误）。但是请注意，如果一直不对这个fd作IO操作（从而导致它再次变成未就绪），<a href="https://baike.baidu.com/item/内核" target="_blank" rel="noopener">内核</a>不会发送更多的通知（only once），不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认。</p>
-<p>ET和LT的区别就在这里体现，LT事件不会丢弃，而是只要读buffer里面有数据可以让用户读，则不断的通知你。而ET则只在事件发生之时通知。可以简单理解为LT是水平触发，而ET则为边缘触发。LT模式只要有事件未处理就会触发，而ET则只在高低电平变换时（即状态从1到0或者0到1）触发。</p>
-</blockquote>
-<p>函数原型</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event *events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
-<p><code>timeout</code> = -1: 一直等待，直到有事件发生.</p>
-<p>​                  = 0: 马上返回.</p>
-<p>​                  = 正整数：等这么长的时间，时间到后不论是否有事件发生就返回。</p>
-<blockquote>
-<p>一般如果网络主循环是单独的线程的话，可以用-1来等，这样可以保证一些效率。</p>
-<p>如果是和主逻辑在同一个线程的话，则可以用0来保证主循环的效率。</p>
-</blockquote>
-<p>相关的系统调用</p>
-<p>epoll_create： 用来创建一个epoll文件描述符。</p>
-<p>epoll_ctl：epoll_ctl用来添加/修改/删除需要侦听的文件描述符及其事件。</p>
-<p>epoll_wait/epoll_pwait：接收发生在被侦听的描述符上的，用户感兴趣的IO事件。</p>
-<p>用完之后，记得用close()来关闭这个创建出来的epoll句柄。</p>
-<blockquote>
-<p>每次添加/修改/删除被侦听文件描述符都需要调用epoll_ctl，所以要尽量少地调用epoll_ctl，防止其所引来的开销抵消其带来的好处。有的时候，应用中可能存在大量的<a href="https://baike.baidu.com/item/短连接" target="_blank" rel="noopener">短连接</a>（比如说Web服务器），epoll_ctl将被频繁地调用，可能成为这个系统的瓶颈。</p>
-</blockquote>
-<blockquote>
-<p>对于第一个缺点，epoll的解决方案在epoll_ctl函数中。每次注册新的事件到epoll句柄中时（在epoll_ctl中指定 EPOLL_CTL_ADD），会把所有的fd拷贝进内核，而不是在epoll_wait的时候重复拷贝。epoll保证了每个fd在整个过程中只会拷贝 一次。</p>
-<p>对于第二个缺点，epoll的解决方案不像select或poll一样每次都把current轮流加入fd对应的设备等待队列中，而只在 epoll_ctl时把current挂一遍（这一遍必不可少）并为每个fd指定一个回调函数，当设备就绪，唤醒等待队列上的等待者时，就会调用这个回调 函数，而这个回调函数会把就绪的fd加入一个就绪链表）。epoll_wait的工作实际上就是在这个就绪链表中查看有没有就绪的fd（利用 schedule_timeout()实现睡一会，判断一会的效果，和select实现中的第7步是类似的）。</p>
-<p>对于第三个缺点，epoll没有这个限制，它所支持的FD上限是最大可以打开文件的数目，这个数字一般远大于2048,举个例子, 在1GB内存的机器上大约是10万左右，具体数目可以cat /proc/sys/fs/file-max察看,一般来说这个数目和系统内存关系很大。</p>
-</blockquote>
-<p>总结</p>
-<blockquote>
-<p>（1）select，poll实现需要自己不断轮询所有fd集合，直到设备就绪，期间可能要睡眠和唤醒多次交替。而epoll其实也需要调用 epoll_wait不断轮询就绪链表，期间也可能多次睡眠和唤醒交替，但是它是设备就绪时，调用回调函数，把就绪fd放入就绪链表中，并唤醒在 epoll_wait中进入睡眠的进程。虽然都要睡眠和交替，但是select和poll在“醒着”的时候要遍历整个fd集合，而epoll在“醒着”的 时候只要判断一下就绪链表是否为空就行了，这节省了大量的CPU时间，这就是回调机制带来的性能提升。</p>
-<p>（2）select，poll每次调用都要把fd集合从用户态往内核态拷贝一次，并且要把current往设备等待队列中挂一次，而epoll只要 一次拷贝，而且把current往等待队列上挂也只挂一次（在epoll_wait的开始，注意这里的等待队列并不是设备等待队列，只是一个epoll内 部定义的等待队列），这也能节省不少的开销。</p>
-</blockquote>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">IO模型</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/20/IO模型/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-常用设计模式" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/05/21/常用设计模式/">常用设计模式</a>
-    </h1>
-  
-
-        
-        <a href="/2019/05/21/常用设计模式/" class="archive-article-date">
-  	<time datetime="2019-05-21T10:09:31.361Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-05-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>[TOC]</p>
-<h4 id="观察者模式"><a href="#观察者模式" class="headerlink" title="观察者模式"></a>观察者模式</h4><p>定义：</p>
-<p>​            定义了对象之间的一对多依赖，这样一来，当一个对象改变状态时，它的所有依赖着都会收到通知并自动更新。</p>
-<p>类图：<br><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.22.06.png" alt="屏幕快照 2019-05-21 16.22.06"></p>
-<h4 id="策略模式"><a href="#策略模式" class="headerlink" title="策略模式"></a>策略模式</h4><p>​    定义：</p>
-<p>​        定义了算法族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化独立于使用算法的客户。    </p>
-<p>​    类图：</p>
-<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.35.43.png" alt="屏幕快照 2019-05-21 16.35.43">    </p>
-<h4 id="装饰者模式"><a href="#装饰者模式" class="headerlink" title="装饰者模式"></a>装饰者模式</h4><p>​     定义：</p>
-<p>​        动态地将责任附加到对象上。想要扩展功能，装饰者提供有别于继承的另一种选择。</p>
-<p>​    类图：</p>
-<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.48.37.png" alt="屏幕快照 2019-05-21 16.48.37"></p>
-<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 16.49.38.png" alt="屏幕快照 2019-05-21 16.49.38"></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> design;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 装饰者模式，动态的将责任附加到对象上，若要扩展功能，装饰者提供了比继承更有弹性的替代方案</span></span><br><span class="line"><span class="comment">* */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Beverage</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> String description = <span class="string">"Unkown Beverage"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getDescription</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> description;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* 浓缩咖啡</span></span><br><span class="line"><span class="comment">* */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Espresso</span> <span class="keyword">extends</span> <span class="title">Beverage</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Espresso</span><span class="params">()</span></span>&#123;</span><br><span class="line">        description = <span class="string">"Espresso"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span></span>&#123;</span><br><span class="line">       <span class="keyword">return</span> <span class="number">1.99</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">CondimentDecorator</span> <span class="keyword">extends</span> <span class="title">Beverage</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> String <span class="title">getDescription</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mocha</span> <span class="keyword">extends</span> <span class="title">CondimentDecorator</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Beverage beverage;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Mocha</span><span class="params">(Beverage beverage)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beverage = beverage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.cost() + .<span class="number">20</span>;</span><br><span class="line">    &#125;</span><br><span class="line">		<span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getDescription</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.getDescription() + <span class="string">",Mocha"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Whip</span> <span class="keyword">extends</span> <span class="title">CondimentDecorator</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Beverage beverage;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Whip</span><span class="params">(Beverage beverage)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beverage = beverage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getDescription</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.getDescription() + <span class="string">",Whip"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">cost</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> beverage.cost() + .<span class="number">10</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StartBuzzCoffe</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span></span>&#123;</span><br><span class="line">        Beverage beverage = <span class="keyword">new</span> Espresso();</span><br><span class="line">        CondimentDecorator mocha = <span class="keyword">new</span> Mocha(beverage);</span><br><span class="line">        CondimentDecorator mocha1 = <span class="keyword">new</span> Mocha(mocha);</span><br><span class="line">        CondimentDecorator whip = <span class="keyword">new</span> Whip(mocha1);</span><br><span class="line">        System.out.println(whip.getDescription());</span><br><span class="line">        System.out.println(whip.cost());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>输出</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Espresso,Mocha,Mocha,Whip</span><br><span class="line">2.49</span><br></pre></td></tr></table></figure>
-<h4 id="工厂方法模式"><a href="#工厂方法模式" class="headerlink" title="工厂方法模式"></a>工厂方法模式</h4><p>定义：</p>
-<p>​        定义了一个创建对象的接口， 但由子类决定要实例化哪个。工厂方法让类把实例化推迟到子类。</p>
-<p>类图：</p>
-<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 17.17.38.png" alt="屏幕快照 2019-05-21 17.22.38 "></p>
-<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 17.22.06.png" alt="屏幕快照 2019-05-21 17.22.06"></p>
-<p><img src="/2019/05/21/常用设计模式/屏幕快照 2019-05-21 17.22.39.png" alt="屏幕快照 2019-05-21 17.22.39"></p>
-<h4 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h4><p>定义：</p>
-<p>​    确保一个类只有一个实例，并提供全局访问点。</p>
-<p>代码示例:</p>
-<ul>
-<li>使用<code>__new__</code></li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 单例对象</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> getattr(cls, <span class="string">'instance'</span>)</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__new__(cls, *args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">b = A()</span><br><span class="line">print(id(a) == id(b)) <span class="comment"># true</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li>使用元类</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(type)</span>:</span></span><br><span class="line">    <span class="comment"># 类名，父类的元组，包含属性的字典</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, *args, **kwargs)</span>:</span></span><br><span class="line">        super(__class__, self).__init__(*args, **kwargs)</span><br><span class="line">        self.instance = <span class="keyword">None</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(self, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> self.instance:</span><br><span class="line">            <span class="keyword">return</span> self.instance</span><br><span class="line"></span><br><span class="line">        self.instance = super(__class__, self).__call__(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> self.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Myclass</span><span class="params">(object, metaclass=B)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Myclass()</span><br><span class="line">b = Myclass()</span><br><span class="line">print(id(a) == id(b)) <span class="comment"># true</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li>使用装饰器</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">singleton</span><span class="params">(cls)</span>:</span></span><br><span class="line">    instance = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">if</span> cls <span class="keyword">in</span> instance:</span><br><span class="line">            <span class="keyword">return</span> instance[cls]</span><br><span class="line">        instance[cls] = cls()</span><br><span class="line">        <span class="keyword">return</span> instance[cls]</span><br><span class="line">    <span class="keyword">return</span> _</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@singleton</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span><span class="params">(object)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Singleton()</span><br><span class="line">b = Singleton()</span><br><span class="line">print(id(a) == id(b)) <span class="comment"># true</span></span><br></pre></td></tr></table></figure>
-<h4 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h4><h5 id="oo基础"><a href="#oo基础" class="headerlink" title="oo基础"></a>oo基础</h5><p>​    抽象、封装、继承、多态</p>
-<h5 id="oo原则"><a href="#oo原则" class="headerlink" title="oo原则"></a>oo原则</h5><ul>
-<li>封装变化 【策略】</li>
-<li>多用组合、少用继承 【策略】</li>
-<li>针对接口编程，而不针对实现编程 【策略】</li>
-<li>为交互对象之间的松耦合而努力【观察者，工厂方法】</li>
-<li>对扩展开放，对修改关闭【装饰者】</li>
-<li>依赖抽象，不要依赖具体类【工厂方法】</li>
-</ul>
-<h5 id="oo模式"><a href="#oo模式" class="headerlink" title="oo模式"></a>oo模式</h5><ul>
-<li>【策略】— 定义算法族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化独立于使用算法的客户。</li>
-<li>【观察者】— 在对象之间定义一对多的依赖，这样一来，当一个对改变状态，依赖它的对象都会收到通知，并自动更新。（MVC代表）</li>
-<li>【装饰者】— 动态地将责任附加到对象上。想要扩展功能，装饰者提供于有别于继承的另外一种选择。</li>
-<li>【工厂方法】— 定义了一个创建对象的接口， 但由子类决定要实例化哪个。工厂方法让类把实例化推迟到子类。</li>
-<li>【单例模式】— 确保一个类只有一个实例，并提供全局访问点</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">设计模式</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/05/21/常用设计模式/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
-    <article id="post-进程间的IPC通信机制" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/30/进程间的IPC通信机制/">进程间通信机制</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/30/进程间的IPC通信机制/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:30:37.825Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>进程间通信(Inter-process communication)，linux中的内存空间分为系统空间和内存空间，其中系统空间各进程的地址空间是共享的（一个线程能够随意访问内存中的任意地址，所以无需进程通信机制的保护）；而用户空间中各进程地址有自己的地址空间，一个进程想要跟另外一个进程之间通信，就必须要访问其他进程的地址空间，从而进行通信。</p>
-<h2 id="进程间通信方式"><a href="#进程间通信方式" class="headerlink" title="进程间通信方式"></a>进程间通信方式</h2><p>Linux进程间的基本通信方式主要有：管道（PIPE）（包括匿名管道和命名管道），信号（signal），消息队列（message queue），信号量，共享内存，内存映射，套接字。</p>
-<h4 id="1-管道"><a href="#1-管道" class="headerlink" title="1.管道"></a>1.管道</h4><p>管道实际上是由<strong>内核管理的缓冲区</strong>，位于管道两端的进程利用管道来传递消息。</p>
-<p>管道的一端连接一个输出进程，由输出进程向管道中存放数据，而另外一端连接一个输入进程（<strong>单向传输</strong>），用来取管道中的数据，当管道中数据小于512字节（<strong>基于字节流</strong>）时，保证写入的原子性；当管道中数据大于512字节时，不保证写入的原子性；当两个进程都终结的时候，管道也随之消失（<strong>生命周期随进程终结</strong>）。</p>
-<p>如下给出了两种描绘<strong>半双工管道</strong>的方法，左图中管道的两端在一个进程中相互连接，右图中则强调数据需要通过内核在管道中流动：</p>
-<p><img src="/2019/03/30/进程间的IPC通信机制/管道1.png" alt="管道"></p>
-<p>管道通常在单个进程中没有太大用处，下图显示了父子进程之间的管道：<strong>进程先调用</strong>pipe，接着调用fork，从而创建从父进程到子进程的IPC管道：</p>
-<p><img src="/2019/03/30/进程间的IPC通信机制/管道2.png" alt="管道"></p>
-<p>fork之后具体要做什么取决于我们想要的数据流的方向。对于从父进程到子进程的管道，父进程关闭管道的读端（fd[0]），子进程关闭管道的写端（fd[1]）：</p>
-<p><img src="/2019/03/30/进程间的IPC通信机制/管道3.png" alt="管道"><br>管道根据是否有名字，分为匿名管道和有名管道，这两种管道有一些区别：</p>
-<pre><code>1. 管道是半双工的，数据只能在一个方向流动，如上图，输出进程只能给输入进程传递，不能反向传递。
-2. 匿名管道只能用于具有亲缘关系的进程之间通信，有名管道可允许没有亲缘关系的进程通信。
-3. 匿名管道的管道对文件系统不可见，有名管道对文件系统可见。
-4. 命名管道创建完成后就可以使用，使用方法与匿名管道一样，区别在于：命名管道使用之前需要open（）打开。这是因为：命名管道是设备文件，是存储在硬盘上，而匿名管道是存在内存中的特殊文件。命名管道调用open时有可能会阻塞，但是如果以读写方式（O_RDWR）打开则一定不会阻塞；以只读方式（O_RONLY）打开时，调用open（）的函数会被阻塞直到有数据可读；如果以只写的方式（O_WONLY）打开同样也会被阻塞，直到有以只读方式打开该管道。
-</code></pre><h5 id="管道的特殊情况（自带同步互斥效果）"><a href="#管道的特殊情况（自带同步互斥效果）" class="headerlink" title="管道的特殊情况（自带同步互斥效果）"></a>管道的特殊情况（自带同步互斥效果）</h5><pre><code>1. 管道的写端进程关闭（指向管道写端的文件描述符），但是读端仍然进程在管道的读端读数据，此时，当文件内的数据被读完后，再次read就会返回0，就像读到文件的结尾。
-2. 管道的写端进程并未关闭（管道写端的引用计数大于1），只是停止向管道中写数据，此时，若有读端的进程在读数据，等管道内剩余数据读完以后，就会阻塞等待，直到有数据可读返回。
-3. 管道的所有读端进程都关闭（指向管道读端的文件描述符），此时，若是有管道写端的的进程向管道内写数据时，该进程就会收到SIGPIPE信号，并异常终止。
-4. 管道的读端进程未关闭，而管道读端的进程并未读区数据，假如此时写端有进程向管道中写数据，等管道写满后就会被阻塞，直到管道有空位置后再写入数据并返回。
-</code></pre><h4 id="2-信号"><a href="#2-信号" class="headerlink" title="2. 信号"></a>2. 信号</h4><p>用于一个或几个进程之间传递异步信号。</p>
-<h4 id="3-消息队列"><a href="#3-消息队列" class="headerlink" title="3.消息队列"></a>3.消息队列</h4><p>消息队列实际上是内核地址空间的内部链表。</p>
-<pre><code>1. 每个消息队列由IPC 标识符唯一地址进行识别。
-2. 不同的消息队列之间相互独立。
-3. 每个消息队列中的消息，又构成一个独立的链表。
-4. 克服了信号承载量少和管道只能承载无格式字符流的缺点。
-</code></pre><p>优点：</p>
-<ol>
-<li>可独立于发送和接收进程存在。</li>
-<li>不需要进程自己提供同步方法，可避免命名管道的同步与阻塞问题。</li>
-<li>可以有选择性的接收数据。</li>
-</ol>
-<p>消息主要由消息类型和消息数据组成，通过msgsnd发送消息，通过msgrcv接收消息。接收消息时，不一定按照先进先出原则，因为可以选择类型接收消息。</p>
-<h4 id="4-信号量"><a href="#4-信号量" class="headerlink" title="4.信号量"></a>4.信号量</h4><p>信号量实际上是一个计数器，控制多个进程对同一资源的访问。</p>
-<h5 id="信号量的工作原理"><a href="#信号量的工作原理" class="headerlink" title="信号量的工作原理"></a>信号量的工作原理</h5><p>由于信号量只能进行两种操作，等待和发送信号，即PV操作。P-&gt; 申请资源，V-&gt; 释放资源。(pv操作都是原子操作，因为需要保护临界资源)</p>
-<p>P(sv):   当 sv&gt;0 时， sv = sv - 1；</p>
-<p>​        当 sv=0 时， 挂起改进程的执行。</p>
-<p>V(sv):  如果有进程挂起，则恢复其运行。如果没有进程挂起（等待），sv = sv +1。</p>
-<p>注：原子操作：单指令的操作称为原子的，单条指令的执行是不会被打断的。</p>
-<h4 id="5-共享内存"><a href="#5-共享内存" class="headerlink" title="5.共享内存"></a>5.共享内存</h4><p>共享内存是在多个进程之间共享内存区域的一种进程间的通信方式 (最快捷的方式) ，有IPC为进程创建的一个特殊地址范围，它将出现在该进程的地址空间中，其他进程可以将同一共享内存连接到自己的地址空间中，所有进程都可以访问共享的内存地址，就好像是malloc分配到的一样。当一个进程改变了这块地址中的内容的时候，其他进程都会察觉到这个更改。未提供同步机制，通常需要用其他的机制来同步对共享内存的访问，例如信号量。 </p>
-<p>在Linux中，每个进程都有属于自己的进程控制块（PCB）和地址空间（Addr Space），并且都有一个与之对应的页表，负责将进程的虚拟地址与物理地址进行映射，通过内存管理单元（MMU）进行管理。两个不同的虚拟地址通过页表映射到物理空间的同一区域，它们所指向的这块区域即共享内存。</p>
-<p><img src="/2019/03/30/进程间的IPC通信机制/共享内存.png" alt="共享内存"></p>
-<p>因为共享内存方式的通信没有中间过程，而管道、消息队列等方式则是需要将数据通过中间机制进行转换。共享内存方式直接将某段内存段进行映射，多个进程间的共享内存是同一块的物理空间，仅仅映射到各进程的地址不同而已，因此不需要进行复制，可以直接使用此段空间。</p>
-<h4 id="6-内存映射"><a href="#6-内存映射" class="headerlink" title="6.内存映射"></a>6.内存映射</h4><p>内存映射文件，是由一个文件到一块内存的映射。内存映射文件与虚拟内存有些类似，通过内存映射文件可以保留一个地址的区域，内存文件映射的物理存储器来自一个已经存在于磁盘上的文件，而且在对该文件进行操作之前必须首先对文件进行映射。使用内存映射文件处理存储于磁盘上的文件时，将不必再对文件执行I/O操作。每一个使用该机制的进程通过把同一个共享的文件映射到自己的进程地址空间来实现多个进程间的通信（这里类似于共享内存，只要有一个进程对这块映射文件的内存进行操作，其他进程也能够马上看到）。</p>
-<h5 id="共享内存和内存映射文件的区别："><a href="#共享内存和内存映射文件的区别：" class="headerlink" title="共享内存和内存映射文件的区别："></a>共享内存和内存映射文件的区别：</h5><p>​    内存映射文件是利用虚拟内存把文件映射到进程的地址空间中去，在此之后进程操作文件，就像操作进程空间里的地址一样了，比如使用c语言的memcpy等内存操作的函数。这种方法能够很好的应用在需要频繁处理一个文件或者是一个大文件的场合，这种方式处理IO效率比普通IO效率要高<br>　　共享内存是内存映射文件的一种特殊情况，内存映射的是一块内存，而非磁盘上的文件。共享内存的主语是进程（Process），操作系统默认会给每一个进程分配一个内存空间，每一个进程只允许访问操作系统分配给它的哪一段内存，而不能访问其他进程的。而有时候需要在不同进程之间访问同一段内存，怎么办呢？操作系统给出了 创建访问共享内存的API，需要共享内存的进程可以通过这一组定义好的API来访问多个进程之间共有的内存，各个进程访问这一段内存就像访问一个硬盘上的文件一样。</p>
-<h5 id="内存映射文件与虚拟内存的区别和联系："><a href="#内存映射文件与虚拟内存的区别和联系：" class="headerlink" title="内存映射文件与虚拟内存的区别和联系："></a>内存映射文件与虚拟内存的区别和联系：</h5><p>内存映射文件和虚拟内存都是操作系统内存管理的重要部分，两者有相似点也有不同点。<br>​    联系：虚拟内存和内存映射都是将一部分内容加载到内存，另一部放在磁盘上的一种机制。对于用户而言都是透明的。<br>​    区别：虚拟内存是硬盘的一部分，是内存和硬盘的数据交换区，许多程序运行过程中把暂时不用的程序数据放入这块虚拟内存，节约内存资源。内存映射是一个文件到一块内存的映射，这样程序通过内存指针就可以对文件进行访问。</p>
-<p>虚拟内存的硬件基础是分页机制。另外一个基础就是局部性原理（时间局部性和空间局部性），这样就可以将程序的一部分装入内存，其余部分留在外存，当访问信息不存在，再将所需数据调入内存。而内存映射文件并不是局部性，而是使虚拟地址空间的某个区域银蛇磁盘的全部或部分内容，通过该区域对被映射的磁盘文件进行访问，不必进行文件I/O也不需要对文件内容进行缓冲处理。</p>
-<h4 id="7-套接字"><a href="#7-套接字" class="headerlink" title="7.套接字"></a>7.套接字</h4><p>套接字机制不但可以单机的不同进程通信，而且使得跨网机器间进程可以通信。<br>套接字的创建和使用与管道是有区别的，套接字明确地将客户端与服务器区分开来，可以实现多个客户端连到同一服务器。 </p>
-<p><img src="https://gss2.bdstatic.com/9fo3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=f9825ddda364034f1bc0ca54ceaa1254/3b87e950352ac65ca241f573f3f2b21193138a6e.jpg" alt="img"></p>
-<p><img src="https://gss0.bdstatic.com/-4o3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=2225b8644fed2e73e8e48e7ee668caee/a2cc7cd98d1001e92d5e43efbd0e7bec55e797eb.jpg" alt="img"></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/30/进程间的IPC通信机制/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -2004,6 +1975,22 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">IO模型</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Tornado</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">后端框架</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">WSGI</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">celery</a>
               </li>
              
               <li class="article-tag-list-item">
