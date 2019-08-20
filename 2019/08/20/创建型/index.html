@@ -6,15 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Tag: linux | yangyaq</title>
+  <title>yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
+  <meta name="description" content="第一批设计模式-– title: 创建型设计模式 toc: true tags:    - 设计模式   - 创建型 -– [TOC] 简单工厂模式定义: ​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。 三个角色  工厂类：DBFactory 抽象产品类：AbstractDataBase 具体产品类：MysqlDataBase  MongoDataBas">
+<meta property="og:type" content="article">
 <meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/tags/linux/index.html">
+<meta property="og:url" content="https://yangyaq.github.io/2019/08/20/创建型/index.html">
 <meta property="og:site_name" content="yangyaq">
+<meta property="og:description" content="第一批设计模式-– title: 创建型设计模式 toc: true tags:    - 设计模式   - 创建型 -– [TOC] 简单工厂模式定义: ​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。 三个角色  工厂类：DBFactory 抽象产品类：AbstractDataBase 具体产品类：MysqlDataBase  MongoDataBas">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-08-20T09:40:47.792Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="yangyaq">
+<meta name="twitter:description" content="第一批设计模式-– title: 创建型设计模式 toc: true tags:    - 设计模式   - 创建型 -– [TOC] 简单工厂模式定义: ​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。 三个角色  工厂类：DBFactory 抽象产品类：AbstractDataBase 具体产品类：MysqlDataBase  MongoDataBas">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
   
@@ -142,65 +146,260 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-创建型" class="article article-type-post " itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="第一批设计模式"><a href="#第一批设计模式" class="headerlink" title="第一批设计模式"></a>第一批设计模式</h1><p>-–</p>
+<p>title: 创建型设计模式</p>
+<p>toc: true</p>
+<p>tags: </p>
+<p>  - 设计模式</p>
+<p>  - 创建型</p>
+<p>-–</p>
+<p>[TOC]</p>
+<h2 id="简单工厂模式"><a href="#简单工厂模式" class="headerlink" title="简单工厂模式"></a>简单工厂模式</h2><p>定义:</p>
+<p>​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。</p>
+<p>三个角色</p>
+<ul>
+<li>工厂类：DBFactory</li>
+<li>抽象产品类：AbstractDataBase</li>
+<li>具体产品类：MysqlDataBase  MongoDataBase</li>
+</ul>
+<p>UML类图</p>
+<p>使用示例：</p>
+<p>根据传入的参数mysql，返回mysql的数据库连接实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mysql'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
+<p>返回mongodb的数据库连接实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mongo'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
+<p>代码示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 简单工厂模式</span></span><br><span class="line"><span class="comment"># 比如创建不同数据库（mysql/mongo）的连接</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDataBase</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""抽象数据库"""</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mongo数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mysql数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""工厂类"""</span></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(name, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> name == <span class="string">'mongo'</span>:</span><br><span class="line">            <span class="keyword">return</span> MongoDataBase().create_db_connect(host, port, db_name)</span><br><span class="line">        <span class="keyword">elif</span> name == <span class="string">'mysql'</span>:</span><br><span class="line">            <span class="keyword">return</span> MysqlDataBase().create_db_connect(host, port, db_name)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出 连接mysql数据库</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">数据库使用者-&gt;数据库创建工厂: 创建一个mongo数据库连接</span><br><span class="line">Note right of 数据库创建工厂: 创建好对应的实例</span><br><span class="line">数据库创建工厂--&gt;数据库使用者: 返回mongo连接实例</span><br></pre></td></tr></table></figure>
+<p>优缺点：</p>
+<ul>
+<li>优点：实现对象的创建和对象的使用分离，将对象的创建交给专门的工厂类负责，</li>
+<li>缺点：工厂类不够灵活，增加新的具体产品需要修改工厂类的判断逻辑代码，而且产品较多时，工厂方法代码将会非常复杂。</li>
+</ul>
+<h2 id="工厂方法模式"><a href="#工厂方法模式" class="headerlink" title="工厂方法模式"></a>工厂方法模式</h2><p>对简单工厂进行优化，取消统一的工厂类，<strong>针对不同的产品提供与之对应的工厂类</strong>。</p>
+<p>定义：</p>
+<p>​    定义了一个创建对象的接口，但由子类决定将哪个类实例化。让一个类的实例化推迟到子类。</p>
+<p>使用示例:</p>
+<p>​    仅仅需要知道工厂名，就可以创建出对应的实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">mongo_factory = MongoFactory()</span><br><span class="line">db = mongo_factory.get_db()</span><br><span class="line">db.connect(<span class="string">'127.0.0.1'</span>, <span class="number">27017</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line">mysql_factory = MysqlFactory()</span><br><span class="line">db1 = mongo_factory.get_db()</span><br><span class="line">db1.connect(<span class="string">'127.0.0.1'</span>, <span class="number">3306</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:27017 db:test</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:3306 db:test</span></span><br></pre></td></tr></table></figure>
+<p>四个角色：</p>
+<ul>
+<li>抽象产品类: DB</li>
+<li>具体产品类:  MysqlDB MongoDB</li>
+<li>抽象工厂类 : AbstractDBFactory</li>
+<li>具体工厂类 : MongoFactory MysqlFactory</li>
+</ul>
+<p>代码示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DB</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;DB:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MongoDB:</span></span><br><span class="line">        <span class="keyword">return</span> MongoDB()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MysqlDB:</span></span><br><span class="line">        <span class="keyword">return</span> MysqlDB()</span><br></pre></td></tr></table></figure>
+<p>工厂方法模式是典型的解耦框架。</p>
+<p>应用场景：</p>
+<p>用来处理对象的创建，并将这样的行为封装在子类中。这样客户端程序中关于超类的代码就和子类对象的创建代码解藕了。</p>
+<h2 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h2><p>定义：</p>
+<p>​    提供一个创建一系列相关或者相互依赖的接口，而无需指定他们具体的类。（在抽象工厂模式中，每一个具体工厂都提供了多个工厂方法用于产生多种不同类型的对象）</p>
+<p>四个角色：</p>
+<ul>
+<li><p>抽象产品： 为每种对象声明接口，在其中声明了对象的所有业务方法</p>
+</li>
+<li><p>具体产品： 它定义具体工厂生产的具体对象。</p>
+</li>
+<li><p>抽象工厂：声明了一组用于创建对象的方法，注意是一组。</p>
+</li>
+<li><p>具体工厂：它实现了在抽象工厂中声明的创建对象的方法，生成一组具体对象。</p>
+</li>
+</ul>
+<h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><p>定义:</p>
+<p>​    确保一个类只有一个实例，并提供一个全局访问点。</p>
+<p>示例：(三种方法实现单例)</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 单例对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 1.重写new的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> getattr(cls, <span class="string">'instance'</span>)</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__new__(cls, *args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">b = A()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2.使用元类的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(type)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__call__(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Myclass</span><span class="params">(object, metaclass=B)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Myclass()</span><br><span class="line">b = Myclass()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 使用装饰器的方式</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">singleton</span><span class="params">(cls)</span>:</span></span><br><span class="line">    instance = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">if</span> cls <span class="keyword">in</span> instance:</span><br><span class="line">            <span class="keyword">return</span> instance[cls]</span><br><span class="line">        instance[cls] = cls()</span><br><span class="line">        <span class="keyword">return</span> instance[cls]</span><br><span class="line">    <span class="keyword">return</span> _</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@singleton</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span><span class="params">(object)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Singleton()</span><br><span class="line">b = Singleton()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="抽象工厂模式和工厂方法模式区别"><a href="#抽象工厂模式和工厂方法模式区别" class="headerlink" title="抽象工厂模式和工厂方法模式区别"></a>抽象工厂模式和工厂方法模式区别</h3><ul>
+<li>抽象工厂模式：提供一个接口，用于创建相关或依赖对象的家族，而不需要明确指定具体类。</li>
+<li>工厂方法模式：定义了一个创建对象的接口，单由子类决定要实例化的类是哪一个。工厂方法让类吧实例化推迟到子类。</li>
+</ul>
+<p>OO原则：</p>
+<ul>
+<li>多用组合，少用继承。</li>
+<li>针对接口编程，不针对实现编程。</li>
+<li><strong>依赖抽象，不要依赖具体产品</strong></li>
+</ul>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/03/30/进程间的IPC通信机制/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:30:37.825Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-03-30</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/30/进程间的IPC通信机制/">进程间通信机制</a>
-    </h1>
-  
+      
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
-        		</li>
-      		
-		</ul>
-	</div>
+      
 
-          
-
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=https://yangyaq.github.io/2019/08/20/创建型/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
   
+<nav id="article-nav">
   
-    </div></section>
+    <a href="/2019/08/20/IO模型/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          IO模型
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/05/21/常用设计模式/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">常用设计模式</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#第一批设计模式"><span class="toc-number">1.</span> <span class="toc-text">第一批设计模式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#简单工厂模式"><span class="toc-number">1.1.</span> <span class="toc-text">简单工厂模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工厂方法模式"><span class="toc-number">1.2.</span> <span class="toc-text">工厂方法模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#抽象工厂模式"><span class="toc-number">1.3.</span> <span class="toc-text">抽象工厂模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#单例模式"><span class="toc-number">1.4.</span> <span class="toc-text">单例模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">1.5.</span> <span class="toc-text">总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#抽象工厂模式和工厂方法模式区别"><span class="toc-number">1.5.1.</span> <span class="toc-text">抽象工厂模式和工厂方法模式区别</span></a></li></ol></li></ol></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+  
+  
+  <div id="gitalk-container" style="padding: 0px 30px 0px 30px;"></div> 
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/md5.min.js.1"></script>
+<script type="text/javascript">
+
+if(true){
+	var gitalk = new Gitalk({
+  	clientID: '461b2251eaec2cd711c1',
+  	clientSecret: '096dcc912a3eeeeb9e0c118fda48ccba97835049',
+  	repo: 'yangyaq.github.io',
+  	owner: 'yangyaq',
+  	admin: ['yangyaq'],
+  	id: md5(location.pathname),
+  	distractionFreeMode: 'true'
+})
+gitalk.render('gitalk-container') 
+}
+</script>
+
+  
+
 
 
           </div>
@@ -223,9 +422,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

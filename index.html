@@ -157,7 +157,7 @@
 
         
         <a href="/2019/08/20/IO模型/" class="archive-article-date">
-  	<time datetime="2019-08-20T09:37:30.368Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+  	<time datetime="2019-08-20T09:45:13.697Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
 </a>
         
       </header>
@@ -174,9 +174,7 @@
 <p>阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。</p>
 <p>非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。</p>
 <p>异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。</p>
-<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831221803468-1908924864.png" alt="1036857-20170831221803468-1908924864"></p>
-<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831225603562-854824774.png" alt="1036857-20170831225603562-854824774"></p>
-<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831232911015-2140233396.png" alt="1036857-20170831232911015-2140233396"></p>
+<p><img src="/2019/08/20/IO模型/IO.png" alt="IO"></p>
 <h2 id="多路复用IO"><a href="#多路复用IO" class="headerlink" title="多路复用IO"></a>多路复用IO</h2><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>可阻塞，可不阻塞</p>
 <p>函数原型</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
@@ -285,6 +283,129 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2019/08/20/IO模型/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+  
+    <article id="post-创建型" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="第一批设计模式"><a href="#第一批设计模式" class="headerlink" title="第一批设计模式"></a>第一批设计模式</h1><p>-–</p>
+<p>title: 创建型设计模式</p>
+<p>toc: true</p>
+<p>tags: </p>
+<p>  - 设计模式</p>
+<p>  - 创建型</p>
+<p>-–</p>
+<p>[TOC]</p>
+<h2 id="简单工厂模式"><a href="#简单工厂模式" class="headerlink" title="简单工厂模式"></a>简单工厂模式</h2><p>定义:</p>
+<p>​    定义一个工厂类，根据传入的参数不同返回不同的实例，被创建的实例有共同的父类接口。</p>
+<p>三个角色</p>
+<ul>
+<li>工厂类：DBFactory</li>
+<li>抽象产品类：AbstractDataBase</li>
+<li>具体产品类：MysqlDataBase  MongoDataBase</li>
+</ul>
+<p>UML类图</p>
+<p>使用示例：</p>
+<p>根据传入的参数mysql，返回mysql的数据库连接实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mysql'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
+<p>返回mongodb的数据库连接实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">db = DBFactory.create_db_connect(<span class="string">'mongo'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'27017'</span>, <span class="string">'db_test'</span>)</span><br></pre></td></tr></table></figure>
+<p>代码示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 简单工厂模式</span></span><br><span class="line"><span class="comment"># 比如创建不同数据库（mysql/mongo）的连接</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDataBase</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""抽象数据库"""</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mongo数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDataBase</span><span class="params">(AbstractDataBase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'连接mysql数据库'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="string">"""工厂类"""</span></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">create_db_connect</span><span class="params">(name, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> name == <span class="string">'mongo'</span>:</span><br><span class="line">            <span class="keyword">return</span> MongoDataBase().create_db_connect(host, port, db_name)</span><br><span class="line">        <span class="keyword">elif</span> name == <span class="string">'mysql'</span>:</span><br><span class="line">            <span class="keyword">return</span> MysqlDataBase().create_db_connect(host, port, db_name)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出 连接mysql数据库</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">数据库使用者-&gt;数据库创建工厂: 创建一个mongo数据库连接</span><br><span class="line">Note right of 数据库创建工厂: 创建好对应的实例</span><br><span class="line">数据库创建工厂--&gt;数据库使用者: 返回mongo连接实例</span><br></pre></td></tr></table></figure>
+<p>优缺点：</p>
+<ul>
+<li>优点：实现对象的创建和对象的使用分离，将对象的创建交给专门的工厂类负责，</li>
+<li>缺点：工厂类不够灵活，增加新的具体产品需要修改工厂类的判断逻辑代码，而且产品较多时，工厂方法代码将会非常复杂。</li>
+</ul>
+<h2 id="工厂方法模式"><a href="#工厂方法模式" class="headerlink" title="工厂方法模式"></a>工厂方法模式</h2><p>对简单工厂进行优化，取消统一的工厂类，<strong>针对不同的产品提供与之对应的工厂类</strong>。</p>
+<p>定义：</p>
+<p>​    定义了一个创建对象的接口，但由子类决定将哪个类实例化。让一个类的实例化推迟到子类。</p>
+<p>使用示例:</p>
+<p>​    仅仅需要知道工厂名，就可以创建出对应的实例。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">mongo_factory = MongoFactory()</span><br><span class="line">db = mongo_factory.get_db()</span><br><span class="line">db.connect(<span class="string">'127.0.0.1'</span>, <span class="number">27017</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line">mysql_factory = MysqlFactory()</span><br><span class="line">db1 = mongo_factory.get_db()</span><br><span class="line">db1.connect(<span class="string">'127.0.0.1'</span>, <span class="number">3306</span>, <span class="string">'test'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#输出</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:27017 db:test</span></span><br><span class="line"><span class="comment"># connect host:127.0.0.1 port:3306 db:test</span></span><br></pre></td></tr></table></figure>
+<p>四个角色：</p>
+<ul>
+<li>抽象产品类: DB</li>
+<li>具体产品类:  MysqlDB MongoDB</li>
+<li>抽象工厂类 : AbstractDBFactory</li>
+<li>具体工厂类 : MongoFactory MysqlFactory</li>
+</ul>
+<p>代码示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DB</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AbstractDBFactory</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;DB:</span></span><br><span class="line">        <span class="keyword">raise</span> NotImplementedError</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoDB</span><span class="params">(DB)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">connect</span><span class="params">(self, host, port, db_name)</span>:</span></span><br><span class="line">        print(<span class="string">'connect host:&#123;0&#125; port:&#123;1&#125; db:&#123;2&#125;'</span>.format(host, port, db_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MongoFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MongoDB:</span></span><br><span class="line">        <span class="keyword">return</span> MongoDB()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MysqlFactory</span><span class="params">(AbstractDBFactory)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_db</span><span class="params">(self)</span>-&gt;MysqlDB:</span></span><br><span class="line">        <span class="keyword">return</span> MysqlDB()</span><br></pre></td></tr></table></figure>
+<p>工厂方法模式是典型的解耦框架。</p>
+<p>应用场景：</p>
+<p>用来处理对象的创建，并将这样的行为封装在子类中。这样客户端程序中关于超类的代码就和子类对象的创建代码解藕了。</p>
+<h2 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h2><p>定义：</p>
+<p>​    提供一个创建一系列相关或者相互依赖的接口，而无需指定他们具体的类。（在抽象工厂模式中，每一个具体工厂都提供了多个工厂方法用于产生多种不同类型的对象）</p>
+<p>四个角色：</p>
+<ul>
+<li><p>抽象产品： 为每种对象声明接口，在其中声明了对象的所有业务方法</p>
+</li>
+<li><p>具体产品： 它定义具体工厂生产的具体对象。</p>
+</li>
+<li><p>抽象工厂：声明了一组用于创建对象的方法，注意是一组。</p>
+</li>
+<li><p>具体工厂：它实现了在抽象工厂中声明的创建对象的方法，生成一组具体对象。</p>
+</li>
+</ul>
+<h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><p>定义:</p>
+<p>​    确保一个类只有一个实例，并提供一个全局访问点。</p>
+<p>示例：(三种方法实现单例)</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 单例对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 1.重写new的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> getattr(cls, <span class="string">'instance'</span>)</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__new__(cls, *args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = A()</span><br><span class="line">b = A()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2.使用元类的方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(type)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__call__</span><span class="params">(cls, *args, **kwargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> hasattr(cls, <span class="string">'instance'</span>):</span><br><span class="line">            <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line">        cls.instance = super(__class__, cls).__call__(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> cls.instance</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Myclass</span><span class="params">(object, metaclass=B)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Myclass()</span><br><span class="line">b = Myclass()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 使用装饰器的方式</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">singleton</span><span class="params">(cls)</span>:</span></span><br><span class="line">    instance = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">_</span><span class="params">()</span>:</span></span><br><span class="line">        <span class="keyword">if</span> cls <span class="keyword">in</span> instance:</span><br><span class="line">            <span class="keyword">return</span> instance[cls]</span><br><span class="line">        instance[cls] = cls()</span><br><span class="line">        <span class="keyword">return</span> instance[cls]</span><br><span class="line">    <span class="keyword">return</span> _</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@singleton</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Singleton</span><span class="params">(object)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">a = Singleton()</span><br><span class="line">b = Singleton()</span><br><span class="line">print(a <span class="keyword">is</span> b)</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><h3 id="抽象工厂模式和工厂方法模式区别"><a href="#抽象工厂模式和工厂方法模式区别" class="headerlink" title="抽象工厂模式和工厂方法模式区别"></a>抽象工厂模式和工厂方法模式区别</h3><ul>
+<li>抽象工厂模式：提供一个接口，用于创建相关或依赖对象的家族，而不需要明确指定具体类。</li>
+<li>工厂方法模式：定义了一个创建对象的接口，单由子类决定要实例化的类是哪一个。工厂方法让类吧实例化推迟到子类。</li>
+</ul>
+<p>OO原则：</p>
+<ul>
+<li>多用组合，少用继承。</li>
+<li>针对接口编程，不针对实现编程。</li>
+<li><strong>依赖抽象，不要依赖具体产品</strong></li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/20/创建型/">展开全文 >></a>
         </p>
       
 
@@ -1333,139 +1454,10 @@
 
 
   
-    <article id="post-tornado-motor" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/11/06/tornado-motor/">tornado+motor</a>
-    </h1>
-  
-
-        
-        <a href="/2018/11/06/tornado-motor/" class="archive-article-date">
-  	<time datetime="2018-11-06T06:23:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="1-python-环境以及版本"><a href="#1-python-环境以及版本" class="headerlink" title="1.python 环境以及版本"></a>1.python 环境以及版本</h2><ul>
-<li>python 3.5</li>
-<li>motor 2.0.0</li>
-<li>tornado 5.1</li>
-</ul>
-<h2 id="2-motor简单介绍"><a href="#2-motor简单介绍" class="headerlink" title="2.motor简单介绍"></a>2.motor简单介绍</h2><ol>
-<li><p>MongoDB 的异步python驱动</p>
-</li>
-<li><p>官网介绍依赖如下</p>
-<p>Unix, including Mac OS X. Windows is not supported.<br>PyMongo 3.6 or later.<br>Python 2.7 or later<br>futures on Python 2.7.<br>backports.pbkdf2 for faster authentication with MongoDB 3.0+, especially on Python older than 2.7.8, or on Python 3 before Python 3.4.</p>
-</li>
-<li><p>实际上motor是对pymongo的封装</p>
-</li>
-<li>需要注意的是motor各版本之间使用方式的改动，可参考Changelog</li>
-</ol>
-<h2 id="3-代码示例"><a href="#3-代码示例" class="headerlink" title="3.代码示例"></a>3.代码示例</h2><ul>
-<li><p>中转接口示例</p>
-<p>假如API中需要调用别的接口，并且获取请求结果，可参考如下代码，此处省去路由列表，仅仅列出处理的类。</p>
-<p>下面需要发送一个json数据类型的post请求。</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Transfer</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line">    <span class="comment">#中转接口</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment">#check_param(['text'], body) #自己的检测函数</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        <span class="comment">#post需要传入的body,json数据</span></span><br><span class="line">        body = &#123;<span class="string">"key"</span>: &#123;<span class="string">"key1"</span>: <span class="string">"theft"</span>, <span class="string">"key2"</span>: text&#125;&#125;</span><br><span class="line">        post_body = json.dumps(body, ensure_ascii=<span class="keyword">False</span>)</span><br><span class="line">        </span><br><span class="line">        url = <span class="string">'http://*****/****'</span><span class="comment">#此处替换自己想要调用的API</span></span><br><span class="line">        headers = &#123;<span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>&#125;</span><br><span class="line">        http_client = tornado.httpclient.AsyncHTTPClient()</span><br><span class="line">        </span><br><span class="line">        <span class="comment">#构造一个post请求</span></span><br><span class="line">        resp = <span class="keyword">yield</span> tornado.gen.Task(</span><br><span class="line">              http_client.fetch,</span><br><span class="line">              url,</span><br><span class="line">              headers = headers,</span><br><span class="line">              method=<span class="string">"POST"</span>,</span><br><span class="line">              body=post_body,</span><br><span class="line">              request_timeout=<span class="number">20</span>  <span class="comment"># 暂时设置超时时间为20s</span></span><br><span class="line">        )</span><br><span class="line">        self.write(resp.body)</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<ul>
-<li>如果想在中转接口之后做一些额外的操作,并且返回一些数据 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Transfer</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line">    <span class="comment">#调用某api</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        <span class="comment">#check_param(['text'], body) #自己的检测函数</span></span><br><span class="line">        <span class="comment">#post需要传入的body,json数据</span></span><br><span class="line">        body = &#123;<span class="string">"key"</span>: &#123;<span class="string">"key1"</span>: <span class="string">"theft"</span>, <span class="string">"key2"</span>: text&#125;&#125;</span><br><span class="line">     </span><br><span class="line">        post_body = json.dumps(body, ensure_ascii=<span class="keyword">False</span>)</span><br><span class="line">     </span><br><span class="line">        url = <span class="string">'http://*****/****'</span><span class="comment">#此处替换自己想要调用的API</span></span><br><span class="line">        headers = &#123;<span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>&#125;</span><br><span class="line">        http_client = tornado.httpclient.AsyncHTTPClient()</span><br><span class="line">     </span><br><span class="line">        <span class="comment">#构造一个post请求</span></span><br><span class="line">        resp = <span class="keyword">yield</span> tornado.gen.Task(</span><br><span class="line">            http_client.fetch,</span><br><span class="line">            url,</span><br><span class="line">            headers = headers,</span><br><span class="line">            method=<span class="string">"POST"</span>,</span><br><span class="line">            body=post_body,</span><br><span class="line">            request_timeout=<span class="number">20</span>  <span class="comment"># 暂时设置超时时间为20s</span></span><br><span class="line">        )</span><br><span class="line">     </span><br><span class="line">        out = <span class="keyword">yield</span> self.do_some(**kwargs)</span><br><span class="line">     </span><br><span class="line">        self.write(out)</span><br><span class="line">     </span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">do_some</span><span class="params">(self)</span>:</span></span><br><span class="line">         <span class="comment">#do something</span></span><br><span class="line">         <span class="keyword">return</span> <span class="string">"some value"</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>​    </p>
-<ul>
-<li><p>对mongo的crud操作</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> motor.motor_tornado</span><br><span class="line">client = motor.motor_tornado.MotorClient(<span class="string">"127.0.0.1"</span>, <span class="number">27017</span>)</span><br><span class="line">collection = client[<span class="string">'test_db'</span>][<span class="string">'test_collection'</span>]</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Add</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"><span class="meta">	@tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        content_id = self.request.body_argument[<span class="string">'id'</span>] </span><br><span class="line"></span><br><span class="line">        body = &#123;<span class="string">"cotent_id"</span>:content_id,<span class="string">"text"</span>:text&#125;</span><br><span class="line">        flag = <span class="keyword">yield</span> collection.insert_one(body)I </span><br><span class="line">        out = &#123;&#125;</span><br><span class="line">        <span class="keyword">if</span> flag:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'insert success'</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'insert fail'</span>            </span><br><span class="line"></span><br><span class="line">        self.write(json.dumps(out, ensure_ascii=<span class="keyword">False</span>))</span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Update</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        content_id = self.request.body_argument[<span class="string">'id'</span>] </span><br><span class="line">        body = &#123;<span class="string">"cotent_id"</span>:content_id,<span class="string">"text"</span>:text&#125;</span><br><span class="line">        flag = <span class="keyword">yield</span> collection.update_one(&#123;<span class="string">'content_id'</span>:content_id&#125;,&#123;</span><br><span class="line">                <span class="string">"$set"</span>: &#123;<span class="string">"text"</span>: text&#125;&#125;)I </span><br><span class="line">        out = &#123;&#125;</span><br><span class="line">        <span class="keyword">if</span> flag:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'update success'</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'update fail'</span>  </span><br><span class="line"></span><br><span class="line">        self.write(json.dumps(out, ensure_ascii=<span class="keyword">False</span>))</span><br><span class="line">      </span><br><span class="line"> <span class="class"><span class="keyword">class</span> <span class="title">ContentList</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        per_page = int(self.get_argument(<span class="string">'per_page'</span>, <span class="string">'50'</span>))</span><br><span class="line">        page = int(self.get_argument(<span class="string">'page'</span>, <span class="string">'1'</span>))</span><br><span class="line"></span><br><span class="line">        content_count = <span class="keyword">yield</span> collection.count_documents(&#123;&#125;)</span><br><span class="line">        page_num = math.ceil(case_count / per_page)</span><br><span class="line"></span><br><span class="line">        <span class="comment">#分页查询</span></span><br><span class="line">        cursor = collection.find().limit(per_page).skip((page - <span class="number">1</span>) * per_page)</span><br><span class="line"></span><br><span class="line">        content_list = []</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">yield</span> <span class="keyword">from</span> cursor.fetch_next):</span><br><span class="line">            obj = cursor.next_object()</span><br><span class="line">            new_obj = &#123;<span class="string">"content_id"</span>: obj[<span class="string">"content_id"</span>],<span class="string">"text"</span>:obj[<span class="string">'text'</span>]&#125;</span><br><span class="line">            content_list.append(new_obj)</span><br><span class="line"></span><br><span class="line">        out=&#123;&#125;</span><br><span class="line">        out[<span class="string">'case_list'</span>] = content_list</span><br><span class="line">        out[<span class="string">'totalCaseNum'</span>] = content_count</span><br><span class="line">        out[<span class="string">'totalPageNum'</span>] = page_num</span><br><span class="line">        out[<span class="string">'per_page'</span>] = per_page</span><br><span class="line"></span><br><span class="line">        self.write(json.dumps(out, ensure_ascii=<span class="keyword">False</span>))</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="4-motor的错误类型"><a href="#4-motor的错误类型" class="headerlink" title="4.motor的错误类型"></a>4.motor的错误类型</h2><p>   由于motor是在pymongo上的封装，一般跟数据库相关的错误都是pymongo.errors</p>
-<ol>
-<li><p>pymongo.errors.PyMongoError: 统一是数据库错误</p>
-</li>
-<li><p>更详细的错误举例如下:</p>
-<p>pymongo.errors.ServerSelectionTimeoutError #连接失败  </p>
-<p>pymongo.errors.DuplicateKeyError#插入时主键重复</p>
-</li>
-<li><p>其他错误类型参考：<br>pymongo.errors</p>
-</li>
-</ol>
-<h2 id="5-问题及总结"><a href="#5-问题及总结" class="headerlink" title="5.问题及总结"></a>5.问题及总结</h2><ul>
-<li><p>接口接受请求发现丢失了参数</p>
-<p>如果你用的是curl ，则要注意 &amp;需要转义</p>
-<p><code>curl http://127.0.0.1:8080/get_content_list?page=1\&amp;page_size=100</code></p>
-</li>
-<li><p>查找数据存在，但是就是查找不到</p>
-<p>我是这么写的：</p>
-<p> <code>curl http://127.0.0.1:8080/has_content_id?content_id=&quot;kk234566&quot;</code></p>
-<p>看出来错误了么， 请求中get带的参数都是字符串的，不用加引hao</p>
-<p> <code>curl http://127.0.0.1:8080/has_content_id?content_id=kk234566</code></p>
-</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">motor</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2018/11/06/tornado-motor/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-
-  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+    </nav>
   
 
 
@@ -1547,6 +1539,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">upload file</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">IO模型</a>
               </li>
              
@@ -1563,26 +1559,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">motor</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">tornado</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">ioloop</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">upload file</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">python3</a>
               </li>
              
@@ -1591,15 +1567,31 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">motor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tornado</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">ioloop</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">OAuth</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">IPC</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">linux</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">OAuth</a>
               </li>
             
             <div class="clearfix"></div>

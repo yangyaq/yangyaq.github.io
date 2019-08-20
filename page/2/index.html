@@ -6,11 +6,11 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
-  <title>Tag: linux | yangyaq</title>
+  <title>yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta property="og:type" content="website">
 <meta property="og:title" content="yangyaq">
-<meta property="og:url" content="https://yangyaq.github.io/tags/linux/index.html">
+<meta property="og:url" content="https://yangyaq.github.io/page/2/index.html">
 <meta property="og:site_name" content="yangyaq">
 <meta property="og:locale" content="zh-Hans">
 <meta name="twitter:card" content="summary">
@@ -144,63 +144,144 @@
           <div id="js-content" class="content-ll">
             
   
-  
+    <article id="post-tornado-motor" class="article article-type-post  article-index" itemscope="" itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/03/30/进程间的IPC通信机制/" class="archive-article-date">
-  	<time datetime="2019-03-30T13:30:37.825Z" itemprop="datePublished"><i class="icon-calendar icon"></i>19-03-30</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
     <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/03/30/进程间的IPC通信机制/">进程间通信机制</a>
+      <a class="article-title" href="/2018/11/06/tornado-motor/">tornado+motor</a>
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2018/11/06/tornado-motor/" class="archive-article-date">
+  	<time datetime="2018-11-06T06:23:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2018-11-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-python-环境以及版本"><a href="#1-python-环境以及版本" class="headerlink" title="1.python 环境以及版本"></a>1.python 环境以及版本</h2><ul>
+<li>python 3.5</li>
+<li>motor 2.0.0</li>
+<li>tornado 5.1</li>
+</ul>
+<h2 id="2-motor简单介绍"><a href="#2-motor简单介绍" class="headerlink" title="2.motor简单介绍"></a>2.motor简单介绍</h2><ol>
+<li><p>MongoDB 的异步python驱动</p>
+</li>
+<li><p>官网介绍依赖如下</p>
+<p>Unix, including Mac OS X. Windows is not supported.<br>PyMongo 3.6 or later.<br>Python 2.7 or later<br>futures on Python 2.7.<br>backports.pbkdf2 for faster authentication with MongoDB 3.0+, especially on Python older than 2.7.8, or on Python 3 before Python 3.4.</p>
+</li>
+<li><p>实际上motor是对pymongo的封装</p>
+</li>
+<li>需要注意的是motor各版本之间使用方式的改动，可参考Changelog</li>
+</ol>
+<h2 id="3-代码示例"><a href="#3-代码示例" class="headerlink" title="3.代码示例"></a>3.代码示例</h2><ul>
+<li><p>中转接口示例</p>
+<p>假如API中需要调用别的接口，并且获取请求结果，可参考如下代码，此处省去路由列表，仅仅列出处理的类。</p>
+<p>下面需要发送一个json数据类型的post请求。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Transfer</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line">    <span class="comment">#中转接口</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment">#check_param(['text'], body) #自己的检测函数</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        <span class="comment">#post需要传入的body,json数据</span></span><br><span class="line">        body = &#123;<span class="string">"key"</span>: &#123;<span class="string">"key1"</span>: <span class="string">"theft"</span>, <span class="string">"key2"</span>: text&#125;&#125;</span><br><span class="line">        post_body = json.dumps(body, ensure_ascii=<span class="keyword">False</span>)</span><br><span class="line">        </span><br><span class="line">        url = <span class="string">'http://*****/****'</span><span class="comment">#此处替换自己想要调用的API</span></span><br><span class="line">        headers = &#123;<span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>&#125;</span><br><span class="line">        http_client = tornado.httpclient.AsyncHTTPClient()</span><br><span class="line">        </span><br><span class="line">        <span class="comment">#构造一个post请求</span></span><br><span class="line">        resp = <span class="keyword">yield</span> tornado.gen.Task(</span><br><span class="line">              http_client.fetch,</span><br><span class="line">              url,</span><br><span class="line">              headers = headers,</span><br><span class="line">              method=<span class="string">"POST"</span>,</span><br><span class="line">              body=post_body,</span><br><span class="line">              request_timeout=<span class="number">20</span>  <span class="comment"># 暂时设置超时时间为20s</span></span><br><span class="line">        )</span><br><span class="line">        self.write(resp.body)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<ul>
+<li>如果想在中转接口之后做一些额外的操作,并且返回一些数据 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Transfer</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line">    <span class="comment">#调用某api</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        <span class="comment">#check_param(['text'], body) #自己的检测函数</span></span><br><span class="line">        <span class="comment">#post需要传入的body,json数据</span></span><br><span class="line">        body = &#123;<span class="string">"key"</span>: &#123;<span class="string">"key1"</span>: <span class="string">"theft"</span>, <span class="string">"key2"</span>: text&#125;&#125;</span><br><span class="line">     </span><br><span class="line">        post_body = json.dumps(body, ensure_ascii=<span class="keyword">False</span>)</span><br><span class="line">     </span><br><span class="line">        url = <span class="string">'http://*****/****'</span><span class="comment">#此处替换自己想要调用的API</span></span><br><span class="line">        headers = &#123;<span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>&#125;</span><br><span class="line">        http_client = tornado.httpclient.AsyncHTTPClient()</span><br><span class="line">     </span><br><span class="line">        <span class="comment">#构造一个post请求</span></span><br><span class="line">        resp = <span class="keyword">yield</span> tornado.gen.Task(</span><br><span class="line">            http_client.fetch,</span><br><span class="line">            url,</span><br><span class="line">            headers = headers,</span><br><span class="line">            method=<span class="string">"POST"</span>,</span><br><span class="line">            body=post_body,</span><br><span class="line">            request_timeout=<span class="number">20</span>  <span class="comment"># 暂时设置超时时间为20s</span></span><br><span class="line">        )</span><br><span class="line">     </span><br><span class="line">        out = <span class="keyword">yield</span> self.do_some(**kwargs)</span><br><span class="line">     </span><br><span class="line">        self.write(out)</span><br><span class="line">     </span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">do_some</span><span class="params">(self)</span>:</span></span><br><span class="line">         <span class="comment">#do something</span></span><br><span class="line">         <span class="keyword">return</span> <span class="string">"some value"</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>​    </p>
+<ul>
+<li><p>对mongo的crud操作</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> motor.motor_tornado</span><br><span class="line">client = motor.motor_tornado.MotorClient(<span class="string">"127.0.0.1"</span>, <span class="number">27017</span>)</span><br><span class="line">collection = client[<span class="string">'test_db'</span>][<span class="string">'test_collection'</span>]</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Add</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"><span class="meta">	@tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        content_id = self.request.body_argument[<span class="string">'id'</span>] </span><br><span class="line"></span><br><span class="line">        body = &#123;<span class="string">"cotent_id"</span>:content_id,<span class="string">"text"</span>:text&#125;</span><br><span class="line">        flag = <span class="keyword">yield</span> collection.insert_one(body)I </span><br><span class="line">        out = &#123;&#125;</span><br><span class="line">        <span class="keyword">if</span> flag:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'insert success'</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'insert fail'</span>            </span><br><span class="line"></span><br><span class="line">        self.write(json.dumps(out, ensure_ascii=<span class="keyword">False</span>))</span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Update</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></span><br><span class="line">        text = self.request.body_argument[<span class="string">'text'</span>]</span><br><span class="line">        content_id = self.request.body_argument[<span class="string">'id'</span>] </span><br><span class="line">        body = &#123;<span class="string">"cotent_id"</span>:content_id,<span class="string">"text"</span>:text&#125;</span><br><span class="line">        flag = <span class="keyword">yield</span> collection.update_one(&#123;<span class="string">'content_id'</span>:content_id&#125;,&#123;</span><br><span class="line">                <span class="string">"$set"</span>: &#123;<span class="string">"text"</span>: text&#125;&#125;)I </span><br><span class="line">        out = &#123;&#125;</span><br><span class="line">        <span class="keyword">if</span> flag:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'update success'</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            out[<span class="string">'msg'</span>] = <span class="string">'update fail'</span>  </span><br><span class="line"></span><br><span class="line">        self.write(json.dumps(out, ensure_ascii=<span class="keyword">False</span>))</span><br><span class="line">      </span><br><span class="line"> <span class="class"><span class="keyword">class</span> <span class="title">ContentList</span><span class="params">(tornado.web.RequestHandler)</span>:</span></span><br><span class="line"><span class="meta">    @tornado.gen.coroutine</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self)</span>:</span></span><br><span class="line">        per_page = int(self.get_argument(<span class="string">'per_page'</span>, <span class="string">'50'</span>))</span><br><span class="line">        page = int(self.get_argument(<span class="string">'page'</span>, <span class="string">'1'</span>))</span><br><span class="line"></span><br><span class="line">        content_count = <span class="keyword">yield</span> collection.count_documents(&#123;&#125;)</span><br><span class="line">        page_num = math.ceil(case_count / per_page)</span><br><span class="line"></span><br><span class="line">        <span class="comment">#分页查询</span></span><br><span class="line">        cursor = collection.find().limit(per_page).skip((page - <span class="number">1</span>) * per_page)</span><br><span class="line"></span><br><span class="line">        content_list = []</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">yield</span> <span class="keyword">from</span> cursor.fetch_next):</span><br><span class="line">            obj = cursor.next_object()</span><br><span class="line">            new_obj = &#123;<span class="string">"content_id"</span>: obj[<span class="string">"content_id"</span>],<span class="string">"text"</span>:obj[<span class="string">'text'</span>]&#125;</span><br><span class="line">            content_list.append(new_obj)</span><br><span class="line"></span><br><span class="line">        out=&#123;&#125;</span><br><span class="line">        out[<span class="string">'case_list'</span>] = content_list</span><br><span class="line">        out[<span class="string">'totalCaseNum'</span>] = content_count</span><br><span class="line">        out[<span class="string">'totalPageNum'</span>] = page_num</span><br><span class="line">        out[<span class="string">'per_page'</span>] = per_page</span><br><span class="line"></span><br><span class="line">        self.write(json.dumps(out, ensure_ascii=<span class="keyword">False</span>))</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="4-motor的错误类型"><a href="#4-motor的错误类型" class="headerlink" title="4.motor的错误类型"></a>4.motor的错误类型</h2><p>   由于motor是在pymongo上的封装，一般跟数据库相关的错误都是pymongo.errors</p>
+<ol>
+<li><p>pymongo.errors.PyMongoError: 统一是数据库错误</p>
+</li>
+<li><p>更详细的错误举例如下:</p>
+<p>pymongo.errors.ServerSelectionTimeoutError #连接失败  </p>
+<p>pymongo.errors.DuplicateKeyError#插入时主键重复</p>
+</li>
+<li><p>其他错误类型参考：<br>pymongo.errors</p>
+</li>
+</ol>
+<h2 id="5-问题及总结"><a href="#5-问题及总结" class="headerlink" title="5.问题及总结"></a>5.问题及总结</h2><ul>
+<li><p>接口接受请求发现丢失了参数</p>
+<p>如果你用的是curl ，则要注意 &amp;需要转义</p>
+<p><code>curl http://127.0.0.1:8080/get_content_list?page=1\&amp;page_size=100</code></p>
+</li>
+<li><p>查找数据存在，但是就是查找不到</p>
+<p>我是这么写的：</p>
+<p> <code>curl http://127.0.0.1:8080/has_content_id?content_id=&quot;kk234566&quot;</code></p>
+<p>看出来错误了么， 请求中get带的参数都是字符串的，不用加引hao</p>
+<p> <code>curl http://127.0.0.1:8080/has_content_id?content_id=kk234566</code></p>
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">IPC</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">motor</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tornado</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2018/11/06/tornado-motor/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
 
-  
-  
-    </div></section>
-  
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
 
-    
+
+
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    </nav>
+  
 
 
           </div>
@@ -222,10 +303,10 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: false,
+		isHome: true,
 		isPost: false,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

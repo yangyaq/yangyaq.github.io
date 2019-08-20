@@ -8,22 +8,20 @@
   <link rel="dns-prefetch" href="https://yangyaq.github.io">
   <title>IO模型 | yangyaq</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。    多路复用IOselect可阻塞，可不阻">
+  <meta name="description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。  多路复用IOselect可阻塞，可不阻塞">
 <meta name="keywords" content="IO模型">
 <meta property="og:type" content="article">
 <meta property="og:title" content="IO模型">
 <meta property="og:url" content="https://yangyaq.github.io/2019/08/20/IO模型/index.html">
 <meta property="og:site_name" content="yangyaq">
-<meta property="og:description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。    多路复用IOselect可阻塞，可不阻">
+<meta property="og:description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。  多路复用IOselect可阻塞，可不阻塞">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://yangyaq.github.io/2019/08/20/IO模型/屏幕快照%202019-03-25%2011.02.23.png">
-<meta property="og:image" content="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831221803468-1908924864.png">
-<meta property="og:image" content="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831225603562-854824774.png">
-<meta property="og:image" content="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831232911015-2140233396.png">
-<meta property="og:updated_time" content="2019-08-20T09:37:30.366Z">
+<meta property="og:image" content="https://yangyaq.github.io/2019/08/20/IO模型/IO.png">
+<meta property="og:updated_time" content="2019-08-20T09:45:13.694Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="IO模型">
-<meta name="twitter:description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。    多路复用IOselect可阻塞，可不阻">
+<meta name="twitter:description" content="内核态（系统空间）- 用户态（用户空间） 一次通信过程分为两步骤：  等待接收数据。 将数据从内核态拷贝至用户态（进程或者线程）。  阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。 非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。 异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。  多路复用IOselect可阻塞，可不阻塞">
 <meta name="twitter:image" content="https://yangyaq.github.io/2019/08/20/IO模型/屏幕快照%202019-03-25%2011.02.23.png">
   
     <link rel="alternative" href="/atom.xml" title="yangyaq" type="application/atom+xml">
@@ -165,7 +163,7 @@
 
         
         <a href="/2019/08/20/IO模型/" class="archive-article-date">
-  	<time datetime="2019-08-20T09:37:30.368Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
+  	<time datetime="2019-08-20T09:45:13.697Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
 </a>
         
       </header>
@@ -182,9 +180,7 @@
 <p>阻塞IO（BIO）： 两个阶段都阻塞，一直等待，直到拷贝结束。</p>
 <p>非阻塞IO（NIO）：第一阶段不阻塞，主动检查是否准备好，直到准备好，第二阶段阻塞。</p>
 <p>异步IO（AIO）：第一阶段，第二阶段都不阻塞，拷贝由系统主动完成。</p>
-<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831221803468-1908924864.png" alt="1036857-20170831221803468-1908924864"></p>
-<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831225603562-854824774.png" alt="1036857-20170831225603562-854824774"></p>
-<p><img src="https://images2017.cnblogs.com/blog/1036857/201708/1036857-20170831232911015-2140233396.png" alt="1036857-20170831232911015-2140233396"></p>
+<p><img src="/2019/08/20/IO模型/IO.png" alt="IO"></p>
 <h2 id="多路复用IO"><a href="#多路复用IO" class="headerlink" title="多路复用IO"></a>多路复用IO</h2><h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>可阻塞，可不阻塞</p>
 <p>函数原型</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
@@ -374,8 +370,8 @@
 <nav id="article-nav">
   
   
-    <a href="/2019/05/21/常用设计模式/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">常用设计模式</div>
+    <a href="/2019/08/20/创建型/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title"></div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -525,6 +521,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">upload file</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">IO模型</a>
               </li>
              
@@ -541,26 +541,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">motor</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">tornado</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">ioloop</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">upload file</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">python3</a>
               </li>
              
@@ -569,15 +549,31 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">motor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tornado</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">ioloop</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">OAuth</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">IPC</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">linux</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">OAuth</a>
               </li>
             
             <div class="clearfix"></div>
